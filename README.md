@@ -15,6 +15,7 @@ brew install GTB-training/gtb/util
 参考资料：
 
 [How to Create and Maintain a Tap](https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap)
+
 [Creating Personal Homebrew Tap/Formula (OSX)](https://www.youtube.com/watch?v=fbyrLo6yx8M)
 
 ## Set Up
