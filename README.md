@@ -80,11 +80,13 @@ gtb clone [options] <repo-name> [student names]
 #### 可选的 options 有：
 
 `-u`：如果 repo 已下载，则更新 repo，否则会输出提示信息并跳过该 repo；
+
 `-b`：下载完所有 repositories 后，自动执行构建操作；
 
 #### 参数说明：
 
 `<repo-name>`：要下载的 homework 或者是 quiz 所对应的 repository 的名字；
+
 `[student names]`：限制只下载指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
 
 #### 示例：
@@ -122,6 +124,7 @@ gtb build <repo-name> [student names]
 #### 参数说明：
 
 `<repo-name>`：要构建的 homework 或者是 quiz 所对应的 repository 的名字；
+
 `[student names]`：限制只构建指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
 
 #### 示例：
@@ -155,6 +158,7 @@ gtb update [options] <repo-name> [student names]
 #### 参数说明：
 
 `<repo-name>`：要更新的 homework 或者是 quiz 所对应的 repository 的名字；
+
 `[student names]`：限制更新指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
 
 #### 示例：
