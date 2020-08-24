@@ -1,10 +1,10 @@
 #!/bin/bash
 
-GTB_ROOT="$HOME/code/gtb"
-STUDENTS_FILE="$GTB_ROOT/gtb-students.txt"
+GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
+GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 SUBCMD_PREFIX='_gtb'
 
-SUBCOMMAND=${1:?Subcommand is required! (e.g. clone.)}
+SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update.)}
 shift
 
 info() {
@@ -28,13 +28,17 @@ run() {
     eval $*
 }
 
-build-repo() {
+build_repo() {
     local repo_name=$1
     local fullname=$2
     local HOMEWORK_ROOT="$GTB_ROOT/$repo_name"
     local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
 
-    [[ -d $STUDENT_HOMEWORK_PATH ]] || error "Local repo \`$STUDENT_HOMEWORK_PATH\` does not exist!"
+    if [[ ! -d $STUDENT_HOMEWORK_PATH ]]
+    then
+        error "Skip building repo \`$STUDENT_HOMEWORK_PATH\` due to folder is not exist!"
+        return
+    fi
 
     run "cd $STUDENT_HOMEWORK_PATH"
 
@@ -77,7 +81,7 @@ update-repo() {
     fi
 }
 
-clone-or-update-repo() {
+clone_or_update_repo() {
     local repo_name=$1
     local username=$2
     local fullname=$3
@@ -87,12 +91,15 @@ clone-or-update-repo() {
     if [[ -d $STUDENT_HOMEWORK_PATH ]] && [[ "$AUTO_UPDATE" == "true" ]]
     then
         update-repo $STUDENT_HOMEWORK_PATH
+    elif [[ -d $STUDENT_HOMEWORK_PATH ]] && [[ "$AUTO_UPDATE" != "true" ]]
+    then
+        info "Repo ${repo_name} for student $fullname has already been downloaded."
     else
         clone-repo $@
     fi
 }
 
-build-repos() {
+build_repos() {
     if [[ "$AUTO_BUILD" != "true" ]]
     then
         return
@@ -102,46 +109,69 @@ build-repos() {
     do
         if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>"
         then
-            build-repo $REPO_NAME $FULLNAME
+            build_repo $REPO_NAME $FULLNAME
         fi
-    done < $STUDENTS_FILE
+    done < $GTB_STUDENTS_FILE
 }
 
-clone-or-update-repos() {
+clone_or_update_repos() {
     while read -r FULLNAME USERNAME
     do
         if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>"
         then
-            clone-or-update-repo $REPO_NAME $USERNAME $FULLNAME
+            clone_or_update_repo $REPO_NAME $USERNAME $FULLNAME
         fi
-    done < $STUDENTS_FILE
+    done < $GTB_STUDENTS_FILE
+}
+
+assert_students_file_exists() {
+    if [[ ! -f $GTB_STUDENTS_FILE ]]
+    then
+        error "Cannot find students file: '$GTB_STUDENTS_FILE'."
+        exit 1
+    fi
 }
 
 _gtb_build() {
-    AUTO_BUILD="true"
+    assert_students_file_exists
 
-    build-repos $@
+    AUTO_BUILD="true"
+    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    shift
+
+    build_repos $@
 }
 
 _gtb_update() {
-    AUTO_UPDATE="true"
+    assert_students_file_exists
 
-    clone-or-update-repos $@
-    build-repos $@
+    AUTO_UPDATE="true"
+    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    shift
+
+    clone_or_update_repos $@
+    build_repos $@
 }
 
 _gtb_clone() {
-    clone-or-update-repos $@
-    build-repos $@
+    assert_students_file_exists
+
+    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    shift
+
+    clone_or_update_repos $@
+    build_repos $@
+}
+
+_gtb_init() {
+    if [[ ! -f $GTB_STUDENTS_FILE ]]
+    then
+        touch $GTB_STUDENTS_FILE
+        info "Created students file: '$GTB_STUDENTS_FILE'."
+    fi
 }
 
 # main method starts from here...
-if [[ ! -f $STUDENTS_FILE ]]
-then
-    error "Cannot find students file: '$STUDENTS_FILE'."
-    exit 1
-fi
-
 if [[ "$(type -t ${SUBCMD_PREFIX}_$SUBCOMMAND)" != 'function' ]]; then
     error "Subcommand \`$SUBCOMMAND\` is INVALID!"
     exit 2
@@ -173,9 +203,6 @@ while :; do
 
     shift
 done
-
-REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
-shift
 
 ${SUBCMD_PREFIX}_${SUBCOMMAND} $@
 
