@@ -186,6 +186,8 @@ gtb update -b B-spring-config-homework
 * 处理错误场景：repo 不存在的情况；
 * 支持显示 usage；
 * 下载和更新操作也许可以优化为并行操作，缩短等待时间；
+* 增加 `cd` 子命令；
+* 改为 source 的方式来使用？这样能改变当前目录，从而使 cd 子命令成为可能；
 
 ## Contributors
 
