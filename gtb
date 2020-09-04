@@ -166,6 +166,7 @@ _gtb_clone() {
 _gtb_init() {
     if [[ ! -f $GTB_STUDENTS_FILE ]]
     then
+        mkdir -p $GTB_ROOT
         touch $GTB_STUDENTS_FILE
         info "Created students file: '$GTB_STUDENTS_FILE'."
     fi
