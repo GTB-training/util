@@ -31,12 +31,16 @@ brew install GTB-training/gtb/util
 `students.txt`内容示例：
 
 ```shell
-$ cat students.txt
-yuqi.wang Uncontrollablly
-peng.tian ifeelcold1824
+$ cat students.txt group1 team1
+yuqi.wang Uncontrollablly group1 team2
+peng.tian ifeelcold1824 group2 team3
 ```
 
-每行表示一个学员，分两列，由空格分隔，第一列是学员名字的拼音，第二列是学员 Github 账号。
+每行表示一个学员，有 2+ 列，列之间由空格分隔：
+
+1. 第一列是学员名字的拼音全拼；
+1. 第二列是学员 Github username；
+1. 后续列为自定义的 tags，每个 tag 一列，每行的 tags 根据需要设置，数量不必一致；
 
 **名字拼音请勿包含空格！**
 
@@ -74,7 +78,7 @@ gtb init
 #### 用法：
 
 ```shell
-gtb clone [options] <repo-name> [student names]
+gtb clone [options] <repo-name> [student names|tag]
 ```
 
 #### 可选的 options 有：
@@ -88,6 +92,7 @@ gtb clone [options] <repo-name> [student names]
 `<repo-name>`：要下载的 homework 或者是 quiz 所对应的 repository 的名字；
 
 `[student names]`：限制只下载指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
+`[tag]`：限制只下载指定 tag 的 repositories，而不是 `students.txt` 中所有学员的 repositories，只支持同时指定最多一个 tag；
 
 #### 示例：
 
@@ -118,7 +123,7 @@ gtb clone -b B-spring-config-homework
 #### 用法：
 
 ```shell
-gtb build <repo-name> [student names]
+gtb build <repo-name> [student names|tag]
 ```
 
 #### 参数说明：
@@ -126,6 +131,8 @@ gtb build <repo-name> [student names]
 `<repo-name>`：要构建的 homework 或者是 quiz 所对应的 repository 的名字；
 
 `[student names]`：限制只构建指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
+
+`[tag]`：限制只下载指定 tag 的 repositories，而不是 `students.txt` 中所有学员的 repositories，只支持同时指定最多一个 tag；
 
 #### 示例：
 
@@ -148,7 +155,7 @@ gtb build B-spring-config-homework san.zhang si.li
 #### 用法：
 
 ```shell
-gtb update [options] <repo-name> [student names]
+gtb update [options] <repo-name> [student names|tag]
 ```
 
 #### 可选的 options 有：
@@ -160,6 +167,8 @@ gtb update [options] <repo-name> [student names]
 `<repo-name>`：要更新的 homework 或者是 quiz 所对应的 repository 的名字；
 
 `[student names]`：限制更新指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
+
+`[tag]`：限制只下载指定 tag 的 repositories，而不是 `students.txt` 中所有学员的 repositories，只支持同时指定最多一个 tag；
 
 #### 示例：
 
