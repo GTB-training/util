@@ -51,7 +51,7 @@ build_repo() {
     fi
 }
 
-clone-repo() {
+clone_repo() {
     local repo_name=$1
     local username=$2
     local fullname=$3
@@ -95,7 +95,7 @@ clone_or_update_repo() {
     then
         info "Repo ${repo_name} for student $fullname has already been downloaded."
     else
-        clone-repo $@
+        clone_repo $@
     fi
 }
 
