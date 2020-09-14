@@ -198,6 +198,9 @@ gtb update -b B-spring-config-homework
 * 增加 `cd` 子命令；
 * 改为 source 的方式来使用？这样能改变当前目录，从而使 cd 子命令成为可能；
 * 增加 `rm` 子命令；
+* 增加 `name` 子命令；
+* 增加 `checkout` 子命令用于查看指定时间的作业的版本；
+* 增加帮助看作业，过滤作业里的 comments，自动按照维度、加减分整理出来最终的 list，可以直接粘贴使用；
 
 ## Contributors
 
