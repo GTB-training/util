@@ -98,6 +98,35 @@ clone_or_update_repo() {
     fi
 }
 
+join_repos() {
+    readonly INVITATIONS_FILE="/tmp/gtb_invatations_${REPO_NAME}.txt"
+
+    gh api /user/repository_invitations | jsonpp | \
+        grep --color=never '^    "id":\|^      "name":\|^        "login":' | \
+        paste -d' ' - - - | \
+        tr -d ', :' | tr -s '"' | tr '"' ' ' | \
+        grep --color=never "${REPO_NAME}" > $INVITATIONS_FILE
+
+    readonly login_list_size=$(cat $INVITATIONS_FILE | wc -l | tr -d ' ')
+
+    if [[ 0 -eq $login_list_size ]]
+    then
+        info "Found $login_list_size invitations for repo ${REPO_NAME}."
+        return
+    fi
+
+    info "Found $login_list_size invitations for repo ${REPO_NAME} from following users:"
+    cat $INVITATIONS_FILE | cut -d' ' -f7 | cat -n
+
+    while read -r cid id cname name clogin login
+    do
+        info "about to accept invitation from user ${login}..."
+        run "gh api -X PATCH /user/repository_invitations/${id}"
+
+        [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
+    done < $INVITATIONS_FILE
+}
+
 build_repos() {
     if [[ "$AUTO_BUILD" != "true" ]]
     then
@@ -129,6 +158,15 @@ assert_students_file_exists() {
         error "Cannot find students file: '$GTB_STUDENTS_FILE'."
         exit 1
     fi
+}
+
+_gtb_join() {
+    assert_students_file_exists
+
+    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    shift
+
+    join_repos $@
 }
 
 _gtb_build() {

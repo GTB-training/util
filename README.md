@@ -58,6 +58,7 @@ peng.tian ifeelcold1824 group2 team3
 * clone：批量下载 repositories；
 * build：批量构建已下载到本地的 repositories；
 * update：批量更新已下载到本地的 repositories；
+* join：批量接受指定 homework/quiz 的 repository invitations；
 
 ### gtb init
 
@@ -170,6 +171,20 @@ gtb update [options] <repo-name> [student names|tag]
 
 `[tag]`：限制只下载指定 tag 的 repositories，而不是 `students.txt` 中所有学员的 repositories，只支持同时指定最多一个 tag；
 
+### gtb join
+
+显示并自动接受所有指定 repo 的 repository invitations。
+
+#### 用法：
+
+```shell
+gtb join <repo-name>
+```
+
+#### 参数说明：
+
+`<repo-name>`：要接受 invitation 的 homework/quiz 所对应的 repository 的名字；
+
 #### 示例：
 
 更新所有学员`B-spring-config-homework`的 repositories：
@@ -187,6 +202,11 @@ gtb update B-spring-config-homework san.zhang si.li
 gtb update -b B-spring-config-homework
 ```
 
+接受所有 repository invitations：
+```shell
+gtb join B-basic-quiz
+```
+
 ## TODO
 
 * 目前 build project 时前端支持的是 yarn，考虑未来增加更多支持；
@@ -201,6 +221,7 @@ gtb update -b B-spring-config-homework
 * 增加 `name` 子命令；
 * 增加 `checkout` 子命令用于查看指定时间的作业的版本；
 * 增加帮助看作业，过滤作业里的 comments，自动按照维度、加减分整理出来最终的 list，可以直接粘贴使用；
+* ~~增加 `join` 子命令；~~
 
 ## Contributors
 
