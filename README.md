@@ -128,7 +128,7 @@ gtb build <repo-name> [student names|tag]
 
 #### 参数说明：
 
-`<repo-name>`：要构建的 homework 或者是 quiz 所对应的 repository 的名字；
+`<repo-name>`：要构建的 homework/quiz 所对应的 repository 的名字；
 
 `[student names]`：限制只构建指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
 
@@ -164,7 +164,7 @@ gtb update [options] <repo-name> [student names|tag]
 
 #### 参数说明：
 
-`<repo-name>`：要更新的 homework 或者是 quiz 所对应的 repository 的名字；
+`<repo-name>`：要更新的 homework/quiz 所对应的 repository 的名字；
 
 `[student names]`：限制更新指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
 
