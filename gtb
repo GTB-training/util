@@ -121,7 +121,7 @@ join_repos() {
     while read -r cid id cname name clogin login
     do
         info "about to accept invitation from user ${login}..."
-        run "gh api -X PATCH /user/repository_invitations/${id}"
+        run "gh api -X PATCH --silent /user/repository_invitations/${id}"
 
         [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
     done < $INVITATIONS_FILE
