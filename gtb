@@ -118,6 +118,11 @@ join_repos() {
     info "Found $login_list_size invitations for repo ${REPO_NAME} from following users:"
     cat $INVITATIONS_FILE | cut -d' ' -f7 | cat -n
 
+    if [[ "$AUTO_ACCEPT" == "false" ]]
+    then
+        return
+    fi
+
     while read -r cid id cname name clogin login
     do
         info "about to accept invitation from user ${login}..."
@@ -219,6 +224,7 @@ OPTIND=1
 
 AUTO_UPDATE="false"
 AUTO_BUILD="false"
+AUTO_ACCEPT="true"
 
 while :; do
     case $1 in
@@ -227,6 +233,9 @@ while :; do
             ;;
         -b|--build)
             AUTO_BUILD="true"
+            ;;
+        -l|--list)
+            AUTO_ACCEPT="false"
             ;;
         --)
             shift
