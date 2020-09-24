@@ -69,7 +69,7 @@ clone_repo() {
     fi
 }
 
-update-repo() {
+update_repo() {
     local student_homework_path=$1
 
     run "cd $student_homework_path"
@@ -89,7 +89,7 @@ clone_or_update_repo() {
 
     if [[ -d $STUDENT_HOMEWORK_PATH ]] && [[ "$AUTO_UPDATE" == "true" ]]
     then
-        update-repo $STUDENT_HOMEWORK_PATH
+        update_repo $STUDENT_HOMEWORK_PATH
     elif [[ -d $STUDENT_HOMEWORK_PATH ]] && [[ "$AUTO_UPDATE" != "true" ]]
     then
         info "Repo ${repo_name} for student $fullname has already been downloaded."
