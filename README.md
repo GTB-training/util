@@ -181,30 +181,25 @@ gtb update [options] <repo-name> [student names|tag]
 gtb join <repo-name>
 ```
 
+#### 可选的 options 有：
+
+`-l|--list`：只列出已有的 invitations，并不进行 accept 操作；
+
+
 #### 参数说明：
 
 `<repo-name>`：要接受 invitation 的 homework/quiz 所对应的 repository 的名字；
 
 #### 示例：
 
-更新所有学员`B-spring-config-homework`的 repositories：
+接受所有 `B-spring-config-homework` 的 repository invitations：
 ```shell
-gtb update B-spring-config-homework
+gtb join B-spring-config-homework
 ```
 
-只更新指定学员`B-spring-config-homework`的 repositories：
+列出所有 `B-spring-config-homework` 的 repository invitations：
 ```shell
-gtb update B-spring-config-homework san.zhang si.li
-```
-
-更新并执行构建操作：
-```shell
-gtb update -b B-spring-config-homework
-```
-
-接受所有 repository invitations：
-```shell
-gtb join B-basic-quiz
+gtb join -l B-spring-config-homework
 ```
 
 ## TODO
