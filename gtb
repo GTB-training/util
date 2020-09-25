@@ -116,7 +116,9 @@ join_repos() {
     fi
 
     info "Found $login_list_size invitations for repo ${REPO_NAME} from following users:"
-    cat $INVITATIONS_FILE | cut -d' ' -f7 | cat -n
+    cat $INVITATIONS_FILE | cut -d' ' -f7 | \
+        xargs -I % grep '\<%\>' $GTB_STUDENTS_FILE | \
+        cut -d' ' -f1-2 | sort | cat -n
 
     if [[ "$AUTO_ACCEPT" == "false" ]]
     then
