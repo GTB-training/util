@@ -204,6 +204,7 @@ gtb join -l B-spring-config-homework
 
 ## TODO
 
+* 支持指定 `--terms`，值为逗号分隔，这样可以把往届的学员都写到一个 students 文件中；
 * 目前 build project 时前端支持的是 yarn，考虑未来增加更多支持；
 * 兼容性问题暂未考虑，使用中遇到时再改；
 * 更新 repo 时，如果 repo 有本地修改的话更新会失败。需要商量一个处理方式，并实施；
