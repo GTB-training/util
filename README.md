@@ -59,6 +59,7 @@ peng.tian ifeelcold1824 group2 team3
 * build：批量构建已下载到本地的 repositories；
 * update：批量更新已下载到本地的 repositories；
 * join：批量接受指定 homework/quiz 的 repository invitations；
+* comments：自动把留在 code repo 里的 comments 提取并格式化；
 
 ### gtb init
 
@@ -200,6 +201,18 @@ gtb join B-spring-config-homework
 列出所有 `B-spring-config-homework` 的 repository invitations：
 ```shell
 gtb join -l B-spring-config-homework
+```
+
+### gtb comments
+
+自动把留在 code repo 里的 comments 提取并格式化。
+
+需 `cd` 到对应的 repo 的目录下后使用。
+
+#### 用法：
+
+```shell
+gtb comments
 ```
 
 ## TODO
