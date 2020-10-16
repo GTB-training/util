@@ -170,43 +170,43 @@ assert_students_file_exists() {
 _gtb_comments() {
     echo '完成度：'
     echo '======='
-    grep '\/\/ TODO GTB-1: \*' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-1: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo 'Details:'
-    grep '\/\/ TODO GTB-1: +' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
-    grep '\/\/ TODO GTB-1: -' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-1: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-1: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo '测试：'
     echo '====='
-    grep '\/\/ TODO GTB-2: \*' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-2: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo 'Details:'
-    grep '\/\/ TODO GTB-2: +' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
-    grep '\/\/ TODO GTB-2: -' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-2: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-2: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo '知识点：'
     echo '======='
-    grep '\/\/ TODO GTB-3: \*' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-3: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo 'Details:'
-    grep '\/\/ TODO GTB-3: +' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
-    grep '\/\/ TODO GTB-3: -' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-3: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-3: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo '工程实践：'
     echo '========='
-    grep '\/\/ TODO GTB-4: \*' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-4: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo 'Details:'
-    grep '\/\/ TODO GTB-4: +' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
-    grep '\/\/ TODO GTB-4: -' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-4: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-4: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo '综合：'
     echo '====='
-    grep '\/\/ TODO GTB-0: \*' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-0: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
     echo
     echo 'Details:'
-    grep '\/\/ TODO GTB-0: +' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
-    grep '\/\/ TODO GTB-0: -' -R * | sed 's/^.*\/\/ TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-0: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
+    grep '\/\/ *TODO GTB-0: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
 }
 
 _gtb_join() {
