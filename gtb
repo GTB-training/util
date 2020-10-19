@@ -167,46 +167,75 @@ assert_students_file_exists() {
     fi
 }
 
+extract_comment_context() {
+    while read -r line
+    do
+        echo "$line" | \
+            sed 's:^.*TODO ::g' | \
+            sed 's: \{1,\}-->$::g' | \
+            sed 's: \{1,\}\*/}$::g' | \
+            sed 's: \{1,\}\*/$::g' | \
+            cut -d' ' -f2-
+    done
+}
+
+extract_summary_comments_for_dimension() {
+    local DIMENSION=${1:?dimension code is required!}
+    grep "TODO GTB-${DIMENSION}: \*" -R * | \
+        extract_comment_context
+}
+
+extract_detail_comments_for_dimension() {
+    local DIMENSION=${1:?dimension code is required!}
+    local SYMBOL=${2:?symbol is required!}
+
+    grep "TODO GTB-${DIMENSION}: ${SYMBOL}" -R * | \
+        extract_comment_context | \
+        sed "s:^:${SYMBOL} \\\\:"
+}
+
 _gtb_comments() {
-    echo '完成度：'
-    echo '======='
-    grep '\/\/ *TODO GTB-1: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo 'Details:'
-    grep '\/\/ *TODO GTB-1: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    grep '\/\/ *TODO GTB-1: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo '测试：'
-    echo '====='
-    grep '\/\/ *TODO GTB-2: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo 'Details:'
-    grep '\/\/ *TODO GTB-2: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    grep '\/\/ *TODO GTB-2: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo '知识点：'
-    echo '======='
-    grep '\/\/ *TODO GTB-3: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo 'Details:'
-    grep '\/\/ *TODO GTB-3: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    grep '\/\/ *TODO GTB-3: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo '工程实践：'
-    echo '========='
-    grep '\/\/ *TODO GTB-4: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo 'Details:'
-    grep '\/\/ *TODO GTB-4: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    grep '\/\/ *TODO GTB-4: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo '综合：'
-    echo '====='
-    grep '\/\/ *TODO GTB-0: \*' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    echo
-    echo 'Details:'
-    grep '\/\/ *TODO GTB-0: +' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
-    grep '\/\/ *TODO GTB-0: -' -R * | sed 's/^.*\/\/ *TODO //g' | cut -d' ' -f2-
+    cat <<-EOF > comments.md
+完成度：
+=======
+$(extract_summary_comments_for_dimension 1)
+
+Details:
+$(extract_detail_comments_for_dimension 1 '+')
+$(extract_detail_comments_for_dimension 1 '-')
+
+测试：
+=====
+$(extract_summary_comments_for_dimension 2)
+
+Details:
+$(extract_detail_comments_for_dimension 2 '+')
+$(extract_detail_comments_for_dimension 2 '-')
+
+知识点：
+=======
+$(extract_summary_comments_for_dimension 3)
+
+Details:
+$(extract_detail_comments_for_dimension 3 '+')
+$(extract_detail_comments_for_dimension 3 '-')
+
+工程实践：
+=========
+$(extract_summary_comments_for_dimension 4)
+
+Details:
+$(extract_detail_comments_for_dimension 4 '+')
+$(extract_detail_comments_for_dimension 4 '-')
+
+综合：
+=====
+$(extract_summary_comments_for_dimension 0)
+
+Details:
+$(extract_detail_comments_for_dimension 0 '+')
+$(extract_detail_comments_for_dimension 0 '-')
+EOF
 }
 
 _gtb_join() {

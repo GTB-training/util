@@ -205,9 +205,16 @@ gtb join -l B-spring-config-homework
 
 ### gtb comments
 
-自动把留在 code repo 里的 comments 提取并格式化。
+自动把留在 code repo 里的 comments 提取并格式化输出到当前目录下的 `comments.md` 文件中。
 
 需 `cd` 到对应的 repo 的目录下后使用。
+
+支持的注释格式如下：
+
+* `// TODO xxx`
+* `/* TODO xxx */`
+* `<!-- // TODO xxx -->`
+* `{/* // TODO xxx */}`
 
 #### 用法：
 
