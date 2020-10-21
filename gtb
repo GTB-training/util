@@ -237,6 +237,8 @@ Details:
 $(extract_detail_comments_for_dimension 0 '+')
 $(extract_detail_comments_for_dimension 0 '-')
 EOF
+
+    cat comments.md
 }
 
 _gtb_join() {
