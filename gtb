@@ -182,7 +182,7 @@ extract_comment_context() {
 
 extract_summary_comments_for_dimension() {
     local DIMENSION=${1:?dimension code is required!}
-    grep "TODO GTB-${DIMENSION}: \*" -R ${GTB_EXCLUDE_DIRS[@]} * | \
+    grep "TODO GTB-\(${DIMENSION}\): \*" -R ${GTB_EXCLUDE_DIRS[@]} * | \
         extract_comment_context
 }
 
@@ -190,7 +190,7 @@ extract_detail_comments_for_dimension() {
     local DIMENSION=${1:?dimension code is required!}
     local SYMBOL=${2:?symbol is required!}
 
-    grep "TODO GTB-${DIMENSION}: ${SYMBOL}" -R ${GTB_EXCLUDE_DIRS[@]} * | \
+    grep "TODO GTB-\(${DIMENSION}\): ${SYMBOL}" -R ${GTB_EXCLUDE_DIRS[@]} * | \
         extract_comment_context | \
         sed "s:^:${SYMBOL} \\\\:"
 }
