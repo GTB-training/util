@@ -211,15 +211,76 @@ gtb join -l B-spring-config-homework
 
 支持的注释格式如下：
 
-* `// TODO xxx`
-* `/* TODO xxx */`
-* `<!-- // TODO xxx -->`
-* `{/* // TODO xxx */}`
+* `// TODO GTB-{category}: xxx`
+* `/* TODO GTB-{category}: xxx */`
+* `<!-- // TODO GTB-{category}: xxx -->`
+* `{/* // TODO GTB-{category}: xxx */}`
+
+`category` 的取值为 5 个作业评价维度：综合、完成度、测试、知识点、工程实践。建议使用 IDEA 的 live template 功能来简化上述注释的编写。
+
+`xxx` 部分的格式为：`{symbol} text`。`symbol` 的取值有：`*`、 `+`、 `-`。含义分别如下：
+* `*` 表示针对当前维度的总结性评价；
+* `+` 针对某个 WELL 的代码细节的评价；
+* `-` 针对某个 LESS WELL 的代码细节的评价；
 
 #### 用法：
 
 ```shell
 gtb comments
+完成度：
+=======
+* foobar 1
+* foobar 2
+
+Details:
++ \+ foo 1
++ \+ foo 2
+- \- bar 1
+- \- bar 2
+
+测试：
+=====
+* foobar 1
+* foobar 2
+
+Details:
++ \+ foo 1
++ \+ foo 2
+- \- bar 1
+- \- bar 2
+
+知识点：
+=======
+* foobar 1
+* foobar 2
+
+Details:
++ \+ foo 1
++ \+ foo 2
+- \- bar 1
+- \- bar 2
+
+工程实践：
+=========
+* foobar 1
+* foobar 2
+
+Details:
++ \+ foo 1
++ \+ foo 2
+- \- bar 1
+- \- bar 2
+
+综合：
+=====
+* foobar 1
+* foobar 2
+
+Details:
++ \+ foo 1
++ \+ foo 2
+- \- bar 1
+- \- bar 2
 ```
 
 ## TODO
