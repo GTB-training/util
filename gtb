@@ -6,7 +6,7 @@ GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 SUBCMD_PREFIX='_gtb'
 
-SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join.)}
+SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, check.)}
 shift
 
 info() {
@@ -245,6 +245,24 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 EOF
 
     cat comments.md
+}
+
+_gtb_check() {
+    while read -r FULLNAME USERNAME TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                if curl -s -I "https://github.com/$USERNAME" | grep --silent 'status: 200 OK'
+                then
+                    info "$TERM_NAME $FULLNAME $USERNAME"
+                else
+                    error "$TERM_NAME $FULLNAME $USERNAME"
+                fi
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
 }
 
 _gtb_join() {

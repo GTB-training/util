@@ -60,6 +60,7 @@ peng.tian ifeelcold1824 term01 group2 team1
 `gtb` 提供了以下子命令来完成上述功能：
 
 * init：用于初始化运行所需的环境，比如创建空的 `students.txt` 文件；
+* check：自动批量检查 GitHub username 是否存在；
 * clone：批量下载 repositories；
 * build：批量构建已下载到本地的 repositories；
 * update：批量更新已下载到本地的 repositories；
@@ -75,6 +76,44 @@ gtb init
 ```
 
 如果 `students.txt` 文件已存在，则不会执行任何操作。如果文件不存在，则创建空的 `students.txt` 文件。
+
+### gtb check
+
+自动批量检查 GitHub username 是否存在。
+
+#### 用法：
+
+```shell
+gtb check [student names|tag]
+```
+
+```shell
+GTB_TERM=xxx gtb check [student names|tag]
+```
+
+#### 参数说明：
+
+`[student names]`：限制只检查指定学员，而不是 `students.txt` 中的所有学员；
+`[tag]`：限制只检查指定 tag 对应的学员，而不是 `students.txt` 中的所有学员；
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
+
+#### 示例：
+
+检查当前默认 term 的所有学员：
+```shell
+gtb check
+```
+
+检查当前默认 term 的 team1 里的学员：
+```shell
+gtb check team1
+```
+
+指定检查 term04 的所有学员：
+```shell
+GTB_TERM=term04 gtb check
+```
 
 ### gtb clone
 
