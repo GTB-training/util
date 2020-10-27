@@ -1,6 +1,7 @@
 #!/bin/bash
 
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
+GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (term01, term02, etc.)}"
 GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 SUBCMD_PREFIX='_gtb'
@@ -32,7 +33,8 @@ run() {
 build_repo() {
     local repo_name=$1
     local fullname=$2
-    local HOMEWORK_ROOT="$GTB_ROOT/$repo_name"
+    local term_name=$3
+    local HOMEWORK_ROOT="$GTB_ROOT/$term_name/$repo_name"
     local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
 
     if [[ ! -d $STUDENT_HOMEWORK_PATH ]]
@@ -56,7 +58,8 @@ clone_repo() {
     local repo_name=$1
     local username=$2
     local fullname=$3
-    local HOMEWORK_ROOT="$GTB_ROOT/$repo_name"
+    local term_name=$4
+    local HOMEWORK_ROOT="$GTB_ROOT/$term_name/$repo_name"
     local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
     local STUDENT_HOMEWORK_URL="git@github.com:${username}/${repo_name}.git"
 
@@ -85,7 +88,8 @@ update_repo() {
 clone_or_update_repo() {
     local repo_name=$1
     local fullname=$3
-    local HOMEWORK_ROOT="$GTB_ROOT/$repo_name"
+    local term_name=$4
+    local HOMEWORK_ROOT="$GTB_ROOT/$term_name/$repo_name"
     local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
 
     if [[ -d $STUDENT_HOMEWORK_PATH ]] && [[ "$AUTO_UPDATE" == "true" ]]
@@ -141,21 +145,27 @@ build_repos() {
         return
     fi
 
-    while read -r FULLNAME USERNAME TAGS
+    while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
-        if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
         then
-            build_repo $REPO_NAME $FULLNAME
+            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                build_repo $REPO_NAME $FULLNAME $TERM_NAME
+            fi
         fi
     done < $GTB_STUDENTS_FILE
 }
 
 clone_or_update_repos() {
-    while read -r FULLNAME USERNAME TAGS
+    while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
-        if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
         then
-            clone_or_update_repo $REPO_NAME $USERNAME $FULLNAME
+            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                clone_or_update_repo $REPO_NAME $USERNAME $FULLNAME $TERM_NAME
+            fi
         fi
     done < $GTB_STUDENTS_FILE
 }

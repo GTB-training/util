@@ -24,6 +24,10 @@ brew install GTB-training/gtb/util
 
 所有需要的初始设置和使用中产生的数据都会放到`GTB_ROOT`目录中，默认位置是`$HOME/code/gtb`，如需指定其它位置，请自行设置环境变量`GTB_ROOT`的值即可。
 
+### GTB_TERM
+
+当前默认的学期。此变量无默认值，如未设置，命令将无法正常运行。请在您的 SHELL 初始化文件中加以设置。
+
 ### GTB_STUDENTS_FILE
 
 学员的信息通过`students.txt`文件提供，默认位置为`$GTB_ROOT/students.txt`，如需自定义位置，请设置环境变量`GTB_STUDENTS_FILE`的值。
@@ -31,15 +35,16 @@ brew install GTB-training/gtb/util
 `students.txt`内容示例：
 
 ```shell
-$ cat students.txt group1 team1
-yuqi.wang Uncontrollablly group1 team2
-peng.tian ifeelcold1824 group2 team3
+$ cat students.txt
+yuqi.wang Uncontrollablly term01 group1 team1
+peng.tian ifeelcold1824 term01 group2 team1
 ```
 
-每行表示一个学员，有 2+ 列，列之间由空格分隔：
+每行表示一个学员，有 3+ 列，列之间由空格分隔：
 
 1. 第一列是学员名字的拼音全拼；
 1. 第二列是学员 Github username；
+1. 第三列是学员所在学期，如：term01、term02 等；
 1. 后续列为自定义的 tags，每个 tag 一列，每行的 tags 根据需要设置，数量不必一致；
 
 **名字拼音请勿包含空格！**
@@ -83,6 +88,10 @@ gtb init
 gtb clone [options] <repo-name> [student names|tag]
 ```
 
+```shell
+GTB_TERM=xxx gtb clone [options] <repo-name> [student names|tag]
+```
+
 #### 可选的 options 有：
 
 `-u`：如果 repo 已下载，则更新 repo，否则会输出提示信息并跳过该 repo；
@@ -95,6 +104,8 @@ gtb clone [options] <repo-name> [student names|tag]
 
 `[student names]`：限制只下载指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
 `[tag]`：限制只下载指定 tag 的 repositories，而不是 `students.txt` 中所有学员的 repositories，只支持同时指定最多一个 tag；
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
 
 #### 示例：
 
@@ -128,6 +139,10 @@ gtb clone -b B-spring-config-homework
 gtb build <repo-name> [student names|tag]
 ```
 
+```shell
+GTB_TERM=xxx gtb build <repo-name> [student names|tag]
+```
+
 #### 参数说明：
 
 `<repo-name>`：要构建的 homework/quiz 所对应的 repository 的名字；
@@ -135,6 +150,8 @@ gtb build <repo-name> [student names|tag]
 `[student names]`：限制只构建指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
 
 `[tag]`：限制只下载指定 tag 的 repositories，而不是 `students.txt` 中所有学员的 repositories，只支持同时指定最多一个 tag；
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
 
 #### 示例：
 
