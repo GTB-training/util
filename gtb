@@ -5,7 +5,7 @@ GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 SUBCMD_PREFIX='_gtb'
 
-SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update.)}
+SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join.)}
 shift
 
 info() {
