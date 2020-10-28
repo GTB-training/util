@@ -106,7 +106,7 @@ clone_or_update_repo() {
 join_repos() {
     readonly INVITATIONS_FILE="/tmp/gtb_invatations_${REPO_NAME}.txt"
 
-    gh api /user/repository_invitations | jsonpp | \
+    gh api '/user/repository_invitations?per_page=100' | jsonpp | \
         grep --color=never '^    "id":\|^      "name":\|^        "login":' | \
         paste -d' ' - - - | \
         tr -d ', :' | tr -s '"' | tr '"' ' ' | \
