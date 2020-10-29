@@ -20,6 +20,14 @@ brew install GTB-training/gtb/util
 
 ## Set Up
 
+### GITHUB_USERNAME
+
+GitHub 的 username，调用 GitHub API 时用于认证。
+
+### GITHUB_TOKEN
+
+GitHub 的 token，调用 GitHub API 时用于认证。请确保该 token 具备足够的权限。去[生成!](https://github.com/settings/tokens) token。
+
 ### GTB_ROOT
 
 所有需要的初始设置和使用中产生的数据都会放到`GTB_ROOT`目录中，默认位置是`$HOME/code/gtb`，如需指定其它位置，请自行设置环境变量`GTB_ROOT`的值即可。
@@ -61,6 +69,7 @@ peng.tian ifeelcold1824 term01 group2 team1
 
 * init：用于初始化运行所需的环境，比如创建空的 `students.txt` 文件；
 * check：自动批量检查 GitHub username 是否存在；
+* show：显示有哪些学员创建了指定 repo，哪些没有创建指定 repo；
 * clone：批量下载 repositories；
 * build：批量构建已下载到本地的 repositories；
 * update：批量更新已下载到本地的 repositories；
@@ -113,6 +122,51 @@ gtb check team1
 指定检查 term04 的所有学员：
 ```shell
 GTB_TERM=term04 gtb check
+```
+
+### gtb show
+
+显示学员名单里，哪些学员创建了指定 repo，哪些没有创建指定 repo。
+
+#### 用法：
+
+```shell
+gtb show <repo-name> [student names|tag]
+```
+
+```shell
+GTB_TERM=xxx gtb show <repo-name> [student names|tag]
+```
+
+#### 参数说明：
+
+`<repo-name>`：要下载的 homework 或者是 quiz 所对应的 repository 的名字；
+
+`[student names]`：限制只下载指定学员的 repositories，而不是 `students.txt` 中所有学员的 repositories；
+`[tag]`：限制只下载指定 tag 的 repositories，而不是 `students.txt` 中所有学员的 repositories，只支持同时指定最多一个 tag；
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
+
+#### 示例：
+
+查看默认 term 的所有学员对 repo `B-spring-config-homework`的创建情况：
+```shell
+gtb show B-spring-config-homework
+```
+
+查看指定 term 的所有学员对 repo `B-spring-config-homework`的创建情况：
+```shell
+GTB_TERM=term04 gtb show B-spring-config-homework
+```
+
+查看指定的学员对 repo `B-spring-config-homework`的创建情况：
+```shell
+gtb show B-spring-config-homework zhang.san li.si
+```
+
+查看指定 tag 对应的学员对 repo `B-spring-config-homework`的创建情况：
+```shell
+gtb show B-spring-config-homework
 ```
 
 ### gtb clone
