@@ -155,7 +155,7 @@ gtb clone B-spring-config-homework
 
 只下载指定学员`B-spring-config-homework`的 repositories：
 ```shell
-gtb clone B-spring-config-homework san.zhang si.li
+gtb clone B-spring-config-homework zhang.san li.si
 ```
 
 下载或更新 repositories：
@@ -201,7 +201,7 @@ gtb build B-spring-config-homework
 
 只构建指定学员`B-spring-config-homework`的 repositories：
 ```shell
-gtb build B-spring-config-homework san.zhang si.li
+gtb build B-spring-config-homework zhang.san li.si
 ```
 
 ### gtb update
