@@ -248,13 +248,18 @@ EOF
 }
 
 _gtb_check() {
+    assert_students_file_exists
+
+    GITHUB_USERNAME="${GITHUB_USERNAME:?GITHUB_USERNAME should be set!}"
+    GITHUB_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN should be set!}"
+
     while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
         then
             if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if curl -s -I "https://github.com/$USERNAME" | grep --silent 'status: 200 OK'
+                if curl -s -u $GITHUB_USERNAME:$GITHUB_TOKEN "https://api.github.com/users/$USERNAME" | tac | tac | grep --silent "\"login\": \"$USERNAME\""
                 then
                     info "$TERM_NAME $FULLNAME $USERNAME"
                 else
