@@ -75,6 +75,7 @@ peng.tian ifeelcold1824 term01 group2 team1
 * update：批量更新已下载到本地的 repositories；
 * join：批量接受指定 homework/quiz 的 repository invitations；
 * comments：自动把留在 code repo 里的 comments 提取并格式化；
+* help：显示帮助信息；
 
 ### gtb init
 
@@ -395,12 +396,12 @@ Details:
 
 ## TODO
 
-* 支持指定 `--terms`，值为逗号分隔，这样可以把往届的学员都写到一个 students 文件中；
+* ~~支持指定 `--terms`，值为逗号分隔，这样可以把往届的学员都写到一个 students 文件中；~~
 * 目前 build project 时前端支持的是 yarn，考虑未来增加更多支持；
 * 兼容性问题暂未考虑，使用中遇到时再改；
 * 更新 repo 时，如果 repo 有本地修改的话更新会失败。需要商量一个处理方式，并实施；
 * 处理错误场景：repo 不存在的情况；
-* 支持显示 usage；
+* ~~支持显示 usage；~~
 * 下载和更新操作也许可以优化为并行操作，缩短等待时间；
 * 增加 `cd` 子命令；
 * 改为 source 的方式来使用？这样能改变当前目录，从而使 cd 子命令成为可能；
