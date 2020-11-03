@@ -56,7 +56,7 @@ build_repo() {
     if [[ -f "package.json" ]]; then
         run "yarn"
     elif [[ -f "build.gradle" ]]; then
-        run "./gradlew --console plain build </dev/null"
+        run "./gradlew build </dev/null"
     else
         error "Failed to build project due to unknown build tool!"
     fi
