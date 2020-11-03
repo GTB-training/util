@@ -30,6 +30,14 @@ run() {
     eval $*
 }
 
+strip_colors() {
+    while read -r line
+    do
+        echo "$line" | \
+            sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g'
+    done
+}
+
 build_repo() {
     local repo_name=$1
     local fullname=$2
@@ -170,6 +178,14 @@ clone_or_update_repos() {
     done < $GTB_STUDENTS_FILE
 }
 
+assert_repo_exists() {
+    if [[ ! -f $GTB_STUDENTS_FILE ]]
+    then
+        error "Cannot find students file: '$GTB_STUDENTS_FILE'."
+        exit 1
+    fi
+}
+
 assert_students_file_exists() {
     if [[ ! -f $GTB_STUDENTS_FILE ]]
     then
@@ -209,6 +225,7 @@ _gtb_comments() {
     cat <<-EOF > comments.md
 ### 完成度：
 $(extract_summary_comments_for_dimension '1\|完成度')
+* 具体验收测试结果详见：`gtb-test-results.md`
 
 __Details:__
 $(extract_detail_comments_for_dimension '1\|完成度' '+')
@@ -270,16 +287,31 @@ _gtb_check() {
     done < $GTB_STUDENTS_FILE
 }
 
-_gtb_ac() {
-    readonly AC_FILE='/tmp/gtb_ac.txt'
-    run "./gradlew --console plain --rerun-tasks test </dev/null | grep 'Test _' > $AC_FILE"
-    for f in $(cat $AC_FILE | cut -d'_' -f2 | sort -u)
+_gtb_test() {
+    local REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    local FULLNAME=${2:?Trainee name is required! (e.g. zhang.san, li.si, etc.)}
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERM/$REPO_NAME/$FULLNAME"
+    local HOMEWORK_TESTS_ROOT="$GTB_ROOT/${REPO_NAME}-ac"
+    local TEST_OUTPUT_FILE='/tmp/gtb_gradle_test_output.log'
+
+    [[ -d $HOMEWORK_ROOT ]] || error "Cannot find homework: $HOMEWORK_ROOT"
+    [[ -d $HOMEWORK_TESTS_ROOT ]] || error "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
+
+    info "Start running acceptance tests..."
+    ( cd $HOMEWORK_TESTS_ROOT && \
+        run "./gradlew --rerun-tasks test < /dev/null" | \
+        tee /dev/tty | \
+        strip_colors > $TEST_OUTPUT_FILE )
+
+    echo
+    info "Start generating test results..."
+    for f in $(cat $TEST_OUTPUT_FILE | grep 'Test _'  | cut -d'_' -f2 | sort -u)
     do
         echo $f
         echo '======='
-        cat $AC_FILE | grep $f | cut -d'_' -f3 | sed -e 's/^/* /' -e 's/ PASSED//'
+        cat $TEST_OUTPUT_FILE | grep $f | cut -d'_' -f3 | sed -e 's/^/* /' -e 's/ PASSED//'
         echo
-    done > ac.md
+    done | tee $HOMEWORK_ROOT/gtb-test-results.md
 }
 
 _gtb_join() {

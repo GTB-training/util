@@ -74,6 +74,7 @@ peng.tian ifeelcold1824 term01 group2 team1
 * build：批量构建已下载到本地的 repositories；
 * update：批量更新已下载到本地的 repositories；
 * join：批量接受指定 homework/quiz 的 repository invitations；
+* test: 对指定 quiz 指定学员的 repo 运行验收测试；
 * comments：自动把留在 code repo 里的 comments 提取并格式化；
 * help：显示帮助信息；
 
@@ -297,7 +298,6 @@ gtb join <repo-name>
 
 `-l|--list`：只列出已有的 invitations，并不进行 accept 操作；
 
-
 #### 参数说明：
 
 `<repo-name>`：要接受 invitation 的 homework/quiz 所对应的 repository 的名字；
@@ -312,6 +312,36 @@ gtb join B-spring-config-homework
 列出所有 `B-spring-config-homework` 的 repository invitations：
 ```shell
 gtb join -l B-spring-config-homework
+```
+
+### gtb test
+
+对学员的 repo 进行验收测试，并输出测试结果到 `gtb-test-results.md`。方便讲师对`完成度`维度进行评价和打分。
+
+#### 用法：
+
+```shell
+gtb test <repo-name> <student name>
+```
+
+```shell
+GTB_TERM=xxx gtb test <repo-name> <student name>
+```
+
+#### 参数说明：
+
+`<repo-name>`：要测试的 homework/quiz 所对应的 repository 的名字；
+
+`<student names>`：要测试的学员的名字；
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
+
+#### 示例：
+
+测试学员 `zhang.san` 的 `B-final-quiz`：
+
+```shell
+gtb test B-final-quiz zhang.san
 ```
 
 ### gtb comments
