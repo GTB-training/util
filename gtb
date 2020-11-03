@@ -225,7 +225,7 @@ _gtb_comments() {
     cat <<-EOF > comments.md
 ### 完成度：
 $(extract_summary_comments_for_dimension '1\|完成度')
-* 具体验收测试结果详见：\`gtb-test-results.md\`
+$([ -f ./gtb-test-results.md ] && echo '* 具体验收测试结果详见：`gtb-test-results.md`')
 
 __Details:__
 $(extract_detail_comments_for_dimension '1\|完成度' '+')
