@@ -218,9 +218,17 @@ extract_detail_comments_for_dimension() {
         sed "s:^:${SYMBOL} \\\\:"
 }
 
-_gtb_comments() {
-    local GTB_COMMENTS_FILE="gtb-comments.md"
-    cat <<-EOF | tee $GTB_COMMENTS_FILE
+strip_blank_details_block() {
+    cat $1 | \
+        tr '\n' '\t' | \
+        sed 's/__Details:__		/__Details:__	/g' | \
+        sed 's/__Details:__			//g' | \
+        sed 's/	\{3,\}/		/g' | \
+        tr '\t' '\n'
+}
+
+extract_and_format_comments() {
+    cat <<-EOF
 ### 完成度：
 $(extract_summary_comments_for_dimension '1\|完成度')
 $([ -f ./gtb-test-results.md ] && echo '* 具体验收测试结果详见：`gtb-test-results.md`')
@@ -258,6 +266,14 @@ $(extract_detail_comments_for_dimension '0\|综合' '+')
 $(extract_detail_comments_for_dimension '0\|综合' '-')
 
 EOF
+}
+
+_gtb_comments() {
+    local GTB_TMP_COMMENTS_FILE="/tmp/gtb-comments.md"
+    local GTB_COMMENTS_FILE="gtb-comments.md"
+
+    extract_and_format_comments > $GTB_TMP_COMMENTS_FILE
+    strip_blank_details_block $GTB_TMP_COMMENTS_FILE | tee $GTB_COMMENTS_FILE
 }
 
 _gtb_check() {
