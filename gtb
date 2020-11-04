@@ -218,6 +218,40 @@ extract_detail_comments_for_dimension() {
         sed "s:^:${SYMBOL} \\\\:"
 }
 
+prepare_run_context() {
+    local HOMEWORK_ROOT=${1:?homework root is required!}
+    local HOMEWORK_TESTS_ROOT=${2:?homework tests root is required!}
+
+    cd "$HOMEWORK_ROOT"
+    run "cp $HOMEWORK_TESTS_ROOT/docker/* ."
+    run "cp settings.gradle settings.gradle.backup"
+    run $'echo "rootProject.name = \'gtb-quiz\'" > settings.gradle'
+}
+
+clear_run_context() {
+    local HOMEWORK_ROOT=${1:?homework root is required!}
+
+    cd "$HOMEWORK_ROOT"
+    run "rm application-docker.properties"
+    run "rm wait-for-it.sh"
+    run "rm Dockerfile"
+    run "rm docker-compose.yml"
+    run "mv settings.gradle.backup settings.gradle"
+}
+
+ensure_application_is_ready() {
+    echo "waiting ready..."
+    while :; do
+        sleep 1
+        curl http://localhost:8080 > /dev/null 2>&1
+        if [[ $? == "0" ]]
+        then
+            echo "application is ready"
+            break
+        fi
+    done
+}
+
 _gtb_comments() {
     local GTB_COMMENTS_FILE="gtb-comments.md"
     cat <<-EOF | tee $GTB_COMMENTS_FILE
@@ -292,29 +326,14 @@ _gtb_up() {
     [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
     [[ -d $HOMEWORK_TESTS_ROOT ]] || fail "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
 
+    prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT"
+
     cd "$HOMEWORK_ROOT"
-    run "cp $HOMEWORK_TESTS_ROOT/docker/* ."
-    run "cp settings.gradle settings.gradle.backup"
-    run $'echo "rootProject.name = \'gtb-quiz\'" > settings.gradle'
     run "./gradlew build -x test"
     run "docker-compose up -d --build"
-    echo "waiting..."
 
-    while :; do
-        sleep 1
-        curl http://localhost:8080 > /dev/null 2>&1
-        if [[ $? == "0" ]]
-        then
-            echo "fully up"
-            break
-        fi
-    done
-
-    run "rm application-docker.properties"
-    run "rm wait-for-it.sh"
-    run "rm Dockerfile"
-    run "rm docker-compose.yml"
-    run "mv settings.gradle.backup settings.gradle"
+    clear_run_context "$HOMEWORK_ROOT"
+    ensure_application_is_ready
 }
 
 _gtb_down() {
@@ -326,18 +345,13 @@ _gtb_down() {
     [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
     [[ -d $HOMEWORK_TESTS_ROOT ]] || fail "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
 
-    cd "$HOMEWORK_ROOT"
-    run "cp $HOMEWORK_TESTS_ROOT/docker/* ."
-    run "cp settings.gradle settings.gradle.backup"
+    prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT"
 
+    cd "$HOMEWORK_ROOT"
     run "docker-compose down"
     run "docker rmi gtb-quiz:1.0"
 
-    run "rm application-docker.properties"
-    run "rm wait-for-it.sh"
-    run "rm Dockerfile"
-    run "rm docker-compose.yml"
-    run "mv settings.gradle.backup settings.gradle"
+    clear_run_context "$HOMEWORK_ROOT"
 }
 
 _gtb_test() {
