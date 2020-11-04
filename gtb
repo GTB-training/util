@@ -234,10 +234,9 @@ clear_run_context() {
 
     info "Start clearing run context..."
     cd "$HOMEWORK_ROOT"
-    rm application-docker.properties
-    rm wait-for-it.sh
-    rm Dockerfile
-    rm docker-compose.yml
+    for f in `echo ${HOMEWORK_TESTS_ROOT}/docker/*`; do
+        rm `basename $f`
+    done
     mv settings.gradle.backup settings.gradle
 }
 
