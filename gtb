@@ -219,7 +219,7 @@ extract_detail_comments_for_dimension() {
 }
 
 _gtb_comments() {
-    local GTB_COMMENTS_FILE="comments.md"
+    local GTB_COMMENTS_FILE="gtb-comments.md"
     cat <<-EOF | tee $GTB_COMMENTS_FILE
 ### 完成度：
 $(extract_summary_comments_for_dimension '1\|完成度')
