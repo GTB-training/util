@@ -6,7 +6,7 @@ GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 SUBCMD_PREFIX='_gtb'
 
-SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, ac, check, show, help.)}
+SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, ac, up, down, check, show, help.)}
 shift
 
 info() {
@@ -281,6 +281,63 @@ _gtb_check() {
             fi
         fi
     done < $GTB_STUDENTS_FILE
+}
+
+_gtb_up() {
+    local REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    local FULLNAME=${2:?Trainee name is required! (e.g. zhang.san, li.si, etc.)}
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERM/$REPO_NAME/$FULLNAME"
+    local HOMEWORK_TESTS_ROOT="$GTB_ROOT/${REPO_NAME}-ac"
+
+    [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
+    [[ -d $HOMEWORK_TESTS_ROOT ]] || fail "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
+
+    cd "$HOMEWORK_ROOT"
+    run "cp $HOMEWORK_TESTS_ROOT/docker/* ."
+    run "cp settings.gradle settings.gradle.backup"
+    run $'echo "rootProject.name = \'gtb-quiz\'" > settings.gradle'
+    run "./gradlew build -x test"
+    run "docker-compose up -d --build"
+    echo "waiting..."
+
+    while :; do
+        sleep 1
+        curl http://localhost:8080 > /dev/null 2>&1
+        if [[ $? == "0" ]]
+        then
+            echo "fully up"
+            break
+        fi
+    done
+
+    run "rm application-docker.properties"
+    run "rm wait-for-it.sh"
+    run "rm Dockerfile"
+    run "rm docker-compose.yml"
+    run "mv settings.gradle.backup settings.gradle"
+}
+
+_gtb_down() {
+    local REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    local FULLNAME=${2:?Trainee name is required! (e.g. zhang.san, li.si, etc.)}
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERM/$REPO_NAME/$FULLNAME"
+    local HOMEWORK_TESTS_ROOT="$GTB_ROOT/${REPO_NAME}-ac"
+
+    [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
+    [[ -d $HOMEWORK_TESTS_ROOT ]] || fail "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
+
+    cd "$HOMEWORK_ROOT"
+    run "cp $HOMEWORK_TESTS_ROOT/docker/* ."
+    run "cp settings.gradle settings.gradle.backup"
+
+    run "docker-compose down"
+    run "docker rmi gtb-quiz:1.0"
+
+    run "rm application-docker.properties"
+    run "rm wait-for-it.sh"
+    run "rm Dockerfile"
+    run "rm docker-compose.yml"
+    run "mv settings.gradle.backup settings.gradle"
 }
 
 _gtb_test() {
