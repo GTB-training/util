@@ -222,31 +222,32 @@ prepare_run_context() {
     local HOMEWORK_ROOT=${1:?homework root is required!}
     local HOMEWORK_TESTS_ROOT=${2:?homework tests root is required!}
 
+    info "Start preparing run context..."
     cd "$HOMEWORK_ROOT"
-    run "cp $HOMEWORK_TESTS_ROOT/docker/* ."
-    run "cp settings.gradle settings.gradle.backup"
-    run $'echo "rootProject.name = \'gtb-quiz\'" > settings.gradle'
+    cp ${HOMEWORK_TESTS_ROOT}/docker/* .
+    cp settings.gradle settings.gradle.backup
+    echo "rootProject.name = 'gtb-quiz'" > settings.gradle
 }
 
 clear_run_context() {
     local HOMEWORK_ROOT=${1:?homework root is required!}
 
+    info "Start clearing run context..."
     cd "$HOMEWORK_ROOT"
-    run "rm application-docker.properties"
-    run "rm wait-for-it.sh"
-    run "rm Dockerfile"
-    run "rm docker-compose.yml"
-    run "mv settings.gradle.backup settings.gradle"
+    rm application-docker.properties
+    rm wait-for-it.sh
+    rm Dockerfile
+    rm docker-compose.yml
+    mv settings.gradle.backup settings.gradle
 }
 
 ensure_application_is_ready() {
-    echo "waiting ready..."
+    info "Start waiting application ready..."
     while :; do
         sleep 1
         curl http://localhost:8080 > /dev/null 2>&1
-        if [[ $? == "0" ]]
-        then
-            echo "application is ready"
+        if [[ $? == "0" ]]; then
+            info "application is ready!"
             break
         fi
     done
@@ -328,9 +329,11 @@ _gtb_up() {
 
     prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT"
 
+    info "Start setting up..."
     cd "$HOMEWORK_ROOT"
-    run "./gradlew build -x test"
-    run "docker-compose up -d --build"
+    run "./gradlew build -x test > /dev/null"
+    run "docker-compose build > /dev/null"
+    run "docker-compose up -d > /dev/null"
 
     clear_run_context "$HOMEWORK_ROOT"
     ensure_application_is_ready
@@ -347,9 +350,10 @@ _gtb_down() {
 
     prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT"
 
+    info "Start shutting down..."
     cd "$HOMEWORK_ROOT"
-    run "docker-compose down"
-    run "docker rmi gtb-quiz:1.0"
+    run "docker-compose down > /dev/null"
+    run "docker rmi gtb-quiz:1.0 > /dev/null"
 
     clear_run_context "$HOMEWORK_ROOT"
 }
