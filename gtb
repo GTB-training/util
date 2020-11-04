@@ -219,7 +219,8 @@ extract_detail_comments_for_dimension() {
 }
 
 _gtb_comments() {
-    cat <<-EOF > comments.md
+    local GTB_COMMENTS_FILE="comments.md"
+    cat <<-EOF > $GTB_COMMENTS_FILE
 ### 完成度：
 $(extract_summary_comments_for_dimension '1\|完成度')
 $([ -f ./gtb-test-results.md ] && echo '* 具体验收测试结果详见：`gtb-test-results.md`')
@@ -258,7 +259,7 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 
 EOF
 
-    cat comments.md
+    cat $GTB_COMMENTS_FILE
 }
 
 _gtb_check() {
