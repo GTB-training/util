@@ -242,15 +242,16 @@ clear_run_context() {
 }
 
 ensure_application_is_ready() {
-    info "Start waiting application ready..."
-    while :; do
-        sleep 1
-        curl http://localhost:8080 > /dev/null 2>&1
-        if [[ "$?" -eq 0 ]]; then
-            info "Application is ready!"
-            break
-        fi
-    done
+    local TIMEOUT=${1:?timeout is required!}
+
+    timeout ${TIMEOUT}s bash << "EOF"
+while :; do
+    sleep 1; curl http://localhost:8080 > /dev/null 2>&1
+    [[ "$?" -eq 0 ]] && break
+done
+EOF
+
+    return $?
 }
 
 _gtb_comments() {
@@ -335,10 +336,16 @@ _gtb_up() {
     local RUN_RETURN_CODE=$?
 
     clear_run_context "$HOMEWORK_ROOT"
-    if [[ "$RUN_RETURN_CODE" -eq 0 ]]; then
-        ensure_application_is_ready
+    [[ "$RUN_RETURN_CODE" -eq 0 ]] || fail "Application startup failed!"
+
+    info "Start waiting application ready..."
+    ensure_application_is_ready 60
+    if [[ $? -eq 0 ]]; then
+        info "Application is ready!"
     else
-        fail "Application startup failed!"
+        error "Application ready failed!"
+        _gtb_down $@
+        exit 1
     fi
 
     if [[ "$AUTO_TEST" == "true" ]]; then
