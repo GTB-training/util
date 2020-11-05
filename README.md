@@ -344,6 +344,70 @@ GTB_TERM=xxx gtb test <repo-name> <student name>
 gtb test B-final-quiz zhang.san
 ```
 
+### gtb up
+
+将学员 repo 使用 docker 容器启动起来, 方便进行验收测试，目前仅支持后端 repo。
+
+#### 用法：
+
+```shell
+gtb up <repo-name> <student name>
+```
+
+```shell
+GTB_TERM=xxx gtb up <repo-name> <student name>
+```
+
+#### 参数说明：
+
+`<repo-name>`：要启动容器的 homework/quiz 所对应的 repository 的名字；
+
+`<student names>`：要启动容器的学员的名字；
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
+
+#### 示例：
+
+启动学员 `zhang.san` 的 `B-final-quiz`：
+
+```shell
+gtb up B-final-quiz zhang.san
+```
+
+#### 可选的 options 有：
+
+`-t` 或 `--test`：在启动完成后，自动进行验收测试；
+
+### gtb down
+
+停止并删除 `gtb up` 创建的docker 容器，目前仅支持后端 repo。
+
+#### 用法：
+
+```shell
+gtb down <repo-name> <student name>
+```
+
+```shell
+GTB_TERM=xxx gtb down <repo-name> <student name>
+```
+
+#### 参数说明：
+
+`<repo-name>`：要关闭容器的 homework/quiz 所对应的 repository 的名字；
+
+`<student names>`：要关闭容器的学员的名字；
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
+
+#### 示例：
+
+关闭学员 `zhang.san` 的 `B-final-quiz`的容器：
+
+```shell
+gtb down B-final-quiz zhang.san
+```
+
 ### gtb comments
 
 自动把留在 code repo 里的 comments 提取并格式化输出到当前目录下的 `comments.md` 文件中。
@@ -443,6 +507,7 @@ Details:
 
 ## Contributors
 
-1. 杜娟 jdu@thoughtworks.com
-1. 王晓峰 xifwang@thoughtworks.com
+-. 杜娟 jdu@thoughtworks.com
+-. 王晓峰 xifwang@thoughtworks.com
+-. 张钊 zhaozhang@thoughtworks.com
 
