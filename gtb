@@ -324,6 +324,7 @@ _gtb_up() {
     local FULLNAME=${2:?Trainee name is required! (e.g. zhang.san, li.si, etc.)}
     local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERM/$REPO_NAME/$FULLNAME"
     local HOMEWORK_TESTS_ROOT="$GTB_ROOT/${REPO_NAME}-ac"
+    local DOCKER_ERROR_LOG_FILE='/tmp/docker_error.log'
 
     [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
     [[ -d $HOMEWORK_TESTS_ROOT ]] || fail "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
@@ -332,22 +333,25 @@ _gtb_up() {
 
     info "Start starting up..."
     cd "$HOMEWORK_ROOT"
-    run "./gradlew build -x test && docker-compose up -d --build"
-    local RUN_RETURN_CODE=$?
-
-    clear_run_context "$HOMEWORK_ROOT"
-    [[ "$RUN_RETURN_CODE" -eq 0 ]] || fail "Application startup failed!"
+    run "./gradlew build -x test && docker-compose up -d --build --remove-orphans"
+    if [[ "$?" -ne 0 ]]; then
+        clear_run_context "$HOMEWORK_ROOT"
+        fail "Application startup failed!"
+    fi
 
     info "Start waiting application ready..."
     ensure_application_is_ready 60
-    if [[ $? -eq 0 ]]; then
-        info "Application is ready!"
-    else
-        error "Application ready failed!"
+    if [[ $? -ne 0 ]]; then
+        docker-compose logs -f app > "$DOCKER_ERROR_LOG_FILE"
+        error "Application ready failed! See the error log at file: ${DOCKER_ERROR_LOG_FILE}"
+        clear_run_context "$HOMEWORK_ROOT"
+
         _gtb_down $@
         exit 1
     fi
+    clear_run_context "$HOMEWORK_ROOT"
 
+    info "Application is ready!"
     if [[ "$AUTO_TEST" == "true" ]]; then
         _gtb_test $@
         _gtb_down $@
