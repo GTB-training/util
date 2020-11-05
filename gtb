@@ -335,8 +335,9 @@ _gtb_up() {
     cd "$HOMEWORK_ROOT"
     run "./gradlew build -x test && docker-compose up -d --build --remove-orphans"
     if [[ "$?" -ne 0 ]]; then
+        error "Application startup failed!"
         clear_run_context "$HOMEWORK_ROOT"
-        fail "Application startup failed!"
+        exit 1
     fi
 
     info "Start waiting application ready..."
