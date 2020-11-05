@@ -355,7 +355,11 @@ _gtb_down() {
 
     info "Start shutting down..."
     cd "$HOMEWORK_ROOT"
-    run "docker-compose down --rmi local"
+    if [[ `docker-compose ps -q | wc -l` -ne 0 ]]; then
+        run "docker-compose down --rmi local"
+    else
+        error "Application not startup yet!"
+    fi
 
     clear_run_context "$HOMEWORK_ROOT"
 }
