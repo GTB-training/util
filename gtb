@@ -246,8 +246,8 @@ ensure_application_is_ready() {
     while :; do
         sleep 1
         curl http://localhost:8080 > /dev/null 2>&1
-        if [[ $? == "0" ]]; then
-            info "application is ready!"
+        if [[ "$?" -eq 0 ]]; then
+            info "Application is ready!"
             break
         fi
     done
@@ -329,14 +329,17 @@ _gtb_up() {
 
     prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT" "$REPO_NAME"
 
-    info "Start setting up..."
+    info "Start starting up..."
     cd "$HOMEWORK_ROOT"
-    run "./gradlew build -x test > /dev/null"
-    run "docker-compose build > /dev/null"
-    run "docker-compose up -d > /dev/null"
+    run "./gradlew build -x test && docker-compose up -d --build"
+    local RUN_RETURN_CODE=$?
 
     clear_run_context "$HOMEWORK_ROOT"
-    ensure_application_is_ready
+    if [[ "$RUN_RETURN_CODE" -eq 0 ]]; then
+        ensure_application_is_ready
+    else
+        error "Application startup failed!"
+    fi
 }
 
 _gtb_down() {
