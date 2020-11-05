@@ -355,8 +355,7 @@ _gtb_down() {
 
     info "Start shutting down..."
     cd "$HOMEWORK_ROOT"
-    run "docker-compose down > /dev/null"
-    run "docker rmi gtb-quiz:1.0 > /dev/null"
+    run "docker-compose down --rmi local"
 
     clear_run_context "$HOMEWORK_ROOT"
 }
