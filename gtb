@@ -338,7 +338,12 @@ _gtb_up() {
     if [[ "$RUN_RETURN_CODE" -eq 0 ]]; then
         ensure_application_is_ready
     else
-        error "Application startup failed!"
+        fail "Application startup failed!"
+    fi
+
+    if [[ "$AUTO_TEST" == "true" ]]; then
+        _gtb_test $@
+        _gtb_down $@
     fi
 }
 
@@ -483,6 +488,7 @@ OPTIND=1
 AUTO_UPDATE="false"
 AUTO_BUILD="false"
 AUTO_ACCEPT="true"
+AUTO_TEST="false"
 
 while :; do
     case $1 in
@@ -494,6 +500,9 @@ while :; do
             ;;
         -l|--list)
             AUTO_ACCEPT="false"
+            ;;
+        -t|--test)
+            AUTO_TEST="true"
             ;;
         --)
             shift
