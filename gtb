@@ -221,12 +221,13 @@ extract_detail_comments_for_dimension() {
 prepare_run_context() {
     local HOMEWORK_ROOT=${1:?homework root is required!}
     local HOMEWORK_TESTS_ROOT=${2:?homework tests root is required!}
+    local REPO_NAME=${3:?repository name is required!}
 
     info "Start preparing run context..."
     cd "$HOMEWORK_ROOT"
     cp ${HOMEWORK_TESTS_ROOT}/docker/* .
     cp settings.gradle settings.gradle.backup
-    echo "rootProject.name = 'gtb-quiz'" > settings.gradle
+    echo "rootProject.name = '${REPO_NAME}'" > settings.gradle
 }
 
 clear_run_context() {
@@ -326,7 +327,7 @@ _gtb_up() {
     [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
     [[ -d $HOMEWORK_TESTS_ROOT ]] || fail "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
 
-    prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT"
+    prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT" "$REPO_NAME"
 
     info "Start setting up..."
     cd "$HOMEWORK_ROOT"
@@ -347,7 +348,7 @@ _gtb_down() {
     [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
     [[ -d $HOMEWORK_TESTS_ROOT ]] || fail "Cannot find homework tests: $HOMEWORK_TESTS_ROOT"
 
-    prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT"
+    prepare_run_context "$HOMEWORK_ROOT" "$HOMEWORK_TESTS_ROOT" "$REPO_NAME"
 
     info "Start shutting down..."
     cd "$HOMEWORK_ROOT"
