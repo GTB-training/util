@@ -347,7 +347,7 @@ _gtb_up() {
         error "Application ready failed! See the error log at file: ${DOCKER_ERROR_LOG_FILE}"
         clear_run_context "$HOMEWORK_ROOT"
 
-        _gtb_down $@
+        _gtb_down "$@"
         exit 1
     fi
 
@@ -355,8 +355,8 @@ _gtb_up() {
     clear_run_context "$HOMEWORK_ROOT"
 
     if [[ "$AUTO_TEST" == "true" ]]; then
-        _gtb_test $@
-        _gtb_down $@
+        _gtb_test "$@"
+        _gtb_down "$@"
     fi
 }
 
