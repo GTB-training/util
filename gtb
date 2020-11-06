@@ -381,7 +381,7 @@ _gtb_show() {
         then
             if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if curl -s -u $GITHUB_USERNAME:$GITHUB_TOKEN "https://api.github.com/repos/$USERNAME/$REPO_NAME" | tac | tac| grep --silent "\"name\": \"$REPO_NAME\""
+                if curl -s -u $GITHUB_USERNAME:$GITHUB_TOKEN "https://api.github.com/repos/$USERNAME/$REPO_NAME" | tac | tac | grep --silent "\"name\": \"$REPO_NAME\""
                 then
                     info "$TERM_NAME $FULLNAME $USERNAME"
                 else
