@@ -273,7 +273,7 @@ _gtb_comments() {
     local GTB_COMMENTS_FILE="gtb-comments.md"
 
     extract_and_format_comments > $GTB_TMP_COMMENTS_FILE
-    strip_blank_details_block $GTB_TMP_COMMENTS_FILE | tee $GTB_COMMENTS_FILE
+    strip_blank_details_block $GTB_TMP_COMMENTS_FILE | tee $GTB_COMMENTS_FILE | tee /dev/tty | pbcopy
 }
 
 _gtb_check() {
