@@ -323,7 +323,7 @@ _gtb_test() {
         echo '======='
         cat $TEST_OUTPUT_FILE | grep $f | cut -d'_' -f3 | sed -e 's/^/* /' -e 's/ PASSED//'
         echo
-    done | tee $HOMEWORK_ROOT/gtb-test-results.md
+    done | tee $HOMEWORK_ROOT/gtb-test-results.md | grep --color -E 'FAILED|$'
 }
 
 _gtb_join() {
