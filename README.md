@@ -75,6 +75,8 @@ peng.tian ifeelcold1824 term01 group2 team1
 * update：批量更新已下载到本地的 repositories；
 * join：批量接受指定 homework/quiz 的 repository invitations；
 * test: 对指定 quiz 指定学员的 repo 运行验收测试；
+* up: 将指定的 repo 使用 docker 容器启动起来
+* down: 停止并删除 `gtb up` 创建的 docker 容器
 * comments：自动把留在 code repo 里的 comments 提取并格式化；
 * help：显示帮助信息；
 
@@ -380,7 +382,7 @@ gtb up B-final-quiz zhang.san
 
 ### gtb down
 
-停止并删除 `gtb up` 创建的docker 容器，目前仅支持后端 repo。
+停止并删除 `gtb up` 创建的 docker 容器，目前仅支持后端 repo。
 
 #### 用法：
 
@@ -504,6 +506,7 @@ Details:
 * 增加 `checkout` 子命令用于查看指定时间的作业的版本；
 * ~~增加帮助看作业，过滤作业里的 comments，自动按照维度、加减分整理出来最终的 list，可以直接粘贴使用；~~
 * ~~增加 `join` 子命令；~~
+* 在学员 repo 的目录运行up和down命令时，不需要指定 repo 和学员
 
 ## Contributors
 

@@ -344,7 +344,7 @@ _gtb_up() {
     ensure_application_is_ready 60
     if [[ $? -ne 0 ]]; then
         docker-compose logs -f app > "$DOCKER_ERROR_LOG_FILE"
-        error "Application ready failed! See the error log at file: ${DOCKER_ERROR_LOG_FILE}"
+        error "Application fail to be ready! See the error log at file: ${DOCKER_ERROR_LOG_FILE}"
         clear_run_context "$HOMEWORK_ROOT"
 
         _gtb_down "$@"
