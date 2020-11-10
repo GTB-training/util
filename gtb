@@ -6,7 +6,7 @@ GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 SUBCMD_PREFIX='_gtb'
 
-SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, ac, up, down, check, show, help.)}
+SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
 shift
 
 info() {
@@ -254,9 +254,17 @@ EOF
     return $?
 }
 
-_gtb_comments() {
-    local GTB_COMMENTS_FILE="gtb-comments.md"
-    cat <<-EOF | tee $GTB_COMMENTS_FILE
+strip_blank_details_block() {
+    cat $1 | \
+        tr '\n' '\t' | \
+        sed 's/__Details:__		/__Details:__	/g' | \
+        sed 's/__Details:__			//g' | \
+        sed 's/	\{3,\}/		/g' | \
+        tr '\t' '\n'
+}
+
+extract_and_format_comments() {
+    cat <<-EOF
 ### 完成度：
 $(extract_summary_comments_for_dimension '1\|完成度')
 $([ -f ./gtb-test-results.md ] && echo '* 具体验收测试结果详见：`gtb-test-results.md`')
@@ -294,6 +302,14 @@ $(extract_detail_comments_for_dimension '0\|综合' '+')
 $(extract_detail_comments_for_dimension '0\|综合' '-')
 
 EOF
+}
+
+_gtb_comments() {
+    local GTB_TMP_COMMENTS_FILE="/tmp/gtb-comments.md"
+    local GTB_COMMENTS_FILE="gtb-comments.md"
+
+    extract_and_format_comments > $GTB_TMP_COMMENTS_FILE
+    strip_blank_details_block $GTB_TMP_COMMENTS_FILE | tee $GTB_COMMENTS_FILE | tee /dev/tty | pbcopy
 }
 
 _gtb_check() {
@@ -406,7 +422,7 @@ _gtb_test() {
         echo '======='
         cat $TEST_OUTPUT_FILE | grep $f | cut -d'_' -f3 | sed -e 's/^/* /' -e 's/ PASSED//'
         echo
-    done | tee $HOMEWORK_ROOT/gtb-test-results.md
+    done | tee $HOMEWORK_ROOT/gtb-test-results.md | grep --color -E 'FAILED|$'
 }
 
 _gtb_join() {
@@ -464,7 +480,7 @@ _gtb_show() {
         then
             if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if curl -s -u $GITHUB_USERNAME:$GITHUB_TOKEN "https://api.github.com/repos/$USERNAME/$REPO_NAME" | tac | tac| grep --silent "\"name\": \"$REPO_NAME\""
+                if curl -s -u $GITHUB_USERNAME:$GITHUB_TOKEN "https://api.github.com/repos/$USERNAME/$REPO_NAME" | tac | tac | grep --silent "\"name\": \"$REPO_NAME\""
                 then
                     info "$TERM_NAME $FULLNAME $USERNAME"
                 else
