@@ -17,7 +17,7 @@ cd ltg
 
 ## Live Template 安装
 
-将生成的 `GTB.xml` 文件复制到 IntelliJ IDEA 的相应目录
+将生成的 `GTB.xml` 文件复制到 IntelliJ IDEA 的相应目录, 然后重启 IntelliJ IDEA
 ```shell
 cp GTB.xml ~/Library/Application\ Support/JetBrains/IntelliJIdea2020.2/templates/GTB.xml
 ```
