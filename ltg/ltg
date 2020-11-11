@@ -1,0 +1,22 @@
+#!/bin/bash
+
+INPUT_FILE=GTB_blank.xml
+OUTPUT_FILE=GTB.xml
+TMP_FILE=tmp
+
+cp $INPUT_FILE $OUTPUT_FILE
+for dimension in $(ls comments)
+do
+    mv $OUTPUT_FILE $TMP_FILE
+    SUGGEST_LIST=$(\
+        cat "comments/${dimension}" | \
+        sed -E '/## |^ *$/d' | sort | \
+        sed "s/^.*$/\\\\\&quot;&\\\\\&quot;/" | \
+        tr '\n' ',' | \
+        sed 's/,$//'| \
+        sed 's/"/\\\\\\\&quot;/g' | \
+        sed 's/</\\\&lt;/g' | \
+        sed 's/>/\\\&gt;/g')
+    cat $TMP_FILE | sed "s/%${dimension}%/${SUGGEST_LIST}/" > $OUTPUT_FILE
+done
+rm $TMP_FILE

@@ -1,0 +1,118 @@
+### 三层架构
+* 需要了解下三层(Three Layer)架构
+* 使用了三层(Three Layer)架构
+* 对三层(Three Layer)架构的掌握不错
+- 三层(Three Layer)架构应该一层调用一层，最好不要出现跨层调用
+- 了解下Repository的概念
+- Repository层应该使用@Repositoy注解
+- Service之间不应该互相调用
+- Service层应该使用@Service注解
+- Service的方法应该定义成实例方法
+
+### Restful实践
+* API设计不符合Restful实践，需要了解Restful实践
+* API设计部分符合Restful API Design，需要加强对Restful实践的掌握
+* API设计符合Restful实践，对Restful实践掌握的不错
+- 违反Restful实践, 资源名一般是复数
+- 违反Restful实践, path一般不使用驼峰形式，使用中划线"-"连接
+- 违反Restful实践, path中的名词，一般是指定资源的名词
+- 违反Restful实践, path中不应该包含动词
+- 违反Restful实践, 创建资源的请求应该使用POST
+- 违反Restful实践, 新建资源时应返回新建后的资源
+- 违反Restful实践, POST请求成功后应该返回201
+- 违反Restful实践，POST请求的传参方式，一般使用@RequestBody
+- 违反Restful实践, GET请求成功后应该返回数据
+- 违反Restful实践，请求成功后直接返回数据即可，不需要再包一层
+
+### Spring MVC
+* 需要掌握Spring MVC相关注解
+* 没有理解掌握Spring MVC相关的内容
+* Spring MVC的知识点掌握的不错
+- 使用了@RestController可以省略@ResponseBody
+- @RestController中一般不使用@ResponseEntity
+- Controller未加@RestController
+- 如果不是特定的自定义返回结果，ResponseEntity可以省略
+- ResponseEntity不应该侵入到Service层
+- ResponseEntity用法错误
+- 推荐使用@ResponseStatus
+- 状态码为200时，可以省略@ResponseStatus注解
+- 状态码为200时，可以省略不写
+- @RequestMapping的produces属性可以省略
+- 了解下@GetMapping
+- 了解下@GetMapping的params属性
+- 最好使用Object接收@RequestBody
+
+### IoC & DI
+* 需要了解Spring IoC Container
+* 需要了解Dependency Injection
+* 没有理解掌握Spring IoC相关的内容
+* Spring IoC相关的注解掌握的不错
+- @ComponentScan可以省略
+- Dependency Injection, 推荐使用构造器注入
+- Dependency Injection, 依赖需要被注入，而非直接new
+- Dependency Injection, 构造器注入的字段推荐使用final
+- Dependency Injection, 构造器注入时@Autowired可以省略
+
+### Spring JPA
+* 了解下数据库(Database)、JPA的使用
+* 需要加强对JPA的掌握和理解
+* JPA的知识点掌握的不错
+- JPA知识点使用错误，声明了自定义方法，但是没有指明sql，JPA无法正常解析
+- 继承JPA接口时不需要加@Repository
+- @OneToMany和@ManyToOne不一定要成对出现
+- id会自动生成，无需指定
+- save方法可以直接返回有id的trainee对象
+- 可以用save方法来更新表
+
+### Exception处理
+* 了解下异常(Exception)处理
+* 异常(Exception)处理的知识点没有完全掌握
+* 对参数校验的异常(Exception)处理相对欠缺
+* 异常(Exception)处理的内容掌握的不错，合理的处理了各类异常
+- 校验错误的异常(Exception)处理应该提取校验注解上的message
+- ResponseStatusException为框架内置异常(Exception)，不需要使用自定义的ExceptionHandler来处理
+
+### 参数校验
++ 对参数进行了额外校验(Validation)
+- @NotEmpty注解已经包含@NotNull的语义
+- 此处的@Validated注解是多余的
+
+### 跨域
+* 合理使用了@CrossOrigin或CorsFilter设置跨域
+- @CrossOrigin可以放在类上
+- @CrossOrigin避免使用通配符，应指定具体的域名
+
+### Lombok
+* 了解下Lombok的使用
+* 能够使用Lombok减少代码量
+* 对Lombok的掌握不错
+- 有默认值的情况，应使用Lombok的@Builder.Default
+
+### Java8
+* 对Java8 Stream的掌握不错
+* 对Java8 Optional的掌握不错
+- 以下代码可以使用Java8 Stream简化
+- 以下lambda表达式可以简化
+- 可以使用lambda表达式简化代码
+- 可以使用orElseThrow方法简化代码
+- 可以使用Comparator的静态方法快捷的生成Comparator
+
+### 杂项
+* 完成度过低(Low)，无法判断知识点的掌握程度
+* 需要了解下序列化(Serialization)相关的知识
+* 了解下DTO的概念，思考下什么场景引入DTO比较合适。
+* 能够合理使用DTO封装数据
+* 了解下数据库(Database)的使用和配置
+* 很多基础(Basis)知识点的使用都不正确
++ 使用了事务(Transaction)注解保证了数据一致性和完整性
++ 使用了ApplicationRunner优雅的进行了数据初始化
+- 了解下@Disable
+- 直接返回对象即可，Spring框架会自动进行序列化(Serialization)
+- 打乱顺序可以了解下Collections.shuffle()
+- 这种自增id的方式，线程不安全，试试AtomicInteger
+- 每次请求应该从数据库(Database)查询数据
+- 分组(Grouping)算法略显复杂，可以想想有没有更简单的方法
+- grouped=true时，应返回已经分组学员
+- 没有返回值时，方法的返回参数可以为void
+- 返回code按照正常的HTTP code即可，无需自定义
+- 一般不推荐使用这样的转String的方式，如果一定要转，看看String.valueOf()

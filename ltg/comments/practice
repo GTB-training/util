@@ -1,0 +1,104 @@
+## 分包
+* 分包(Package)合理
+- Spring MVC异常处理类和Controller应该在同一个包(Package)
+
+## Clean Code
+* code smell过多，了解下Clean Code
+* Clean Code做的不错
+
+## git提交
+* Git, 遵循了小步提交
+* Git, commit message表意
+* Git, commit message不够表意
+* Git, 提交粒度过细, 应该按照功能小步提交
+* Git, 提交不够小步
+
+## 命名
+* 了解下Java命名(Naming)规范
+- Naming, 包名不符合规范, 应该全小写，组合词直接相连
+- Naming, 类名不符合规范, 应该使用大驼峰
+- Naming, 方法名不符合规范, 应该使用小驼峰
+- Naming, 变量名不符合规范, 应该使用小驼峰
+- Naming, 常量名不符合规范，应该全大写，组合词用下划线"_"相连
+- Naming, 类名应该使用单数
+- Naming, 类名应避免包含动词
+- Naming, 命名不够表意
+- Naming, 不要进行不表意的缩写
+- Naming, 尽量避免后缀带数字的命名
+- Naming, 已经属于Student了，那么变量可以直接命名为name，无需加前缀
+- Naming, Controller类的前缀一般为要操作的资源名
+- Naming, Controller类一般命名为xxxController，如果是用了其他必须要按照特定规则命名的框架，那就按照项目要求来
+- Naming, Service类一般命名为xxxService
+- Naming, Repository类一般命名为xxxRepository
+- Naming, Repository类一般命名为xxxRepository
+
+## Responsibility
+* 注意单一职责(Responsibility)，每种资源应该有单独的Controller, Service和Repository
+- Responsibility, 数据存储相关的操作，应该由Repository层来做
+- Responsibility, 业务流程相关的操作，应该由Service层来做
+
+## OOP
+* 需要加强面向对象编程(OOP)的意识
+* OOP, 应该创建专门的类来表示<>
+
+## Code Smell
+* 有抽取Magic Number的意识
+- Code Smell, Magic Number
+- Code Smell, 拼写错误
+- Code Smell, 长方法，需要抽成多个方法提高可读性
+- Code Smell, 过长的代码，应该及时换行
+- Code Smell, 仅仅从代码的角度来讲， 类似"inputStudent"出现了多次的代码，需要抽取变量
+- Code Smell, 重复代码（hard code）过多，需要重构
+
+## Readability
+- Readability, 下面代码可以抽成方法，提高可读性
+- Readability, Stream每个方法建议新起一行，提高可读性
+- Readability, 方法链式调用层级太多，可以通过定义局部变量提高可读性
+- Readability, 如果不沟通，前端不会知道这里需要"inputStudent"作为key，可读性太低
+
+## Exception
+- Exception, 异常名起的不太好，可以使用EntityNotFoundException
+- Exception, 异常处理避免直接打印堆栈
+- Exception, 异常最好使用Exception结尾
+- Exception, 一般特定的业务异常场景，在service中进行throw
+
+## 无用代码
+- Unused, 未使用的import语句
+- Unused, 未使用的方法参数
+- Unused, 未使用的方法
+- Unused, 未使用的变量
+- Unused, 未使用的代码
+- Unused, 无用的初始化值
+- Unused, 与业务需求无关的代码及时清理
+- Comment, 无必要的注释
+- Comment, 无必要的文档注释
+- Comment, 一段代码如果不需要，应该删除而非将其注释
+- Debug, 调试代码在正式提交前应该被删除
+
+## 杂项
+* 完成度过低(Low)，无法正常判断工程实践
++ 定义了单独的DTO
+- Initialization, 初始化数据建议不要耦合在代码中
+- Initialization, 数据初始化的操作，不是controller的职责。
+- Array, 不推荐使用数组
+- Array, 请使用Java-style的数组声明，如int[] formatter = new int[6]
+- Constant, 常量的声明位置错误
+- Constant, 应该使用常量
+- Database, 所有数据状态都应该维护在数据库中，不要进行这种内存操作
+- Generic, 没有使用泛型
+- Generic, ResponseEntity应指定类型参数
+- Error, 这个不删除，会导致编译错误
+- Style, 注意代码风格，哪儿应该加空格，哪儿应该不加空格
+- Order, 注意类成员的顺序，一般是字段，构造器，公共方法，私有方法
+- Graceful, 代码不优雅
+- path应该首字母小写
+- 这种写法可能抛NPE
+- 尽量使用 equals()
+- 先import，再引用，避免直接使用类的全名
+- Spring Bean一般为单例, 字段不需要使用static
+- for循环可以使用Collections.addAll()替换
+- import语句不要使用通配符
+- 计算id的方式不够健壮，可以使用字段保存最大id
+- 推荐使用Map保存学员数据
+- 应该使用private，遵循最小访问原则
+- 代码中应该保证List总不为null

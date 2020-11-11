@@ -1,0 +1,17 @@
+## 测试情况
+* Controller层有少量测试
+* 有Controller层测试，但覆盖不全面
+* 有Controller层测试，且覆盖比较全面
+* Service层有少量测试
+* 有Service层测试，但覆盖不全面
+* 有Service层测试，且覆盖比较全面
+* Repository层有少量测试
+* 有Repository层测试，但覆盖不全面
+* 有Repository层测试，且覆盖比较全面
+* Controller,Service,Repository层均无测试
+* Controller,Service,Repository层均有测试，且覆盖比较全面
+
+## 杂项
+* Simple, 测试内容过于简单，了解下测试的最佳实践
+- Controller层测试，了解下@WebMvcTest
+- 被测试类的包路径应保持和测试类一致
