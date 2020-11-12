@@ -1,0 +1,48 @@
+## 抽象
+* Extract, 建议把数据请求提取到单独的service
+* Extract, 有抽取API层，且做了拆分
+- Extract, URL建议提取常量
+
+## Sass
+* Sass, 全局样式建议放在reboot.scss中
+* Sass, 嵌套层次太多
+- Sass, 推荐使用class选择器
+- Sass, 顶层不要使用标签选择器
+
+## git提交
+* Git, 遵循了小步提交
+* Git, commit message表意
+* Git, commit message不够表意
+* Git, 提交粒度过细, 应该按照功能小步提交
+* Git, 提交不够小步
+
+## 命名
+- Naming, 命名不符合业务功能，看不出来职责，命名应该更贴合业务或功能
+- Naming, css class命名不符合规范，不建议用驼峰
+- Naming, 不符合React命名规范
+- Naming, 组件名不符合规范, 应该使用大驼峰
+- Naming, 方法名不符合规范, 应该使用小驼峰
+- Naming, 变量名不符合规范, 应该使用小驼峰
+- Naming, 命名不够表意
+- Naming, 不要进行不表意的缩写
+- Naming, 尽量避免后缀带数字的命名
+
+## Code Smell
+* Code Smell, 有抽取Service意识
+* Code Smell, 请求和业务逻辑耦合在一起，建议把获取数据的逻辑提取到单独的方法中
+- Code Smell, Magic Number
+- Code Smell, 拼写错误
+- Code Smell, 长方法，需要抽成多个方法提高可读性
+- Code Smell, 重复代码（hard code）过多，需要重构
+- Code Smell, 方法职责不明确，一个方法应该只做一件事儿
+- Code Smell, 不要提交console.log"
+- Code Smell, 无必要的注释
+- Code Smell, 建议把URL定义为常量
+
+## 无用代码
+- Unused, 未使用的import语句
+- Unused, 未使用的方法参数
+- Unused, 未使用的方法
+- Unused, 未使用的变量
+- Unused, 未使用的代码
+- Unused, 与业务需求无关的代码及时清理

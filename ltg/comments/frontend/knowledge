@@ -1,0 +1,43 @@
+### 组件划分
+* Split, 组件划分不够合理，职责不明确
+* Split, 组件划分不够合理，划分层次不够
+* Split, 组件划分不够合理，层次嵌套太多
+- Split, 不符合单一职责，建议按照业务逻辑划分模块或方法
+- Split, 两个组件有很多重复逻辑，可以抽象、提取成公共组件
+- Split, 请求和渲染逻辑耦合在一起
+
+### 数据结构
+* Data, 数据结构不合理
+- Data, 添加、修改或者删除数据之后需要从后端获取数据而不是前端自己拼接
+- Data, 对数据的操作应该在数据定义的组件中
+
+### HTML
+* Html, 没有使用语义标签
+- Html, 该标签不符合语义
+- Html, 既然是title是否h*标签更合适呢？
+- Html, 列表用ul li更符合语义
+- Html, 存在没有意义的html嵌套
+- Html, div嵌套过深
+
+### Sass
+* Sass, 对Sass语法掌握的不错
+* Sass, 没有使用Sass语法
+- Sass, 可以把button样式提取成mixin
+
+### CSS
+- CSS, 不建议使用ID选择器
+
+### ES
+* ES, 建议使用ES6语法
+- ES, 建议用ES6 forEach
+- ES, 建议用ES6 map
+- ES, 建议用解构赋值，代码更可读
+
+### React
+* React, React语法基本掌握
+* React, 需要了解一下React生命周期方法
+- React, 循环渲染需要给子元素设置key，可参见console error
+
+### 杂项
+- Npm, 用npm去管理包依赖
+- API, API 请求需要处理异常情况
