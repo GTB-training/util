@@ -1,22 +1,45 @@
 #!/bin/bash
 
-INPUT_FILE=GTB_blank.xml
-OUTPUT_FILE=GTB.xml
-TMP_FILE=tmp
+END=${1:-backend}
+if [[ "$END" = 'backend' ]]; then
+  TEMPLATE_FILE="templates/GTB-backend.xml"
+elif [[ "$END" = 'frontend' ]]; then
+  TEMPLATE_FILE="templates/GTB-frontend.xml"
+else
+  echo "End is unsupported! (e.g. backend, frontend)"
+  exit 1
+fi
 
-cp $INPUT_FILE $OUTPUT_FILE
-for dimension in $(ls comments)
-do
-    mv $OUTPUT_FILE $TMP_FILE
-    SUGGEST_LIST=$(\
-        cat "comments/${dimension}" | \
-        sed -E '/## |^ *$/d' | sort | \
-        sed "s/^.*$/\\\\\&quot;&\\\\\&quot;/" | \
-        tr '\n' ',' | \
-        sed 's/,$//'| \
-        sed 's/"/\\\\\\\&quot;/g' | \
-        sed 's/</\\\&lt;/g' | \
-        sed 's/>/\\\&gt;/g')
-    cat $TMP_FILE | sed "s/%${dimension}%/${SUGGEST_LIST}/" > $OUTPUT_FILE
-done
-rm $TMP_FILE
+QUIZ_NAME=${2:-$END}
+COMMENTS_DIR="comments/${QUIZ_NAME}"
+if [[ ! -d "$COMMENTS_DIR" ]]; then
+  echo "Quiz name is unsupported!"
+  exit 1
+fi
+
+OUTPUT_FILE=GTB.xml
+
+generate_live_template()
+{
+  local TMP_FILE=tmp
+
+  echo "Start generating live template..."
+  cp $TEMPLATE_FILE $OUTPUT_FILE
+  for dimension in $(ls "${COMMENTS_DIR}"/)
+  do
+      mv $OUTPUT_FILE $TMP_FILE
+      SUGGEST_LIST=$( \
+          cat "${COMMENTS_DIR}/${dimension}" | \
+          sed -E '/## |^ *$/d' | sort | \
+          sed "s/^.*$/\\\\\&quot;&\\\\\&quot;/" | \
+          tr '\n' ',' | \
+          sed 's/,$//'| \
+          sed 's/"/\\\\\\\&quot;/g' | \
+          sed 's/</\\\&lt;/g' | \
+          sed 's/>/\\\&gt;/g')
+      cat $TMP_FILE | sed "s/%${dimension}%/${SUGGEST_LIST}/" > $OUTPUT_FILE
+  done
+  rm $TMP_FILE
+}
+
+generate_live_template

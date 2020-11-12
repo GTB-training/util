@@ -1,0 +1,47 @@
+<templateSet group="GTB">
+    <template name="gcc" value="TODO GTB-完成度: $COMMENT$" description="gtb comments for completeness" toReformat="false"
+              toShortenFQNames="true">
+        <variable name="COMMENT" expression="enum(%completeness%)" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="CSS" value="true"/>
+            <option name="HTML" value="true"/>
+            <option name="JAVA_SCRIPT" value="true"/>
+        </context>
+    </template>
+    <template name="gck" value="TODO GTB-知识点: $COMMENT$" description="gtb comments for knowledge usage"
+              toReformat="false" toShortenFQNames="true">
+        <variable name="COMMENT" expression="enum(%knowledge%)" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="CSS" value="true"/>
+            <option name="HTML" value="true"/>
+            <option name="JAVA_SCRIPT" value="true"/>
+        </context>
+    </template>
+    <template name="gcp" value="TODO GTB-工程实践: $COMMENT$" description="gtb comments for engineering practice"
+              toReformat="false" toShortenFQNames="true">
+        <variable name="COMMENT" expression="enum(%practice%)" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="CSS" value="true"/>
+            <option name="HTML" value="true"/>
+            <option name="JAVA_SCRIPT" value="true"/>
+        </context>
+    </template>
+    <template name="gcs" value="TODO GTB-综合: $COMMENT$" description="gtb comments for summary" toReformat="false"
+              toShortenFQNames="true">
+        <variable name="COMMENT" expression="enum(%summary%)" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="CSS" value="true"/>
+            <option name="HTML" value="true"/>
+            <option name="JAVA_SCRIPT" value="true"/>
+        </context>
+    </template>
+    <template name="gct" value="TODO GTB-测试: $COMMENT$" description="gtb comments for test" toReformat="false"
+              toShortenFQNames="true">
+        <variable name="COMMENT" expression="enum(%test%)" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="CSS" value="true"/>
+            <option name="HTML" value="true"/>
+            <option name="JAVA_SCRIPT" value="true"/>
+        </context>
+    </template>
+</templateSet>
