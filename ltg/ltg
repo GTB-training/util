@@ -30,7 +30,7 @@ generate_live_template()
       mv $OUTPUT_FILE $TMP_FILE
       SUGGEST_LIST=$( \
           cat "${COMMENTS_DIR}/${dimension}" | \
-          sed -E '/## |^ *$/d' | sort | \
+          sed -E '/^#|^ *$/d' | sort | \
           sed "s/^.*$/\\\\\&quot;&\\\\\&quot;/" | \
           tr '\n' ',' | \
           sed 's/,$//'| \
