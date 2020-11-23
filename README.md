@@ -59,13 +59,7 @@ peng.tian ifeelcold1824 term01 group2 team1
 
 ## Command: gtb
 
-`gtb` 的主要功能有：
-
-* 批量下载 homework repositories；
-* 批量更新已下载的 homework repositories；
-* 批量执行构建操作；
-
-`gtb` 提供了以下子命令来完成上述功能：
+`gtb` 提供了以下命令：
 
 * init：用于初始化运行所需的环境，比如创建空的 `students.txt` 文件；
 * check：自动批量检查 GitHub username 是否存在；
@@ -78,6 +72,7 @@ peng.tian ifeelcold1824 term01 group2 team1
 * up: 将指定的 repo 使用 docker 容器启动起来
 * down: 停止并删除 `gtb up` 创建的 docker 容器
 * comments：自动把留在 code repo 里的 comments 提取并格式化；
+* repo: 查看指定 org 或 team 的 repos，也可以向 team 添加或删除 repos；
 * help：显示帮助信息；
 
 ### gtb init
@@ -488,6 +483,94 @@ Details:
 + \+ foo 2
 - \- bar 1
 - \- bar 2
+```
+
+### gtb repo
+
+跟操作 org 下 repos 相关的命令，有以下子命令：
+
+* list：用于查看 org 或 team 下的所有 repos；
+* add：用于将指定 repo 添加到指定 team；
+* remove：用于讲指定 repo 从指定 team 中移除；
+
+#### gtb repo list
+
+显示 org 或 team 下的 repos。当 repo 为 public 时，行尾会有 🟢 标记，以引起使用者的注意，通常我们要求 org 下的 repo 尽量设置为 private。
+
+如果未提供 team 则显示 org 下的 repos，如果提供了 team，则显示 team 下的 repos。
+
+列出的 repos 已经按照名字升序进行了排序。如还需进行计数，请接 `cat -n` 或其它合适的命令。
+
+该命令的输出可直接用于 add 和 remove 等子命令。
+
+由于 GitHub API 的分页最大条数限制为 100，当 repos 数量超过 100 时，该命令则只能显示前 100 个 repos。
+
+##### 用法：
+
+```shell
+gtb repo list <organization> [team]
+```
+
+##### 参数说明：
+
+`<organization>`：organization 的名字。必填参数；
+
+`[team]`：team 名字，也称 team slug。可选参数，未提供时则返回 org 下的所有 repos；
+
+#### gtb repo add
+
+将一个或多个 repos 加入到指定 org 下的指定 team 中。目前加入时设置的 permission 为 `pull`。
+
+该子命令支持管道输入，以方便使用存储于文本文件中的 repo names 进行批量的添加操作。
+
+##### 用法：
+
+```shell
+gtb repo add <organization> <team> [repos]
+```
+
+```shell
+echo repo1 repo2 | gtb repo add <organization> <team>
+```
+
+```shell
+cat repos.txt
+repo1
+repo2
+
+cat repos.txt | gtb repo add <organization> <team>
+```
+
+##### 参数说明：
+
+`<organization>`：organization 的名字。必填参数；
+
+`<team>`：team 名字，也称 team slug。必填参数；
+
+`[repos]`：空格分隔的 repo 名称列表；
+
+#### gtb repo remove
+
+将一个或多个 repos 从指定 org 下的指定 team 中移除。
+
+该子命令支持管道输入，以方便使用存储于文本文件中的 repo names 进行批量的移除操作。
+
+##### 用法：
+
+```shell
+gtb repo remove <organization> <team> [repos]
+```
+
+```shell
+echo repo1 repo2 | gtb repo remove <organization> <team>
+```
+
+```shell
+cat repos.txt
+repo1
+repo2
+
+cat repos.txt | gtb repo remove <organization> <team>
 ```
 
 ## TODO

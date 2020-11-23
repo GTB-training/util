@@ -304,6 +304,107 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 EOF
 }
 
+remove_repo_from_team() {
+    local ORG=$1
+    local TEAM=$2
+    local REPO=$3
+    local ENDPOINT="/orgs/$ORG/teams/$TEAM/repos/$ORG/$REPO"
+
+    run "gh api --silent -X DELETE $ENDPOINT"
+
+    [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
+}
+
+_gtb_repo_remove() {
+    local ORG=${1:?Organization is required!}
+    shift
+    local TEAM=${1:?Team is required!}
+    shift
+
+    if [[ -p /dev/stdin ]]
+    then
+        while read line
+        do
+            for repo in $line
+            do
+                remove_repo_from_team $ORG $TEAM $repo
+            done
+        done
+    fi
+
+
+    for repo in $@
+    do
+        remove_repo_from_team $ORG $TEAM $repo
+    done
+}
+
+add_repo_to_team() {
+    local ORG=$1
+    local TEAM=$2
+    local REPO=$3
+    local ENDPOINT="/orgs/$ORG/teams/$TEAM/repos/$ORG/$REPO"
+
+    run "gh api --silent -X PUT $ENDPOINT -F permission='pull'"
+
+    [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
+}
+
+_gtb_repo_add() {
+    local ORG=${1:?Organization is required!}
+    shift
+    local TEAM=${1:?Team is required!}
+    shift
+
+    if [[ -p /dev/stdin ]]
+    then
+        while read line
+        do
+            for repo in $line
+            do
+                add_repo_to_team $ORG $TEAM $repo
+            done
+        done
+    fi
+
+
+    for repo in $@
+    do
+        add_repo_to_team $ORG $TEAM $repo
+    done
+}
+
+_gtb_repo_list() {
+    local ORG=${1:?Organization is required!}
+    local TEAM=${2}
+
+    local ENDPOINT="/orgs/$ORG/repos?per_page=100"
+    if [[ -n "$TEAM" ]]
+    then
+        ENDPOINT="/orgs/$ORG/teams/$TEAM/repos?per_page=100"
+    fi
+    gh api $ENDPOINT | jsonpp | \
+        grep '    "name":\|    "private":' | \
+        tr -d '", ' | \
+        cut -d':' -f2 | \
+        paste -d' ' - - | \
+        sort | \
+        sed -e 's/ true$//' -e 's/false$/🟢/'
+}
+
+_gtb_repo() {
+    REPO_SUBCOMMAND=${1:?Subcommand is required! (e.g. add, remove.)}
+    shift
+
+    local subcommand_function="${FUNCNAME[0]}_$REPO_SUBCOMMAND"
+
+    if [[ "$(type -t $subcommand_function)" != 'function' ]]; then
+        fail "error: Unknown subcommand: $REPO_SUBCOMMAND"
+    fi
+
+    $subcommand_function $@
+}
+
 _gtb_comments() {
     local GTB_TMP_COMMENTS_FILE="/tmp/gtb-comments.md"
     local GTB_COMMENTS_FILE="gtb-comments.md"
