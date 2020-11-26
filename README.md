@@ -595,7 +595,7 @@ cat repos.txt | gtb repo remove <organization> <team>
 
 ## Contributors
 
--. 杜娟 jdu@thoughtworks.com
--. 王晓峰 xifwang@thoughtworks.com
--. 张钊 zhaozhang@thoughtworks.com
+* 杜娟 jdu@thoughtworks.com
+* 王晓峰 xifwang@thoughtworks.com
+* 张钊 zhaozhang@thoughtworks.com
 
