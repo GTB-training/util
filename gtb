@@ -319,6 +319,28 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 EOF
 }
 
+__gtb_student_list() {
+    assert_students_file_exists
+
+    GITHUB_USERNAME="${GITHUB_USERNAME:?GITHUB_USERNAME should be set!}"
+    GITHUB_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN should be set!}"
+
+    while read -r FULLNAME USERNAME TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                info "$TERM_NAME $FULLNAME $USERNAME $TAGS"
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_student() {
+    __gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 remove_repo_from_team() {
     local ORG=$1
     local TEAM=$2
