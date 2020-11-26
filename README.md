@@ -590,6 +590,8 @@ cat repos.txt | gtb repo remove <organization> <team>
 * ~~增加帮助看作业，过滤作业里的 comments，自动按照维度、加减分整理出来最终的 list，可以直接粘贴使用；~~
 * ~~增加 `join` 子命令；~~
 * 在学员 repo 的目录运行up和down命令时，不需要指定 repo 和学员
+* 原来的 SUBCOMMAND 改叫 COMMAND；
+* 内部方法统一以 `__gtb_` 开头；
 
 ## Contributors
 
