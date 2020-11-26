@@ -319,6 +319,19 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 EOF
 }
 
+__gtb_student_group() {
+    local GROUPS_COUNT=${1:?error: <GROUPS_COUNT> is required!}
+
+    cat $GTB_STUDENTS_FILE | \
+        grep "\<$GTB_TERM\>" | \
+        shuf | \
+        cut -d' ' -f1 | \
+        xargs -n$GROUPS_COUNT echo | \
+        datamash transpose --no-strict -t' ' | \
+        sed 's: N/A::' | \
+        cat -n
+}
+
 __gtb_student_list() {
     while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
