@@ -320,11 +320,6 @@ EOF
 }
 
 __gtb_student_list() {
-    assert_students_file_exists
-
-    GITHUB_USERNAME="${GITHUB_USERNAME:?GITHUB_USERNAME should be set!}"
-    GITHUB_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN should be set!}"
-
     while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
@@ -338,6 +333,8 @@ __gtb_student_list() {
 }
 
 _gtb_student() {
+    assert_students_file_exists
+
     __gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
