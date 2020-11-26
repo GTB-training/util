@@ -43,6 +43,21 @@ strip_colors() {
     done
 }
 
+__gtb_run_subcommand() {
+    COMMAND=${1:?Command is required! (e.g. repo, student.)}
+    shift
+    SUBCOMMAND=${1:?Subcommand is required! (e.g. list, add, remove.)}
+    shift
+
+    local subcommand_function="__gtb_${COMMAND}_${SUBCOMMAND}"
+
+    if [[ "$(type -t $subcommand_function)" != 'function' ]]; then
+        fail "error: Unknown subcommand: $SUBCOMMAND"
+    fi
+
+    $subcommand_function "$@"
+}
+
 build_repo() {
     local repo_name=$1
     local fullname=$2
@@ -315,7 +330,7 @@ remove_repo_from_team() {
     [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
 }
 
-_gtb_repo_remove() {
+__gtb_repo_remove() {
     local ORG=${1:?Organization is required!}
     shift
     local TEAM=${1:?Team is required!}
@@ -350,7 +365,7 @@ add_repo_to_team() {
     [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
 }
 
-_gtb_repo_add() {
+__gtb_repo_add() {
     local ORG=${1:?Organization is required!}
     shift
     local TEAM=${1:?Team is required!}
@@ -374,7 +389,7 @@ _gtb_repo_add() {
     done
 }
 
-_gtb_repo_list() {
+__gtb_repo_list() {
     local ORG=${1:?Organization is required!}
     local TEAM=${2}
 
@@ -393,16 +408,7 @@ _gtb_repo_list() {
 }
 
 _gtb_repo() {
-    REPO_SUBCOMMAND=${1:?Subcommand is required! (e.g. add, remove.)}
-    shift
-
-    local subcommand_function="${FUNCNAME[0]}_$REPO_SUBCOMMAND"
-
-    if [[ "$(type -t $subcommand_function)" != 'function' ]]; then
-        fail "error: Unknown subcommand: $REPO_SUBCOMMAND"
-    fi
-
-    $subcommand_function $@
+    __gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_comments() {
