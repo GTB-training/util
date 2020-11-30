@@ -3,6 +3,7 @@
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
 GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (term01, term02, etc.)}"
 GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
+GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 SUBCMD_PREFIX='_gtb'
 
@@ -317,6 +318,43 @@ $(extract_detail_comments_for_dimension '0\|综合' '+')
 $(extract_detail_comments_for_dimension '0\|综合' '-')
 
 EOF
+}
+
+_gtb_student_random_clear() {
+    _gtb_student_random_reset
+}
+
+_gtb_student_random_reset() {
+    echo -n > $GTB_RANDOM_LIST_FILE
+}
+
+_gtb_student_random_next() {
+    if [[ ! -s $GTB_RANDOM_LIST_FILE ]]
+    then
+        fail 'error: Please run `gtb student random` to generate random list first.'
+    fi
+
+    local next=$(head -n1 $GTB_RANDOM_LIST_FILE)
+    local rest=$(tail -n +2 $GTB_RANDOM_LIST_FILE)
+
+    echo "$rest" > $GTB_RANDOM_LIST_FILE
+    echo "$next" >> $GTB_RANDOM_LIST_FILE
+
+    echo $next
+}
+
+_gtb_student_random_generate() {
+    _gtb_student_list "$@" | \
+        shuf | \
+        cut -d' ' -f2 > $GTB_RANDOM_LIST_FILE
+}
+
+_gtb_student_random() {
+    if ! echo $1 | grep --silent '^\(next\)$'; then
+        set -- generate "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_student_group() {
