@@ -321,15 +321,16 @@ EOF
 
 __gtb_student_group() {
     local GROUPS_COUNT=${1:?error: <GROUPS_COUNT> is required!}
+    shift
 
-    cat $GTB_STUDENTS_FILE | \
-        grep "\<$GTB_TERM\>" | \
+    __gtb_student_list "$@" | \
         shuf | \
-        cut -d' ' -f1 | \
+        cut -d' ' -f2 | \
         xargs -n$GROUPS_COUNT echo | \
         datamash transpose --no-strict -t' ' | \
         sed 's: N/A::' | \
-        cat -n
+        cat -n | \
+        column -t
 }
 
 __gtb_student_list() {
