@@ -464,7 +464,7 @@ _gtb_check() {
         then
             if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if curl -s -u $GITHUB_USERNAME:$GITHUB_TOKEN "https://api.github.com/users/$USERNAME" | tac | tac | grep --silent "\"login\": \"$USERNAME\""
+                if gh api "/users/$USERNAME" | jsonpp | grep --silent "\"login\": \"$USERNAME\""
                 then
                     info "$TERM_NAME $FULLNAME $USERNAME"
                 else
