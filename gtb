@@ -43,13 +43,13 @@ strip_colors() {
     done
 }
 
-__gtb_run_subcommand() {
+_gtb_run_subcommand() {
     COMMAND=${1:?Command is required! (e.g. repo, student.)}
     shift
     SUBCOMMAND=${1:?Subcommand is required! (e.g. list, add, remove.)}
     shift
 
-    local subcommand_function="__gtb_${COMMAND}_${SUBCOMMAND}"
+    local subcommand_function="_gtb_${COMMAND}_${SUBCOMMAND}"
 
     if [[ "$(type -t $subcommand_function)" != 'function' ]]; then
         fail "error: Unknown subcommand: $SUBCOMMAND"
@@ -319,11 +319,11 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 EOF
 }
 
-__gtb_student_group() {
+_gtb_student_group() {
     local GROUPS_COUNT=${1:?error: <GROUPS_COUNT> is required!}
     shift
 
-    __gtb_student_list "$@" | \
+    _gtb_student_list "$@" | \
         shuf | \
         cut -d' ' -f2 | \
         xargs -n$GROUPS_COUNT echo | \
@@ -333,7 +333,7 @@ __gtb_student_group() {
         column -t
 }
 
-__gtb_student_list() {
+_gtb_student_list() {
     while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
@@ -349,7 +349,7 @@ __gtb_student_list() {
 _gtb_student() {
     assert_students_file_exists
 
-    __gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 remove_repo_from_team() {
@@ -363,7 +363,7 @@ remove_repo_from_team() {
     [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
 }
 
-__gtb_repo_remove() {
+_gtb_repo_remove() {
     local ORG=${1:?Organization is required!}
     shift
     local TEAM=${1:?Team is required!}
@@ -398,7 +398,7 @@ add_repo_to_team() {
     [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
 }
 
-__gtb_repo_add() {
+_gtb_repo_add() {
     local ORG=${1:?Organization is required!}
     shift
     local TEAM=${1:?Team is required!}
@@ -422,7 +422,7 @@ __gtb_repo_add() {
     done
 }
 
-__gtb_repo_list() {
+_gtb_repo_list() {
     local ORG=${1:?Organization is required!}
     local TEAM=${2}
 
@@ -441,7 +441,7 @@ __gtb_repo_list() {
 }
 
 _gtb_repo() {
-    __gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_comments() {
