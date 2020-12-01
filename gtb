@@ -355,7 +355,7 @@ _gtb_student_random_generate() {
 }
 
 _gtb_student_random() {
-    if ! echo $1 | grep --silent '^\(next\)$'; then
+    if ! echo $1 | grep --silent '^\(next\|show\|reset\|clear\)$'; then
         set -- generate "$@"
     fi
 
