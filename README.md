@@ -102,6 +102,7 @@ GTB_TERM=xxx gtb check [student names|tag]
 #### 参数说明：
 
 `[student names]`：限制只检查指定学员，而不是 `students.txt` 中的所有学员；
+
 `[tag]`：限制只检查指定 tag 对应的学员，而不是 `students.txt` 中的所有学员；
 
 `GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
@@ -487,11 +488,11 @@ Details:
 
 ### gtb repo
 
-跟操作 org 下 repos 相关的命令，有以下子命令：
+用于操作 org 下 repos 相关的命令，有以下子命令：
 
 * list：用于查看 org 或 team 下的所有 repos；
 * add：用于将指定 repo 添加到指定 team；
-* remove：用于讲指定 repo 从指定 team 中移除；
+* remove：用于将指定 repo 从指定 team 中移除；
 
 #### gtb repo list
 
