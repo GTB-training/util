@@ -72,6 +72,7 @@ peng.tian ifeelcold1824 term01 group2 team1
 * up: 将指定的 repo 使用 docker 容器启动起来
 * down: 停止并删除 `gtb up` 创建的 docker 容器
 * comments：自动把留在 code repo 里的 comments 提取并格式化；
+* student：用于执行跟学员相关的各种操作，如：查看列表、随机分组、随机排序并一次点名等；
 * repo: 查看指定 org 或 team 的 repos，也可以向 team 添加或删除 repos；
 * help：显示帮助信息；
 
@@ -485,6 +486,108 @@ Details:
 - \- bar 1
 - \- bar 2
 ```
+
+### gtb student
+
+用于操作学员相关的命令，有以下子命令：
+
+* list：用于查看所有或指定 tag 的学员的列表；
+* group：将指定的学员随机分为 N 组；
+* random：讲指定的学员随机排序，然后用于点名；
+
+#### gtb student list
+
+查看指定学期的所有学员，或者根据提供的 TAG 进行过滤。
+
+##### 用法：
+
+```shell
+gtb student list [tag|student names]
+```
+
+```shell
+GTB_TERM=XXX gtb student list [tag|student names]
+```
+
+##### 参数说明：
+
+`[tag]`：可选参数。用于过滤学员，可以查看 `GTB_STUDENTS_FILE` 获取合法的 TAG 取值。
+
+`[student names]`：可选参数。用于过滤学员，多个值时以空格分隔，可以查看 `GTB_STUDENTS_FILE` 获取合法的 TAG 取值。
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
+
+#### gtb student group
+
+把指定的学员随机分为 N 组。默认是对当前学期所以学员进行分组。
+
+##### 用法：
+
+```shell
+gtb student group <count> [tag|student names]
+```
+
+```shell
+GTB_TERM=XXX gtb student group <count> [tag|student names]
+```
+
+##### 参数说明：
+
+`<count>`：必填参数。需要划分的组数。
+
+`[tag]`：可选参数。用于过滤学员，可以查看 `GTB_STUDENTS_FILE` 获取合法的 TAG 取值。
+
+`[student names]`：可选参数。用于过滤学员，多个值时以空格分隔，可以查看 `GTB_STUDENTS_FILE` 获取合法的 TAG 取值。
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
+
+#### gtb student random
+
+对指定的学员进行随机排序，然后可以单个进行点名。
+
+有以下子命令：
+
+* next：用于点名。根据随机排序后的顺序，依次循环显示学员的名字。
+* show：显示随机排序后的名单。
+* reset：清空名单。
+* clear：同 reset。
+
+##### 用法：
+
+对指定的学员进行随机排序，但此时并不会输出排序结果。
+
+排序结果保存在文件 `/tmp/gtb_random_list.txt` 中。
+
+```shell
+gtb student random [tag|student names]
+```
+
+显示排序结果。如有需要查看完整的排序结果，可以使用 show 子命令。
+
+```shell
+gtb student random show
+```
+
+根据随机排序结果进行点名，每次显示一个学员的名字。
+
+```shell
+gtb student random next
+```
+
+情况随机排序结果，在点名结束后可以对随机排序结果进行情况，放置后续被误用。
+
+```shell
+gtb student random clear
+gtb student random reset
+```
+
+##### 参数说明：
+
+`[tag]`：可选参数。用于过滤学员，可以查看 `GTB_STUDENTS_FILE` 获取合法的 TAG 取值。
+
+`[student names]`：可选参数。用于过滤学员，多个值时以空格分隔，可以查看 `GTB_STUDENTS_FILE` 获取合法的 TAG 取值。
+
+`GTB_TERM`：如需指定跟当前默认 term 不同的 term，可在命令前设置 `GTB_TERM`。
 
 ### gtb repo
 
