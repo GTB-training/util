@@ -328,6 +328,10 @@ _gtb_student_random_reset() {
     echo -n > $GTB_RANDOM_LIST_FILE
 }
 
+_gtb_student_random_show() {
+    cat $GTB_RANDOM_LIST_FILE
+}
+
 _gtb_student_random_next() {
     if [[ ! -s $GTB_RANDOM_LIST_FILE ]]
     then
