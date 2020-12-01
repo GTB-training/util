@@ -350,7 +350,8 @@ _gtb_student_random_next() {
 _gtb_student_random_generate() {
     _gtb_student_list "$@" | \
         shuf | \
-        cut -d' ' -f2 > $GTB_RANDOM_LIST_FILE
+        cut -d' ' -f2 | \
+        cat -n > $GTB_RANDOM_LIST_FILE
 }
 
 _gtb_student_random() {
