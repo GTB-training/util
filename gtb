@@ -5,6 +5,8 @@ GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (term01, term02, etc.)}"
 GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
+GTB_REPOS_DIR="repos"
+GTB_TERMS_DIR="terms"
 SUBCMD_PREFIX='_gtb'
 
 SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
@@ -63,7 +65,7 @@ build_repo() {
     local repo_name=$1
     local fullname=$2
     local term_name=$3
-    local HOMEWORK_ROOT="$GTB_ROOT/$term_name/$repo_name"
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERMS_DIR/$term_name/$repo_name"
     local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
 
     if [[ ! -d $STUDENT_HOMEWORK_PATH ]]
@@ -88,7 +90,7 @@ clone_repo() {
     local username=$2
     local fullname=$3
     local term_name=$4
-    local HOMEWORK_ROOT="$GTB_ROOT/$term_name/$repo_name"
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERMS_DIR/$term_name/$repo_name"
     local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
     local STUDENT_HOMEWORK_URL="git@github.com:${username}/${repo_name}.git"
 
@@ -118,7 +120,7 @@ clone_or_update_repo() {
     local repo_name=$1
     local fullname=$3
     local term_name=$4
-    local HOMEWORK_ROOT="$GTB_ROOT/$term_name/$repo_name"
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERMS_DIR/$term_name/$repo_name"
     local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
 
     if [[ -d $STUDENT_HOMEWORK_PATH ]] && [[ "$AUTO_UPDATE" == "true" ]]
@@ -521,7 +523,7 @@ _gtb_check() {
 _gtb_up() {
     local REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
     local FULLNAME=${2:?Trainee name is required! (e.g. zhang.san, li.si, etc.)}
-    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERM/$REPO_NAME/$FULLNAME"
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERMS_DIR/$GTB_TERM/$REPO_NAME/$FULLNAME"
     local HOMEWORK_TESTS_ROOT="$GTB_ROOT/${REPO_NAME}-ac"
     local DOCKER_ERROR_LOG_FILE='/tmp/docker_error.log'
 
@@ -562,7 +564,7 @@ _gtb_up() {
 _gtb_down() {
     local REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
     local FULLNAME=${2:?Trainee name is required! (e.g. zhang.san, li.si, etc.)}
-    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERM/$REPO_NAME/$FULLNAME"
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERMS_DIR/$GTB_TERM/$REPO_NAME/$FULLNAME"
     local HOMEWORK_TESTS_ROOT="$GTB_ROOT/${REPO_NAME}-ac"
 
     [[ -d $HOMEWORK_ROOT ]] || fail "Cannot find homework: $HOMEWORK_ROOT"
@@ -584,7 +586,7 @@ _gtb_down() {
 _gtb_test() {
     local REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
     local FULLNAME=${2:?Trainee name is required! (e.g. zhang.san, li.si, etc.)}
-    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERM/$REPO_NAME/$FULLNAME"
+    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERMS_DIR/$GTB_TERM/$REPO_NAME/$FULLNAME"
     local HOMEWORK_TESTS_ROOT="$GTB_ROOT/${REPO_NAME}-ac"
     local TEST_OUTPUT_FILE='/tmp/gtb_gradle_test_output.log'
 
@@ -677,7 +679,8 @@ _gtb_show() {
 _gtb_init() {
     if [[ ! -f $GTB_STUDENTS_FILE ]]
     then
-        mkdir -p $GTB_ROOT
+        mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
+        mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
         touch $GTB_STUDENTS_FILE
         info "Created students file: '$GTB_STUDENTS_FILE'."
     fi
