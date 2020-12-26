@@ -679,6 +679,7 @@ cat repos.txt | gtb repo remove <organization> <team>
 
 ## TODO
 
+* 批量创建 comments 分支；
 * 集成 gtb_extend 脚本；
 * 支持 links 功能；
 * ~~支持指定 `--terms`，值为逗号分隔，这样可以把往届的学员都写到一个 students 文件中；~~
