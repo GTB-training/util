@@ -679,6 +679,8 @@ cat repos.txt | gtb repo remove <organization> <team>
 
 ## TODO
 
+* 集成 gtb_extend 脚本；
+* 支持 links 功能；
 * ~~支持指定 `--terms`，值为逗号分隔，这样可以把往届的学员都写到一个 students 文件中；~~
 * 目前 build project 时前端支持的是 yarn，考虑未来增加更多支持；
 * 兼容性问题暂未考虑，使用中遇到时再改；
