@@ -679,6 +679,7 @@ cat repos.txt | gtb repo remove <organization> <team>
 
 ## TODO
 
+* 增加 team list 命令；
 * 批量创建 comments 分支；
 * 集成 gtb_extend 脚本；
 * 支持 links 功能；
