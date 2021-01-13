@@ -33,6 +33,20 @@ run() {
     eval $*
 }
 
+logt() {
+    local fg_color=$1
+    local bg_color=$2
+    shift 2
+    echo "$(tput setab $bg_color)$(tput setaf $fg_color)$*$(tput sgr 0)"
+}
+
+logtn() {
+    local fg_color=$1
+    local bg_color=$2
+    shift 2
+    echo -n "$(tput setab $bg_color)$(tput setaf $fg_color)$*$(tput sgr 0)"
+}
+
 fail() {
     error $*
     exit 1
@@ -67,10 +81,28 @@ gh_membership() {
     gh api "/orgs/${ORG}/memberships/${USERNAME}" 2>/dev/null | jsonpp
 }
 
-gh_is_active_admin_role() {
-    local ORG=${1:?org is required!}
-    local USERNAME=${2:?username is required!}
-    gh_membership $ORG $USERNAME | grep -A1 '"state": "active"' | grep --silent '"role": "admin"'
+gh_is_pending() {
+    cat | grep --silent '"state": "pending"'
+}
+
+gh_is_active() {
+    cat | grep --silent '"state": "active"'
+}
+
+gh_is_active_admin() {
+    cat | grep -A1 '"state": "active"' | grep --silent '"role": "admin"'
+}
+
+gh_is_active_member() {
+    cat | grep -A1 '"state": "active"' | grep --silent '"role": "member"'
+}
+
+gh_is_pending_admin() {
+    cat | grep -A1 '"state": "pending"' | grep --silent '"role": "admin"'
+}
+
+gh_is_pending_member() {
+    cat | grep -A1 '"state": "pending"' | grep --silent '"role": "member"'
 }
 
 build_repo() {
@@ -432,7 +464,7 @@ _gtb_student() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
-_gtb_invitation_org_open() {
+_gtb_invitation_org_accept() {
     local USERNAME=$1
     shift
 
@@ -442,19 +474,53 @@ _gtb_invitation_org_open() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if [[ -z "$USERNAME" ]] || ! gh api "/orgs/${ORG}/members/${USERNAME}" >/dev/null 2>&1; then
+                if gh_membership $ORG $USERNAME | gh_is_pending_admin; then
                     run "open https://github.com/orgs/${ORG}/invitation"
-                    sleep 1
+                    sleep .5
                 fi
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
 
+_gtb_invitation_org_list() {
+    local USERNAME=${1:?username is required!}
+    shift
+
+    logtn 15 28  ' active admin   ' 1>&2
+    logtn 15 32  ' pending admin  ' 1>&2
+    logtn 15 220 ' pending member ' 1>&2
+    logtn 15 52  ' active member  ' 1>&2
+    logt  15 160 ' no invitation  ' 1>&2
+
+    echo 1>&2
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                local membership=$(gh_membership $ORG $USERNAME)
+                if echo $membership | gh_is_active_admin; then
+                    logt 28  0 $ORG
+                elif echo $membership | gh_is_pending_admin; then
+                    logt 32 0 $ORG
+                elif echo $membership | gh_is_pending_member; then
+                    logt 220 0 $ORG
+                elif echo $membership | gh_is_active_member; then
+                    logt 52 0 $ORG
+                else
+                    logt 160 0 $ORG
+                fi
             fi
         fi
     done < $GTB_STUDENTS_FILE
 }
 
 _gtb_invitation_org() {
-    if ! echo $1 | grep --silent '^\(open\)$'; then
-        set -- open "$@"
+    if ! echo $1 | grep --silent '^\(list\|accept\)$'; then
+        set -- list "$@"
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
@@ -476,7 +542,7 @@ _gtb_role_check() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if gh_is_active_admin_role $ORG $USERNAME; then
+                if gh_membership $ORG $USERNAME | gh_is_active_admin; then
                     info "$ORG $TAGS"
                 else
                     error "$ORG $TAGS"
