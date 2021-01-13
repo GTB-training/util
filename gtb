@@ -454,7 +454,7 @@ _gtb_invitation() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
-_gtb_org_role_check() {
+_gtb_role_check() {
     local USERNAME=${1:?Trainer username is required!}
     shift
 
@@ -464,7 +464,7 @@ _gtb_org_role_check() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if gh api "/orgs/${ORG}/memberships/${USERNAME}" 2>&1 | jsonpp | grep -A1 '"state": "active"' | grep --silent '"role": "admin"'; then
+                if gh api "/orgs/${ORG}/memberships/${USERNAME}" 2>/dev/null | jsonpp | grep -A1 '"state": "active"' | grep --silent '"role": "admin"'; then
                     info "$ORG $TAGS"
                 else
                     error "$ORG $TAGS"
@@ -475,15 +475,7 @@ _gtb_org_role_check() {
     done < $GTB_STUDENTS_FILE
 }
 
-_gtb_org_role() {
-    if ! echo $1 | grep --silent '^\(check\)$'; then
-        set -- check "$@"
-    fi
-
-    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_org() {
+_gtb_role() {
     assert_students_file_exists
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
