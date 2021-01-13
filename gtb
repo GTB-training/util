@@ -378,6 +378,29 @@ _gtb_student_group() {
         column -t
 }
 
+_gtb_student_check() {
+    assert_students_file_exists
+
+    GITHUB_USERNAME="${GITHUB_USERNAME:?GITHUB_USERNAME should be set!}"
+    GITHUB_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN should be set!}"
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                if gh api "/orgs/$ORG" 2>/dev/null | jsonpp | grep --silent "\"login\": \"$ORG\""
+                then
+                    info "$TERM_NAME $FULLNAME $ORG $TAGS"
+                else
+                    error "$TERM_NAME $FULLNAME $ORG $TAGS"
+                fi
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
 _gtb_student_list() {
     while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
