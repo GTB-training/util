@@ -61,6 +61,12 @@ _gtb_run_subcommand() {
     $subcommand_function "$@"
 }
 
+gh_membership() {
+    local ORG=${1:?org is required!}
+    local USERNAME=${2:?username is required!}
+    gh api "/orgs/${ORG}/memberships/${USERNAME}" 2>/dev/null | jsonpp
+}
+
 build_repo() {
     local repo_name=$1
     local fullname=$2
@@ -464,7 +470,7 @@ _gtb_role_check() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if gh api "/orgs/${ORG}/memberships/${USERNAME}" 2>/dev/null | jsonpp | grep -A1 '"state": "active"' | grep --silent '"role": "admin"'; then
+                if gh_membership $ORG $USERNAME | grep -A1 '"state": "active"' | grep --silent '"role": "admin"'; then
                     info "$ORG $TAGS"
                 else
                     error "$ORG $TAGS"
