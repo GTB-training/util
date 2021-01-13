@@ -420,6 +420,40 @@ _gtb_student() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_invitation_org_open() {
+    local USERNAME=$1
+    shift
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                if [[ -z "$USERNAME" ]] || ! gh api "/orgs/${ORG}/members/${USERNAME}" >/dev/null 2>&1; then
+                    run "open https://github.com/orgs/${ORG}/invitation"
+                    sleep 1
+                fi
+
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_invitation_org() {
+    if ! echo $1 | grep --silent '^\(open\)$'; then
+        set -- open "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_invitation() {
+    assert_students_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 remove_repo_from_team() {
     local ORG=$1
     local TEAM=$2
