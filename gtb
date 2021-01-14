@@ -524,6 +524,28 @@ _gtb_student_org_invite() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_student_org_join() {
+    local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. zhang.zhe, wang.ke)}
+    shift
+
+    local trainer_username=$(_gtb_trainer_username $TRAINER_FULLNAME)
+    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$trainer_username"
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                if gh_membership $ORG $trainer_username | gh_is_pending_admin; then
+                    run "open https://github.com/orgs/${ORG}/invitation"
+                    sleep .5
+                fi
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
 _gtb_check_student_org_for_presence() {
     if _gtb_is_a_trainer $1; then
         shift
@@ -604,7 +626,7 @@ _gtb_student_org_check() {
 }
 
 _gtb_student_org() {
-    if ! echo $1 | grep --silent '^\(invite\|check\)$'; then
+    if ! echo $1 | grep --silent '^\(invite\|check\|join\)$'; then
         set -- check "$@"
     fi
 
@@ -642,25 +664,6 @@ _gtb_student() {
     assert_students_file_exists
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_invitation_org_accept() {
-    local USERNAME=$1
-    shift
-
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                if gh_membership $ORG $USERNAME | gh_is_pending_admin; then
-                    run "open https://github.com/orgs/${ORG}/invitation"
-                    sleep .5
-                fi
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
 }
 
 remove_repo_from_team() {
