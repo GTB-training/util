@@ -589,7 +589,9 @@ _gtb_check_student_org_for_trainer_role() {
 }
 
 _gtb_student_org_check() {
-    _gtb_check_student_org_for_presence "$@"
+    if [[ "$CHECK_ROLE_ONLY" == "false" ]]; then
+        _gtb_check_student_org_for_presence "$@"
+    fi
 
     assert_trainers_file_exists
     if ! _gtb_is_a_trainer $1; then
@@ -975,6 +977,7 @@ AUTO_UPDATE="false"
 AUTO_BUILD="false"
 AUTO_ACCEPT="true"
 AUTO_TEST="false"
+CHECK_ROLE_ONLY="false"
 
 while :; do
     case $1 in
@@ -989,6 +992,9 @@ while :; do
             ;;
         -t|--test)
             AUTO_TEST="true"
+            ;;
+        --role)
+            CHECK_ROLE_ONLY="true"
             ;;
         --)
             shift
