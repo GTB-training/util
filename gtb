@@ -579,9 +579,6 @@ _gtb_invitation_org_accept() {
 }
 
 _gtb_invitation_org_list() {
-    local USERNAME=${1:?username is required!}
-    shift
-
     echo 1>&2
     logtn 15 28  '  active admin  ' 1>&2
     logtn 15 32  ' pending admin  ' 1>&2
@@ -590,13 +587,19 @@ _gtb_invitation_org_list() {
     logt  15 160 ' no invitation  ' 1>&2
     echo 1>&2
 
+    local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. zhang.zhe, wang.ke)}
+    shift
+
+    local trainer_username=$(_gtb_trainer_username $TRAINER_FULLNAME)
+    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$trainer_username"
+
     while read -r FULLNAME ORG TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                local membership=$(gh_membership $ORG $USERNAME)
+                local membership=$(gh_membership $ORG $trainer_username)
                 if echo $membership | gh_is_active_admin; then
                     logt 28  0 $ORG
                 elif echo $membership | gh_is_pending_admin; then
