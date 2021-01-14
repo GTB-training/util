@@ -9,6 +9,7 @@ GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gra
 GTB_REPOS_DIR="repos"
 GTB_TERMS_DIR="terms"
 SUBCMD_PREFIX='_gtb'
+GTB_DEFAULT_REPO_ROOT="$GTB_ROOT/$GTB_REPOS_DIR/default"
 
 SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
 shift
@@ -30,7 +31,7 @@ debug() {
 }
 
 run() {
-    echo "$(tput setaf 2)$*$(tput sgr 0)"
+    echo "$(tput setaf 2)$*$(tput sgr 0)" 1>&2
     eval $*
 }
 
@@ -67,6 +68,11 @@ strip_colors() {
         echo "$line" | \
             sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g'
     done
+}
+
+_gtb_default_repo_dir() {
+    local REPO_NAME=${1:?Repo name is required!}
+    echo "$GTB_DEFAULT_REPO_ROOT/$REPO_NAME"
 }
 
 _gtb_run_subcommand() {
@@ -122,6 +128,24 @@ gh_create_invitation() {
 
 gh_is_invitation_created() {
     cat | grep --silent '"created_at":'
+}
+
+gh_create_org_repo() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    local response=$(run "gh api -X POST /orgs/$ORG/repos -F private=true -F name=$REPO_NAME 2>/dev/null" | jsonpp)
+
+    if echo $response | grep --silent "\"full_name\": \"$ORG/$REPO_NAME\""; then
+        return 0
+    fi
+
+    if echo $response | grep --silent '"message": "name already exists on this account"'; then
+        return 0
+    fi
+
+    error $response
+    return 1
 }
 
 build_repo() {
@@ -284,6 +308,12 @@ assert_students_file_exists() {
         error "Cannot find students file: '$GTB_STUDENTS_FILE'."
         exit 1
     fi
+}
+
+assert_local_repo_exists() {
+    local REPO_NAME=${1:?Repo name is required!}
+
+    [[ -d $(_gtb_default_repo_dir $REPO_NAME) ]] || fail "Cannot find repo '$REPO_NAME' in '$GTB_DEFAULT_REPO_ROOT/'."
 }
 
 extract_comment_context() {
@@ -675,6 +705,67 @@ remove_repo_from_team() {
     run "gh api --silent -X DELETE $ENDPOINT"
 
     [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
+}
+
+_gtb_push_to_student_repo() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    cd $(_gtb_default_repo_dir $REPO_NAME)
+
+    run "git push $ORG origin/master:refs/heads/master"
+    run "git push --force $ORG origin/master:refs/heads/latest"
+}
+
+_gtb_create_repo_in_student_org() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    cd $(_gtb_default_repo_dir $REPO_NAME)
+
+    if git remote | grep --silent "$ORG"; then
+        return 0
+    fi
+
+    gh_create_org_repo $ORG $REPO_NAME
+    if [[ $? -ne 0 ]]; then
+        fail "Failed to create repo '$REPO_NAME' in '$ORG'."
+    fi
+
+    local repo_url="git@github.com:$ORG/${REPO_NAME}.git"
+    run "git remote add $ORG $repo_url"
+}
+
+_gtb_update_local_repo() {
+    local REPO_NAME=${1:?Repo name is required!}
+
+    cd $(_gtb_default_repo_dir $REPO_NAME)
+    run "git fetch origin"
+
+    if [[ $? -ne 0 ]]; then
+        fail "Failed to update local repo '$REPO_NAME'."
+    fi
+}
+
+_gtb_repo_publish() {
+    local REPO_NAME=$1
+    shift
+
+    assert_local_repo_exists $REPO_NAME
+
+    _gtb_update_local_repo $REPO_NAME
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                _gtb_create_repo_in_student_org $ORG $REPO_NAME
+                _gtb_push_to_student_repo $ORG $REPO_NAME
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
 }
 
 _gtb_repo_remove() {
