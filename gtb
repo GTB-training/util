@@ -535,12 +535,12 @@ _gtb_invitation_org_list() {
     local USERNAME=${1:?username is required!}
     shift
 
+    echo 1>&2
     logtn 15 28  ' active admin   ' 1>&2
     logtn 15 32  ' pending admin  ' 1>&2
     logtn 15 220 ' pending member ' 1>&2
     logtn 15 52  ' active member  ' 1>&2
     logt  15 160 ' no invitation  ' 1>&2
-
     echo 1>&2
 
     while read -r FULLNAME ORG TERM_NAME TAGS
@@ -581,7 +581,7 @@ _gtb_invitation() {
 }
 
 _gtb_role_check() {
-    local USERNAME=${1:?Trainer username is required!}
+    local USERNAME=${1:?Trainer GitHub username is required!}
     shift
 
     while read -r FULLNAME ORG TERM_NAME TAGS
@@ -591,9 +591,9 @@ _gtb_role_check() {
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
                 if gh_membership $ORG $USERNAME | gh_is_active_admin; then
-                    info "$ORG $TAGS"
+                    logt 28 0 "$ORG $TAGS"
                 else
-                    error "$ORG $TAGS"
+                    logt 160 0 "$ORG $TAGS"
                 fi
 
             fi
