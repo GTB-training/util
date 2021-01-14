@@ -34,6 +34,14 @@ run() {
     eval $*
 }
 
+header() {
+    tput setab 15
+    tput setab 91
+    printf "%-80s" "$*"
+    tput sgr0
+    printf "\n"
+}
+
 logt() {
     local fg_color=$1
     local bg_color=$2
@@ -391,6 +399,22 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 EOF
 }
 
+_gtb_is_a_trainer() {
+    if [[ -z "$*" ]]; then
+        return 1
+    fi
+
+    while read -r FULLNAME USERNAME ID TAGS
+    do
+        if echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        then
+            return 0
+        fi
+    done < $GTB_TRAINERS_FILE
+
+    return 2
+}
+
 _gtb_trainer_id() {
     while read -r FULLNAME USERNAME ID TAGS
     do
@@ -500,12 +524,18 @@ _gtb_student_org_invite() {
     done < $GTB_STUDENTS_FILE
 }
 
-_gtb_student_org_check() {
+_gtb_check_student_org_for_presence() {
+    if _gtb_is_a_trainer $1; then
+        shift
+    fi
+
+    header "Checking student org for presence..."
+
     while read -r FULLNAME ORG TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
         then
-            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
                 if gh api "/orgs/$ORG" 2>/dev/null | jsonpp | grep --silent "\"login\": \"$ORG\""
                 then
@@ -518,9 +548,62 @@ _gtb_student_org_check() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_check_student_org_for_trainer_role() {
+    assert_trainers_file_exists
+
+    header "Checking student org for trainer's role which should be admin..."
+
+    logtn 15 28  '  active admin  ' 1>&2
+    logtn 15 32  ' pending admin  ' 1>&2
+    logtn 15 220 ' pending member ' 1>&2
+    logtn 15 13  ' active member  ' 1>&2
+    logt  15 161 ' no invitation  ' 1>&2
+
+    local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. zhang.zhe, wang.ke)}
+    shift
+
+    local trainer_username=$(_gtb_trainer_username $TRAINER_FULLNAME)
+    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$trainer_username"
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                local membership=$(gh_membership $ORG $trainer_username)
+                if echo $membership | gh_is_active_admin; then
+                    logt 15 28 $ORG
+                elif echo $membership | gh_is_pending_admin; then
+                    logt 15 32 $ORG
+                elif echo $membership | gh_is_pending_member; then
+                    logt 15 220 $ORG
+                elif echo $membership | gh_is_active_member; then
+                    logt 15 13 $ORG
+                else
+                    logt 15 161 $ORG
+                fi
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_student_org_check() {
+    _gtb_check_student_org_for_presence "$@"
+
+    assert_trainers_file_exists
+    if ! _gtb_is_a_trainer $1; then
+        return 0
+    fi
+
+    echo
+
+    _gtb_check_student_org_for_trainer_role "$@"
+}
+
 _gtb_student_org() {
-    if ! echo $1 | grep --silent '^\(invite\)$'; then
-        set -- invite "$@"
+    if ! echo $1 | grep --silent '^\(invite\|check\)$'; then
+        set -- check "$@"
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
@@ -576,85 +659,6 @@ _gtb_invitation_org_accept() {
             fi
         fi
     done < $GTB_STUDENTS_FILE
-}
-
-_gtb_invitation_org_list() {
-    echo 1>&2
-    logtn 15 28  '  active admin  ' 1>&2
-    logtn 15 32  ' pending admin  ' 1>&2
-    logtn 15 220 ' pending member ' 1>&2
-    logtn 15 52  ' active member  ' 1>&2
-    logt  15 160 ' no invitation  ' 1>&2
-    echo 1>&2
-
-    local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. zhang.zhe, wang.ke)}
-    shift
-
-    local trainer_username=$(_gtb_trainer_username $TRAINER_FULLNAME)
-    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$trainer_username"
-
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                local membership=$(gh_membership $ORG $trainer_username)
-                if echo $membership | gh_is_active_admin; then
-                    logt 28  0 $ORG
-                elif echo $membership | gh_is_pending_admin; then
-                    logt 32 0 $ORG
-                elif echo $membership | gh_is_pending_member; then
-                    logt 220 0 $ORG
-                elif echo $membership | gh_is_active_member; then
-                    logt 52 0 $ORG
-                else
-                    logt 160 0 $ORG
-                fi
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
-}
-
-_gtb_invitation_org() {
-    if ! echo $1 | grep --silent '^\(list\|accept\)$'; then
-        set -- list "$@"
-    fi
-
-    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_invitation() {
-    assert_students_file_exists
-
-    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_role_check() {
-    local USERNAME=${1:?Trainer GitHub username is required!}
-    shift
-
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                if gh_membership $ORG $USERNAME | gh_is_active_admin; then
-                    logt 28 0 "$ORG $TAGS"
-                else
-                    logt 160 0 "$ORG $TAGS"
-                fi
-
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
-}
-
-_gtb_role() {
-    assert_students_file_exists
-
-    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 remove_repo_from_team() {
