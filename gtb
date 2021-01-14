@@ -583,7 +583,7 @@ _gtb_invitation_org_list() {
     shift
 
     echo 1>&2
-    logtn 15 28  ' active admin   ' 1>&2
+    logtn 15 28  '  active admin  ' 1>&2
     logtn 15 32  ' pending admin  ' 1>&2
     logtn 15 220 ' pending member ' 1>&2
     logtn 15 52  ' active member  ' 1>&2
