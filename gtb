@@ -406,7 +406,7 @@ _gtb_trainer_username() {
     do
         if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
         then
-            info "$USERNAME"
+            echo "$USERNAME"
         fi
     done < $GTB_TRAINERS_FILE
 }
@@ -416,7 +416,7 @@ _gtb_trainer_list() {
     do
         if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
         then
-            info "$FULLNAME $USERNAME $ID $TAGS"
+            echo "$FULLNAME $USERNAME $ID $TAGS"
         fi
     done < $GTB_TRAINERS_FILE
 }
