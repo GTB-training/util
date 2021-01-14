@@ -106,6 +106,16 @@ gh_is_pending_member() {
     cat | grep -A1 '"state": "pending"' | grep --silent '"role": "member"'
 }
 
+gh_create_invitation() {
+    local ORG=${1:?Org is required!}
+    local INVITEE_ID=${2:?Invitee ID is required!}
+    gh api /orgs/${ORG}/invitations -F role=admin -F invitee_id=$INVITEE_ID 2>/dev/null
+}
+
+gh_is_invitation_created() {
+    cat | grep --silent '"created_at":'
+}
+
 build_repo() {
     local repo_name=$1
     local fullname=$2
@@ -246,6 +256,13 @@ clone_or_update_repos() {
     done < $GTB_STUDENTS_FILE
 }
 
+assert_not_empty() {
+    if [[ -z "$2" ]]
+    then
+        fail "$1"
+    fi
+}
+
 assert_trainers_file_exists() {
     if [[ ! -f $GTB_TRAINERS_FILE ]]
     then
@@ -379,7 +396,7 @@ _gtb_trainer_id() {
     do
         if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
         then
-            info "$ID"
+            echo "$ID"
         fi
     done < $GTB_TRAINERS_FILE
 }
@@ -451,6 +468,41 @@ _gtb_student_random_generate() {
 _gtb_student_random() {
     if ! echo $1 | grep --silent '^\(next\|show\|reset\|clear\)$'; then
         set -- generate "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_student_org_invite() {
+    assert_trainers_file_exists
+
+    local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. qu.hang wang.xiaofeng)}
+    shift 1
+
+    local invitee_id=$(_gtb_trainer_id $TRAINER_FULLNAME)
+    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$invitee_id"
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                local response=$(gh_create_invitation $ORG $invitee_id)
+                if echo $response | gh_is_invitation_created; then
+                    info "$ORG $TRAINER_FULLNAME"
+                else
+                    error "$ORG $TRAINER_FULLNAME"
+                    echo $response | jsonpp 1>&2
+                fi
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_student_org() {
+    if ! echo $1 | grep --silent '^\(invite\)$'; then
+        set -- invite "$@"
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
