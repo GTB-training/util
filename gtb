@@ -594,7 +594,7 @@ _gtb_invitation_org_list() {
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
         then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
                 local membership=$(gh_membership $ORG $USERNAME)
                 if echo $membership | gh_is_active_admin; then
