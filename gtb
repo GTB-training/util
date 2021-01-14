@@ -374,6 +374,46 @@ $(extract_detail_comments_for_dimension '0\|综合' '-')
 EOF
 }
 
+_gtb_trainer_id() {
+    while read -r FULLNAME USERNAME ID TAGS
+    do
+        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        then
+            info "$ID"
+        fi
+    done < $GTB_TRAINERS_FILE
+}
+
+_gtb_trainer_username() {
+    while read -r FULLNAME USERNAME ID TAGS
+    do
+        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        then
+            info "$USERNAME"
+        fi
+    done < $GTB_TRAINERS_FILE
+}
+
+_gtb_trainer_list() {
+    while read -r FULLNAME USERNAME ID TAGS
+    do
+        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        then
+            info "$FULLNAME $USERNAME $ID $TAGS"
+        fi
+    done < $GTB_TRAINERS_FILE
+}
+
+_gtb_trainer() {
+    assert_trainers_file_exists
+
+    if ! echo $1 | grep --silent '^\(list\|username\|id\)$'; then
+        set -- list "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_student_random_clear() {
     _gtb_student_random_reset
 }
