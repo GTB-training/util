@@ -2,6 +2,7 @@
 
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
 GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (term01, term02, etc.)}"
+GTB_TRAINERS_FILE="${GTB_TRAINERS_FILE:-$GTB_ROOT/trainers.txt}"
 GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
 GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
@@ -243,6 +244,13 @@ clone_or_update_repos() {
             fi
         fi
     done < $GTB_STUDENTS_FILE
+}
+
+assert_trainers_file_exists() {
+    if [[ ! -f $GTB_TRAINERS_FILE ]]
+    then
+        fail "Cannot find trainers file: '$GTB_TRAINERS_FILE'."
+    fi
 }
 
 assert_students_file_exists() {
@@ -839,10 +847,17 @@ _gtb_show() {
 }
 
 _gtb_init() {
+    mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
+    mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
+
+    if [[ ! -f $GTB_TRAINERS_FILE ]]
+    then
+        touch $GTB_TRAINERS_FILE
+        info "Created trainers file: '$GTB_TRAINERS_FILE'."
+    fi
+
     if [[ ! -f $GTB_STUDENTS_FILE ]]
     then
-        mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
-        mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
         touch $GTB_STUDENTS_FILE
         info "Created students file: '$GTB_STUDENTS_FILE'."
     fi
