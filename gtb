@@ -1018,9 +1018,7 @@ _gtb_clone_default_repo() {
     local REPO_NAME=${1:?Repo name is required!}
     local repo_dir=$(_gtb_default_repo_dir $REPO_NAME)
 
-    [[ -d $repo_dir ]] || mkdir -p $repo_dir
-
-    gh_clone_repo tws-graduate-program $REPO_NAME $repo_dir
+    [[ -d $repo_dir ]] || gh_clone_repo tws-graduate-program $REPO_NAME $repo_dir
 }
 
 _gtb_update_default_repo() {
@@ -1034,6 +1032,8 @@ _gtb_update_default_repo() {
 _gtb_repo_publish() {
     local REPO_NAME=$1
     shift
+
+    header "Preparing local default repo $REPO_NAME..."
 
     _gtb_clone_default_repo $REPO_NAME
     if [[ $? -ne 0 ]]; then
@@ -1051,6 +1051,8 @@ _gtb_repo_publish() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
+                echo
+                header "Publish repo $REPO_NAME to $ORG..."
                 _gtb_create_repo_in_student_org $ORG $REPO_NAME
                 _gtb_push_to_student_repo $ORG $REPO_NAME
                 gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
