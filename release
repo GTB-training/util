@@ -1,0 +1,39 @@
+#!/bin/bash
+
+VERSION=${1:?Version is required! release <version> [ref] (e.g. v1.18.0, v0.0.1)}
+REF=${2}
+
+run() {
+    echo "$(tput setaf 40)$*$(tput sgr0)" 1>&2
+    eval $*
+}
+
+log() {
+    echo "$(tput setaf 33)$*$(tput sgr0)" 1>&2
+}
+
+[[ -z "$REF" ]] && REF=HEAD
+
+run "git tag $VERSION $REF"
+run "git push origin master && git push --tags"
+run "sleep 3"
+run "wget -P $HOME/Downloads/ https://github.com/GTB-training/util/archive/${VERSION}.tar.gz"
+
+checksum=$(run "shasum -a 256 $HOME/Downloads/${VERSION}.tar.gz | cut -d' ' -f1")
+
+(
+    log 'Start to update homebrew-gtb...'
+
+    cd ../homebrew-gtb/
+    sed -i '' -e "s:/v.*\":/$VERSION\":" -e "s:sha256 \".*\":sha256 \"$checksum\":" util.rb
+
+    git diff
+
+    read -p "Are you sure to commit and push? (y|n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        git add . && git commit -m "upgrade to $VERSION" && git push
+    fi
+)
+
