@@ -217,10 +217,20 @@ gh_init_repo_secrets() {
     local TERM=${3:?Term is required!}
     local FULLNAME=${4:?Fullname is required!}
 
-    gh_set_repo_secret $ORG $REPO_NAME SONAR_ADDRESS $GTB_SONAR_ADDRESS
-    gh_set_repo_secret $ORG $REPO_NAME SONAR_TOKEN $GTB_SONAR_TOKEN
-    gh_set_repo_secret $ORG $REPO_NAME STUDENT_TERM $TERM
-    gh_set_repo_secret $ORG $REPO_NAME STUDENT_NAME $FULLNAME
+    local secrets=$(gh_secret_list $ORG $REPO_NAME | cut -f1)
+
+    if ! echo $secrets | grep --silent SONAR_ADDRESS; then
+        gh_set_repo_secret $ORG $REPO_NAME SONAR_ADDRESS $GTB_SONAR_ADDRESS
+    fi
+    if ! echo $secrets | grep --silent SONAR_TOKEN; then
+        gh_set_repo_secret $ORG $REPO_NAME SONAR_TOKEN $GTB_SONAR_TOKEN
+    fi
+    if ! echo $secrets | grep --silent STUDENT_TERM; then
+        gh_set_repo_secret $ORG $REPO_NAME STUDENT_TERM $TERM
+    fi
+    if ! echo $secrets | grep --silent STUDENT_NAME; then
+        gh_set_repo_secret $ORG $REPO_NAME STUDENT_NAME $FULLNAME
+    fi
 }
 
 gh_create_org_repo() {
