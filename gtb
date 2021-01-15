@@ -153,6 +153,25 @@ gh_list_org_repos() {
         sed -e 's/ true$//' -e 's/false$/🟢/'
 }
 
+gh_show_org_repo() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    local ENDPOINT="/repos/$ORG/$REPO_NAME"
+    local OUTPUT="$ORG $REPO_NAME"
+
+    gh api $ENDPOINT 1>/dev/null 2>&1
+
+    local result=$?
+    if [[ $result -eq 0 ]]; then
+        echo $OUTPUT
+    else
+        error $OUTPUT
+    fi
+
+    return $result
+}
+
 gh_create_org_repo() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
@@ -725,8 +744,24 @@ _gtb_student_repo_list() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_student_repo_show() {
+    local REPO_NAME=${1:?Repo name is required!}
+    shift
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                gh_show_org_repo $ORG $REPO_NAME
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
 _gtb_student_repo() {
-    if ! echo $1 | grep --silent '^\(list\|create\|delete\)$'; then
+    if ! echo $1 | grep --silent '^\(show\|list\|create\|delete\)$'; then
         set -- list "$@"
     fi
 
