@@ -690,6 +690,24 @@ _gtb_student_list() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_student_show() {
+    local STUDENT_FULLNAME=${1:?Trainee fullname is required! (e.g. zhang.san, li.si, etc.)}
+
+    while read -r FULLNAME USERNAME TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ "$FULLNAME" == "$STUDENT_FULLNAME" ]]
+            then
+                echo "$TERM_NAME $FULLNAME $USERNAME $TAGS"
+                return 0
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+
+    return 1
+}
+
 _gtb_student() {
     assert_students_file_exists
 
