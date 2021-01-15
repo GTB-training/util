@@ -1006,8 +1006,10 @@ _gtb_create_repo_in_student_org() {
     fi
 
     gh_create_org_repo $ORG $REPO_NAME
-    if [[ $? -ne 0 ]]; then
-        fail "Failed to create repo '$REPO_NAME' in '$ORG'."
+    local result=$?
+    if [[ $result -ne 0 ]]; then
+        error "Failed to create repo '$REPO_NAME' in '$ORG'."
+        return $result
     fi
 
     local repo_url="git@github.com:$ORG/${REPO_NAME}.git"
@@ -1053,7 +1055,7 @@ _gtb_repo_publish() {
             then
                 echo
                 header "Publish repo $REPO_NAME to $ORG..."
-                _gtb_create_repo_in_student_org $ORG $REPO_NAME
+                _gtb_create_repo_in_student_org $ORG $REPO_NAME || continue
                 _gtb_push_to_student_repo $ORG $REPO_NAME
                 gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
             fi
