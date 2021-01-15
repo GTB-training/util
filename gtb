@@ -1056,8 +1056,8 @@ _gtb_repo_publish() {
                 echo
                 header "Publish repo $REPO_NAME to $ORG..."
                 _gtb_create_repo_in_student_org $ORG $REPO_NAME || continue
-                _gtb_push_to_student_repo $ORG $REPO_NAME
                 gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
+                _gtb_push_to_student_repo $ORG $REPO_NAME
             fi
         fi
     done < $GTB_STUDENTS_FILE
