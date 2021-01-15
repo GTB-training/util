@@ -4,6 +4,8 @@ GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
 GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (term01, term02, etc.)}"
 GTB_TRAINERS_FILE="${GTB_TRAINERS_FILE:-$GTB_ROOT/trainers.txt}"
 GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_ROOT/students.txt}"
+GTB_SONAR_ADDRESS="${GTB_SONAR_ADDRESS:?Please set env GTB_SONAR_ADDRESS correctly! (P.S. Ask ZHANG Zhe)}"
+GTB_SONAR_TOKEN="${GTB_SONAR_TOKEN:?Please set env GTB_SONAR_TOKEN correctly! (P.S. Ask ZHANG Zhe)}"
 GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 GTB_REPOS_DIR="repos"
@@ -170,6 +172,55 @@ gh_show_org_repo() {
     fi
 
     return $result
+}
+
+gh_secret_list() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    gh secret list -R $ORG/$REPO_NAME 2>/dev/null
+}
+
+gh_remove_repo_secret() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+    local NAME=${3:?Secret name is required!}
+
+    local response=$(gh secret -R $ORG/$REPO_NAME remove $NAME 2>&1)
+
+    if echo $response | grep --silent "Removed secret wang from"; then
+        echo "✓ Removed secret $NAME from $ORG/$REPO_NAME"
+        return 0
+    fi
+
+    if echo $response | grep --silent 'failed to delete secret wang: HTTP 404'; then
+        echo "✓ Removed secret $NAME from $ORG/$REPO_NAME"
+        return 0
+    fi
+
+    error $response
+    return 1
+}
+
+gh_set_repo_secret() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+    local NAME=${3:?Secret name is required!}
+    local VALUE=${4:?Secret value is required!}
+
+    gh secret -R $ORG/$REPO_NAME set $NAME -b"$VALUE"
+}
+
+gh_init_repo_secrets() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+    local TERM=${3:?Term is required!}
+    local FULLNAME=${4:?Fullname is required!}
+
+    gh_set_repo_secret $ORG $REPO_NAME SONAR_ADDRESS $GTB_SONAR_ADDRESS
+    gh_set_repo_secret $ORG $REPO_NAME SONAR_TOKEN $GTB_SONAR_TOKEN
+    gh_set_repo_secret $ORG $REPO_NAME STUDENT_TERM $TERM
+    gh_set_repo_secret $ORG $REPO_NAME STUDENT_NAME $FULLNAME
 }
 
 gh_create_org_repo() {
@@ -843,6 +894,84 @@ _gtb_student() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_secret_init() {
+    local REPO_NAME=${1:?Repo name is required!}
+    shift
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                logt 15 27 "Initialize default repository secrets for $ORG/$REPO_NAME..." 1>&2
+                gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_secret_remove() {
+    local REPO_NAME=${1:?Repo name is required!}
+    local NAME=${2:?Secret name is required!}
+    shift 2
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if ! echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            continue
+        fi
+
+        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        then
+            gh_remove_repo_secret $ORG $REPO_NAME $NAME
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_secret_set() {
+    local REPO_NAME=${1:?Repo name is required!}
+    local NAME=${2:?Secret name is required!}
+    local VALUE=${3:?Secret value is required!}
+    shift 3
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                logt 15 27 "Set repository secret for $ORG/$REPO_NAME..." 1>&2
+                gh_set_repo_secret $ORG $REPO_NAME $NAME $VALUE
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_secret_list() {
+    local REPO_NAME=${1:?Repo name is required!}
+    shift
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                logt 15 27 "List repository secrets from $ORG/$REPO_NAME..." 1>&2
+                gh_secret_list $ORG $REPO_NAME
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_secret() {
+    assert_students_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 remove_repo_from_team() {
     local ORG=$1
     local TEAM=$2
@@ -910,6 +1039,7 @@ _gtb_repo_publish() {
             then
                 _gtb_create_repo_in_student_org $ORG $REPO_NAME
                 _gtb_push_to_student_repo $ORG $REPO_NAME
+                gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
             fi
         fi
     done < $GTB_STUDENTS_FILE
