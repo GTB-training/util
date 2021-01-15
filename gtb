@@ -14,6 +14,10 @@ GTB_DEFAULT_REPO_ROOT="$GTB_ROOT/$GTB_REPOS_DIR/default"
 SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
 shift
 
+cuts() {
+    cat | cut -d' ' "$@"
+}
+
 info() {
     echo "$(tput setaf 4)$(tput bold)$*$(tput sgr 0)"
 }
@@ -128,6 +132,25 @@ gh_create_invitation() {
 
 gh_is_invitation_created() {
     cat | grep --silent '"created_at":'
+}
+
+gh_list_org_repos() {
+    local ORG=${1:?Org is required!}
+    local TEAM=${2}
+
+    local ENDPOINT="/orgs/$ORG/repos?per_page=100"
+    if [[ -n "$TEAM" ]]
+    then
+        ENDPOINT="/orgs/$ORG/teams/$TEAM/repos?per_page=100"
+    fi
+
+    run "gh api $ENDPOINT 2>/dev/null" | jsonpp | \
+        grep '    "name":\|    "private":' | \
+        tr -d '", ' | \
+        cut -d':' -f2 | \
+        paste -d' ' - - | \
+        sort | \
+        sed -e 's/ true$//' -e 's/false$/🟢/'
 }
 
 gh_create_org_repo() {
@@ -655,6 +678,27 @@ _gtb_student_org_check() {
     _gtb_check_student_org_for_trainer_role "$@"
 }
 
+_gtb_student_repo_list() {
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                gh_list_org_repos $ORG
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
+_gtb_student_repo() {
+    if ! echo $1 | grep --silent '^\(list\|create\|delete\)$'; then
+        set -- list "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_student_org() {
     if ! echo $1 | grep --silent '^\(invite\|check\|join\)$'; then
         set -- check "$@"
@@ -846,21 +890,7 @@ _gtb_repo_add() {
 }
 
 _gtb_repo_list() {
-    local ORG=${1:?Organization is required!}
-    local TEAM=${2}
-
-    local ENDPOINT="/orgs/$ORG/repos?per_page=100"
-    if [[ -n "$TEAM" ]]
-    then
-        ENDPOINT="/orgs/$ORG/teams/$TEAM/repos?per_page=100"
-    fi
-    gh api $ENDPOINT | jsonpp | \
-        grep '    "name":\|    "private":' | \
-        tr -d '", ' | \
-        cut -d':' -f2 | \
-        paste -d' ' - - | \
-        sort | \
-        sed -e 's/ true$//' -e 's/false$/🟢/'
+    gh_list_org_repos "$@"
 }
 
 _gtb_repo() {
