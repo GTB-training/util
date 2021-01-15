@@ -171,6 +171,24 @@ gh_create_org_repo() {
     return 1
 }
 
+gh_delete_repo() {
+    local OWNER=${1:?Owner is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    local response=$(run "gh api -X DELETE /repos/$OWNER/$REPO_NAME 2>/dev/null")
+
+    if [[ "$response" == "" ]]; then
+        return 0
+    fi
+
+    if echo $response | grep --silent '"message":"Not Found"'; then
+        return 0
+    fi
+
+    error $response
+    return 1
+}
+
 build_repo() {
     local repo_name=$1
     local fullname=$2
@@ -676,6 +694,22 @@ _gtb_student_org_check() {
     echo
 
     _gtb_check_student_org_for_trainer_role "$@"
+}
+
+_gtb_student_repo_delete() {
+    local REPO_NAME=${1:?Repo name is required!}
+    shift
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                gh_delete_repo $ORG $REPO_NAME
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
 }
 
 _gtb_student_repo_list() {
