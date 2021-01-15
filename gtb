@@ -778,6 +778,14 @@ _gtb_student_org_check() {
     _gtb_check_student_org_for_trainer_role "$@"
 }
 
+_gtb_student_org() {
+    if ! echo $1 | grep --silent '^\(invite\|check\|join\)$'; then
+        set -- check "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_student_secret_init() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
@@ -922,14 +930,6 @@ _gtb_student_repo_show() {
 _gtb_student_repo() {
     if ! echo $1 | grep --silent '^\(show\|list\|create\|delete\)$'; then
         set -- list "$@"
-    fi
-
-    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_student_org() {
-    if ! echo $1 | grep --silent '^\(invite\|check\|join\)$'; then
-        set -- check "$@"
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
