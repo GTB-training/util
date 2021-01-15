@@ -42,11 +42,11 @@ run() {
 }
 
 header() {
-    tput setab 15
-    tput setab 91
-    printf "%-80s" "$*"
+    tput setaf 15
+    tput setab 8
+    printf "%-80s" "$*" 1>&2
     tput sgr0
-    printf "\n"
+    printf "\n" 1>&2
 }
 
 logt() {
@@ -54,6 +54,18 @@ logt() {
     local bg_color=$2
     shift 2
     echo "$(tput setab $bg_color)$(tput setaf $fg_color)$*$(tput sgr 0)"
+}
+
+logtf() {
+    local fg_color=$1
+    shift
+    echo "$(tput setaf $fg_color)$*$(tput sgr 0)"
+}
+
+logtb() {
+    local bg_color=$1
+    shift
+    echo "$(tput setab $bg_color)$*$(tput sgr 0)"
 }
 
 logtn() {
@@ -193,7 +205,7 @@ gh_list_repo_workflow_runs() {
         grep '^      "\(run_number\|name\|status\|conclusion\|created_at\|updated_at\)"' | \
         cut -d'"' -f3 | \
         paste -d'|' - - - - - - | \
-        column -s'|' -t -x
+        column -s'|' -t
 }
 
 gh_run_repo_workflow() {
@@ -213,7 +225,7 @@ gh_workflow_list() {
         grep '^      "\(name\|path\|state\)":' | \
         cut -d'"' -f4 | \
         paste -d'|' - - - | \
-        column -s'|' -t -x | \
+        column -s'|' -t | \
         sort
 }
 
@@ -750,25 +762,19 @@ _gtb_check_student_org_for_presence() {
             then
                 if gh api "/orgs/$ORG" 2>/dev/null | jsonpp | grep --silent "\"login\": \"$ORG\""
                 then
-                    info "$TERM_NAME $FULLNAME $ORG $TAGS"
+                    logtf 28 "$TERM_NAME|$FULLNAME|$ORG|$TAGS"
                 else
-                    error "$TERM_NAME $FULLNAME $ORG $TAGS"
+                    logtf 161 "$TERM_NAME|$FULLNAME|$ORG|$TAGS"
                 fi
             fi
         fi
-    done < $GTB_STUDENTS_FILE
+    done < $GTB_STUDENTS_FILE | sort -r | column -s'|' -t
 }
 
 _gtb_check_student_org_for_trainer_role() {
     assert_trainers_file_exists
 
     header "Checking student org for trainer's role which should be admin..."
-
-    logtn 15 28  '  active admin  ' 1>&2
-    logtn 15 32  ' pending admin  ' 1>&2
-    logtn 15 220 ' pending member ' 1>&2
-    logtn 15 13  ' active member  ' 1>&2
-    logt  15 161 ' no invitation  ' 1>&2
 
     local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. zhang.zhe, wang.ke)}
     shift
@@ -784,19 +790,20 @@ _gtb_check_student_org_for_trainer_role() {
             then
                 local membership=$(gh_membership $ORG $trainer_username)
                 if echo $membership | gh_is_active_admin; then
-                    logt 15 28 $ORG
+                    logtf 28 "$ORG|active admin"
                 elif echo $membership | gh_is_pending_admin; then
-                    logt 15 32 $ORG
+                    logtf 32 "$ORG|pending admin"
                 elif echo $membership | gh_is_pending_member; then
-                    logt 15 220 $ORG
+                    logtf 220 "$ORG|pending member"
                 elif echo $membership | gh_is_active_member; then
-                    logt 15 13 $ORG
+                    logtf 13 "$ORG|active member"
                 else
-                    logt 15 161 $ORG
+                    logtf 161 "$ORG|no invitation"
                 fi
             fi
         fi
-    done < $GTB_STUDENTS_FILE
+    done < $GTB_STUDENTS_FILE | sort -r | column -s'|' -t
+
 }
 
 _gtb_student_org_check() {
