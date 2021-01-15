@@ -259,6 +259,14 @@ gh_delete_repo() {
     return 1
 }
 
+gh_clone_repo() {
+    local OWNER=${1:?Owner is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+    local DIR=${3:?Director is required!}
+
+    run "gh repo clone $OWNER/$REPO_NAME $DIR"
+}
+
 build_repo() {
     local repo_name=$1
     local fullname=$2
@@ -419,12 +427,6 @@ assert_students_file_exists() {
         error "Cannot find students file: '$GTB_STUDENTS_FILE'."
         exit 1
     fi
-}
-
-assert_local_repo_exists() {
-    local REPO_NAME=${1:?Repo name is required!}
-
-    [[ -d $(_gtb_default_repo_dir $REPO_NAME) ]] || fail "Cannot find repo '$REPO_NAME' in '$GTB_DEFAULT_REPO_ROOT/'."
 }
 
 extract_comment_context() {
@@ -1012,24 +1014,36 @@ _gtb_create_repo_in_student_org() {
     run "git remote add $ORG $repo_url"
 }
 
-_gtb_update_local_repo() {
+_gtb_clone_default_repo() {
     local REPO_NAME=${1:?Repo name is required!}
+    local repo_dir=$(_gtb_default_repo_dir $REPO_NAME)
 
-    cd $(_gtb_default_repo_dir $REPO_NAME)
+    [[ -d $repo_dir ]] || mkdir -p $repo_dir
+
+    gh_clone_repo tws-graduate-program $REPO_NAME $repo_dir
+}
+
+_gtb_update_default_repo() {
+    local REPO_NAME=${1:?Repo name is required!}
+    local repo_dir=$(_gtb_default_repo_dir $REPO_NAME)
+
+    run "cd $repo_dir"
     run "git fetch origin"
-
-    if [[ $? -ne 0 ]]; then
-        fail "Failed to update local repo '$REPO_NAME'."
-    fi
 }
 
 _gtb_repo_publish() {
     local REPO_NAME=$1
     shift
 
-    assert_local_repo_exists $REPO_NAME
+    _gtb_clone_default_repo $REPO_NAME
+    if [[ $? -ne 0 ]]; then
+        fail "Failed to clone default repo '$REPO_NAME'."
+    fi
 
-    _gtb_update_local_repo $REPO_NAME
+    _gtb_update_default_repo $REPO_NAME
+    if [[ $? -ne 0 ]]; then
+        fail "Failed to update default repo '$REPO_NAME'."
+    fi
 
     while read -r FULLNAME ORG TERM_NAME TAGS
     do
