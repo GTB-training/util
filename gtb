@@ -986,6 +986,13 @@ _gtb_student_repo_delete() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
 
+    read -p "Are you SURE to delete repo '$REPO_NAME' from students' organizaion? (Y|N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
+
     while read -r FULLNAME ORG TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
