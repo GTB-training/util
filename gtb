@@ -1491,6 +1491,17 @@ _gtb_show() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_upgrade() {
+    read -p "Are you SURE to upgrade to lastest version? (Y|N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
+
+    run "brew upgrade GTB-training/gtb/util"
+}
+
 _gtb_update() {
     [[ -d $GTB_CONFIG_DIR ]] || fail 'Cannot find config directory `$GTB_CONFIG_DIR`. Please run `gtb init` to re-init.'
     update_repo $GTB_CONFIG_DIR
