@@ -1491,6 +1491,11 @@ _gtb_show() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_update() {
+    [[ -d $GTB_CONFIG_DIR ]] || fail 'Cannot find config directory `$GTB_CONFIG_DIR`. Please run `gtb init` to re-init.'
+    update_repo $GTB_CONFIG_DIR
+}
+
 _gtb_init() {
     mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
     mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
