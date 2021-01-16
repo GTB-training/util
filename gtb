@@ -843,7 +843,7 @@ _gtb_student_workflow_runs() {
 
         if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
         then
-            logt 15 27 "Runs of workflow $WORKFLOW_FILENAME from repository $ORG/$REPO_NAME..." 1>&2
+            header "Runs of workflow $WORKFLOW_FILENAME from repository $ORG/$REPO_NAME..."
             gh_list_repo_workflow_runs $ORG $REPO_NAME $WORKFLOW_FILENAME
         fi
     done < $GTB_STUDENTS_FILE
@@ -860,7 +860,7 @@ _gtb_student_workflow_run() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                logt 15 27 "Run repository workflow $WORKFLOW_FILENAME from $ORG/$REPO_NAME..." 1>&2
+                header "Run repository workflow $WORKFLOW_FILENAME from $ORG/$REPO_NAME..."
                 gh_run_repo_workflow $ORG $REPO_NAME $WORKFLOW_FILENAME
             fi
         fi
@@ -877,7 +877,7 @@ _gtb_student_workflow_list() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                logt 15 27 "List repository workflows from $ORG/$REPO_NAME..." 1>&2
+                header "List repository workflows from $ORG/$REPO_NAME..."
                 gh_workflow_list $ORG $REPO_NAME
             fi
         fi
