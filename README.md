@@ -679,6 +679,7 @@ cat repos.txt | gtb repo remove <organization> <team>
 
 ## TODO
 
+* 可以在任何位置指定选项，而不用限制于特定位置，比如 gtb stduent --role org check wang.wu
 * 增加 repo remote add teacher/student
 * 增加 team list 命令；
 * 批量创建 comments 分支；
