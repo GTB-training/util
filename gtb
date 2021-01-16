@@ -214,7 +214,7 @@ gh_run_repo_workflow() {
     local WORKFLOW_FILENAME=${3:?Workflow filename is required!}
     local ENDPOINT="/repos/$ORG/$REPO_NAME/actions/workflows/$WORKFLOW_FILENAME/dispatches"
 
-    run "gh api -X POST $ENDPOINT -F ref=master 2>/dev/null" | jsonpp
+    (run "gh api -X POST $ENDPOINT -F ref=master 2>/dev/null" || logtf 32 $(_gtb_actions_url $ORG $REPO_NAME) >&2) | jsonpp
 }
 
 gh_workflow_list() {
@@ -1112,6 +1112,13 @@ remove_repo_from_team() {
     run "gh api --silent -X DELETE $ENDPOINT"
 
     [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
+}
+
+_gtb_actions_url() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    echo "https://github.com/$ORG/$REPO_NAME/actions"
 }
 
 _gtb_push_to_student_repo() {
