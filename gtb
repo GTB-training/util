@@ -1123,6 +1123,20 @@ _gtb_push_to_student_repo() {
     run "git push --force $ORG origin/master:refs/heads/latest"
 }
 
+_gtb_add_student_repo_as_remote() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+
+    cd $(_gtb_default_repo_dir $REPO_NAME)
+
+    if git remote | grep --silent "$ORG"; then
+        return 0
+    fi
+
+    local repo_url="git@github.com:$ORG/${REPO_NAME}.git"
+    run "git remote add $ORG $repo_url"
+}
+
 _gtb_create_repo_in_student_org() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
@@ -1140,8 +1154,7 @@ _gtb_create_repo_in_student_org() {
         return $result
     fi
 
-    local repo_url="git@github.com:$ORG/${REPO_NAME}.git"
-    run "git remote add $ORG $repo_url"
+    _gtb_add_student_repo_as_remote $ORG $REPO_NAME
 }
 
 _gtb_clone_default_repo() {
