@@ -149,7 +149,7 @@ gh_is_invitation_created() {
 }
 
 gh_list_org_repos() {
-    local ORG=${1:?Org is required!}
+    local ORG=${1:-tws-graduate-program}
     local TEAM=${2}
 
     local ENDPOINT="/orgs/$ORG/repos?per_page=100"
