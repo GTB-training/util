@@ -636,6 +636,16 @@ _gtb_trainer_username() {
     done < $GTB_TRAINERS_FILE
 }
 
+_gtb_trainer_fullname() {
+    while read -r FULLNAME USERNAME ID TAGS
+    do
+        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+        then
+            echo "$FULLNAME"
+        fi
+    done < $GTB_TRAINERS_FILE
+}
+
 _gtb_trainer_list() {
     while read -r FULLNAME USERNAME ID TAGS
     do
@@ -649,7 +659,7 @@ _gtb_trainer_list() {
 _gtb_trainer() {
     assert_trainers_file_exists
 
-    if ! echo $1 | grep --silent '^\(list\|username\|id\)$'; then
+    if ! echo $1 | grep --silent '^\(list\|fullname\|username\|id\)$'; then
         set -- list "$@"
     fi
 
