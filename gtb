@@ -1186,8 +1186,11 @@ _gtb_push_to_student_repo() {
 _gtb_remove_remote_student_repo() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
+    local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
 
-    cd $(_gtb_default_repo_dir $REPO_NAME)
+    [[ -d $REPO_DIR ]] || return 0
+
+    cd $REPO_DIR
 
     if ! git remote | grep --silent "$ORG"; then
         return 0
