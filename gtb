@@ -1528,6 +1528,19 @@ _gtb_show() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_colors() {
+  # for bg_color in {0..$(tput colors)}; do
+  for bg_color in $(seq 0 $(tput colors)); do
+    tput setaf 231
+    tput setab $bg_color
+    printf "  %3d  " $bg_color
+    if [[ $(( $bg_color % 8 )) -eq 0 ]]; then
+        tput sgr0
+        printf "\n"
+    fi;
+  done;
+}
+
 _gtb_upgrade() {
     read -p "Are you SURE to upgrade to lastest version? (Y|N) " -n 1 -r
     echo
