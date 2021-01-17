@@ -1358,9 +1358,6 @@ _gtb_comments() {
 _gtb_check() {
     assert_students_file_exists
 
-    GITHUB_USERNAME="${GITHUB_USERNAME:?GITHUB_USERNAME should be set!}"
-    GITHUB_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN should be set!}"
-
     while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
@@ -1511,9 +1508,6 @@ _gtb_clone() {
 _gtb_show() {
     assert_students_file_exists
 
-    GITHUB_USERNAME="${GITHUB_USERNAME:?GITHUB_USERNAME should be set!}"
-    GITHUB_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN should be set!}"
-
     REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
     shift
 
@@ -1523,7 +1517,7 @@ _gtb_show() {
         then
             if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                if curl -s -u $GITHUB_USERNAME:$GITHUB_TOKEN "https://api.github.com/repos/$USERNAME/$REPO_NAME" | tac | tac | grep --silent "\"name\": \"$REPO_NAME\""
+                if gh api /repos/$USERNAME/$REPO_NAME 1>/dev/null 2>&1
                 then
                     info "$TERM_NAME $FULLNAME $USERNAME"
                 else
