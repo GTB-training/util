@@ -6,6 +6,7 @@ GTB_CONFIG_REPO=config
 GTB_CONFIG_DIR="$GTB_ROOT/$GTB_CONFIG_REPO"
 GTB_TRAINERS_FILE="${GTB_TRAINERS_FILE:-$GTB_CONFIG_DIR/trainers.txt}"
 GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_CONFIG_DIR/students.txt}"
+GTB_DASHBOARD_ADDRESS="${GTB_DASHBOARD_ADDRESS:?Please set env GTB_DASHBOARD_ADDRESS correctly! (P.S. Ask ZHANG Zhe)}"
 GTB_SONAR_ADDRESS="${GTB_SONAR_ADDRESS:?Please set env GTB_SONAR_ADDRESS correctly! (P.S. Ask ZHANG Zhe)}"
 GTB_SONAR_TOKEN="${GTB_SONAR_TOKEN:?Please set env GTB_SONAR_TOKEN correctly! (P.S. Ask ZHANG Zhe)}"
 GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
@@ -269,6 +270,9 @@ gh_init_repo_secrets() {
 
     local secrets=$(gh_secret_list $ORG $REPO_NAME | cut -f1)
 
+    if ! echo $secrets | grep --silent DASHBOARD_ADDRESS; then
+        gh_set_repo_secret $ORG $REPO_NAME DASHBOARD_ADDRESS $GTB_DASHBOARD_ADDRESS
+    fi
     if ! echo $secrets | grep --silent SONAR_ADDRESS; then
         gh_set_repo_secret $ORG $REPO_NAME SONAR_ADDRESS $GTB_SONAR_ADDRESS
     fi
