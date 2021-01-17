@@ -328,7 +328,7 @@ gh_clone_repo() {
     local REPO_NAME=${2:?Repo name is required!}
     local DIR=${3:?Director is required!}
 
-    run "gh repo clone $OWNER/$REPO_NAME $DIR"
+    run "git clone git@github.com:$OWNER/$REPO_NAME $DIR"
 }
 
 build_repo() {
