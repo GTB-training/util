@@ -675,6 +675,12 @@ _gtb_trainer() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_is_valid_git_ref() {
+    local REF=${1:?Ref is required!}
+
+    run "git cat-file -t $REF 1>/dev/null 2>&1"
+}
+
 _gtb_student_random_clear() {
     _gtb_student_random_reset
 }
@@ -1007,6 +1013,84 @@ _gtb_student_secret() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_pick_and_push_commits() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+    shift 2
+
+    cd $(_gtb_default_repo_dir $REPO_NAME)
+
+    if ! run "git remote | grep --silent $ORG"; then
+        echo "remote not found"
+        return 1
+    fi
+    run "git cherry-pick --abort 1>/dev/null 2>&1"
+    run "git fetch $ORG" >&2
+    run "git checkout master" >&2
+    run "git branch -D $ORG 1>/dev/null 2>&1"
+    if ! run "git checkout -b $ORG $ORG/master 1>&2"; then
+        echo "failed to create student branch"
+        return 2
+    fi
+    for commit in $commits_to_pick; do
+        if ! run "git cherry-pick $commit" >&2; then
+            run "git cherry-pick --abort 1>/dev/null 2>&1"
+            echo "failed to pick $commit"
+            return 3
+        fi
+    done
+    if ! run "git push $ORG $ORG:master" >&2; then
+        echo "failed to push"
+        return 101
+    fi
+    run "git checkout master" >&2
+    echo "done"
+}
+
+_gtb_student_repo_pick() {
+    local REPO_NAME=${1:?Repo name is required!}
+    shift
+
+    if [[ 0 -eq $# ]]; then
+        fail 'error: refs to pick is not provided. (e.g. gtb student repo pick bronze-java-level-1 extended-tests)'
+    fi
+
+    cd $(_gtb_default_repo_dir $REPO_NAME)
+
+    local commits_to_pick=''
+    while [[ $# -gt 0 ]]; do
+        local ref=$1
+
+        if ! _gtb_is_valid_git_ref $ref; then
+            break;
+        fi
+
+        commits_to_pick="$commits_to_pick $ref"
+        shift
+    done
+
+    if [[ -z "$commits_to_pick" ]]; then
+        fail 'error: commits to be picked is not provided. (e.g. gtb student repo pick bronze-java-level-1 extended-tests)'
+    fi
+
+    _gtb_update_default_repo $REPO_NAME
+
+    while read -r FULLNAME ORG TERM_NAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                msg=$(_gtb_pick_and_push_commits $ORG $REPO_NAME $commits_to_pick)
+                [[ $? -eq 0 ]] && font_color=28 || font_color=161
+                logtf $font_color "$FULLNAME|$msg"
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE | tee /dev/tty | sort -r | column -s'|' -t | sed '1 i\
+        ============== SUMMARY ==============
+    '
+}
+
 _gtb_student_repo_delete() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
@@ -1097,7 +1181,7 @@ _gtb_student_repo_open() {
 }
 
 _gtb_student_repo() {
-    if ! echo $1 | grep --silent '^\(show\|list\|create\|delete\|open\)$'; then
+    if ! echo $1 | grep --silent '^\(show\|list\|create\|delete\|open\|pick\)$'; then
         set -- list "$@"
     fi
 
@@ -1245,7 +1329,7 @@ _gtb_update_default_repo() {
     local repo_dir=$(_gtb_default_repo_dir $REPO_NAME)
 
     run "cd $repo_dir"
-    run "git fetch origin"
+    run "git fetch origin --prune --prune-tags"
 }
 
 _gtb_repo_publish() {
