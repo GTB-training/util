@@ -1081,8 +1081,16 @@ _gtb_student_repo_pick() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                msg=$(_gtb_pick_and_push_commits $ORG $REPO_NAME $commits_to_pick)
-                [[ $? -eq 0 ]] && font_color=28 || font_color=161
+                local retry_times=3
+                local result=101
+
+                while [[ $retry_times -gt 0 && $result -gt 100 ]]; do
+                    msg=$(_gtb_pick_and_push_commits $ORG $REPO_NAME $commits_to_pick)
+                    result=$?
+                    (( retry_times-- ))
+                done
+
+                [[ $result -eq 0 ]] && font_color=28 || font_color=161
                 logtf $font_color "$FULLNAME|$msg"
             fi
         fi
