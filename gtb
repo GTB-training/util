@@ -14,7 +14,7 @@ GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gra
 GTB_REPOS_DIR="repos"
 GTB_TERMS_DIR="terms"
 SUBCMD_PREFIX='_gtb'
-GTB_DEFAULT_REPO_ROOT="$GTB_ROOT/$GTB_REPOS_DIR/default"
+GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default}"
 
 SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
 shift
