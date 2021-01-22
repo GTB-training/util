@@ -91,6 +91,14 @@ strip_colors() {
     done
 }
 
+_gtb_tablularize() {
+    cat | tee /dev/tty | sort -r | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
+}
+
+_gtb_pv() {
+    cat | pv -ptblSs $1 -i 0.3
+}
+
 _gtb_default_repo_dir() {
     local REPO_NAME=${1:?Repo name is required!}
     echo "$GTB_DEFAULT_REPO_ROOT/$REPO_NAME"
@@ -1094,9 +1102,7 @@ _gtb_student_repo_pick() {
                 logtf $font_color "$FULLNAME|$msg"
             fi
         fi
-    done < $GTB_STUDENTS_FILE | tee /dev/tty | sort -r | column -s'|' -t | sed '1 i\
-        ============== SUMMARY ==============
-    '
+    done < $GTB_STUDENTS_FILE | _gtb_pv 3 | _gtb_tablularize 'SUMMARY'
 }
 
 _gtb_student_repo_delete() {
