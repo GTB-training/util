@@ -91,8 +91,16 @@ strip_colors() {
     done
 }
 
-_gtb_tablularize() {
-    cat | tee /dev/tty | sort -r | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
+_gtb_tee1() {
+    cat | tee /dev/tty
+}
+
+_gtb_tabularize() {
+    if [[ -z "$*" ]]; then
+        cat | sort -r | column -s'|' -t
+    else
+        cat | sort -r | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
+    fi
 }
 
 _gtb_pv() {
@@ -717,7 +725,7 @@ _gtb_student_random_next() {
 }
 
 _gtb_student_random_generate() {
-    _gtb_student_list "$@" | \
+    _gtb_filter_students "$@" | \
         shuf | \
         cut -d' ' -f2 | \
         cat -n > $GTB_RANDOM_LIST_FILE
@@ -1102,7 +1110,7 @@ _gtb_student_repo_pick() {
                 logtf $font_color "$FULLNAME|$msg"
             fi
         fi
-    done < $GTB_STUDENTS_FILE | _gtb_pv 3 | _gtb_tablularize 'SUMMARY'
+    done < $GTB_STUDENTS_FILE | _gtb_pv 3 | _gtb_tee1 | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_student_repo_delete() {
@@ -1206,7 +1214,7 @@ _gtb_student_group() {
     local GROUPS_COUNT=${1:?error: <GROUPS_COUNT> is required!}
     shift
 
-    _gtb_student_list "$@" | \
+    _gtb_filter_students "$@" | \
         shuf | \
         cut -d' ' -f2 | \
         xargs -n$GROUPS_COUNT echo | \
@@ -1216,17 +1224,31 @@ _gtb_student_group() {
         column -t
 }
 
-_gtb_student_list() {
+_gtb_filter_students() {
     while read -r FULLNAME USERNAME TERM_NAME TAGS
     do
         if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                info "$TERM_NAME $FULLNAME $USERNAME $TAGS"
+                printf "%s\n" "$TERM_NAME $FULLNAME $USERNAME $TAGS"
             fi
         fi
     done < $GTB_STUDENTS_FILE
+}
+
+count_lines() {
+    if [[ -z "$*" ]]; then
+        echo 0
+        return
+    fi
+    echo "$*" | wc -l
+}
+
+_gtb_student_list() {
+    local students
+    students=$(_gtb_filter_students "$@")
+    printf "%s\n" "$students" | tr ' ' '|' | _gtb_tabularize | cat -n
 }
 
 _gtb_student_show() {
