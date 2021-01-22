@@ -6,6 +6,7 @@ GTB_CONFIG_REPO=config
 GTB_CONFIG_DIR="$GTB_ROOT/$GTB_CONFIG_REPO"
 GTB_TRAINERS_FILE="${GTB_TRAINERS_FILE:-$GTB_CONFIG_DIR/trainers.txt}"
 GTB_STUDENTS_FILE="${GTB_STUDENTS_FILE:-$GTB_CONFIG_DIR/students.txt}"
+GTB_MAX_RETRY_TIMES_REPO_PICK="${GTB_MAX_RETRY_TIMES_REPO_PICK:-3}"
 GTB_DASHBOARD_ADDRESS="${GTB_DASHBOARD_ADDRESS:?Please set env GTB_DASHBOARD_ADDRESS correctly! (P.S. Ask ZHANG Zhe)}"
 GTB_SONAR_ADDRESS="${GTB_SONAR_ADDRESS:?Please set env GTB_SONAR_ADDRESS correctly! (P.S. Ask ZHANG Zhe)}"
 GTB_SONAR_TOKEN="${GTB_SONAR_TOKEN:?Please set env GTB_SONAR_TOKEN correctly! (P.S. Ask ZHANG Zhe)}"
@@ -97,14 +98,14 @@ _gtb_tee1() {
 
 _gtb_tabularize() {
     if [[ -z "$*" ]]; then
-        cat | sort -r | column -s'|' -t
+        cat | sort | column -s'|' -t
     else
-        cat | sort -r | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
+        cat | sort | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
     fi
 }
 
 _gtb_pv() {
-    cat | pv -ptblSs $1 -i 0.3
+    cat | pv -ptbelSs $1 -i 0.3 -N "total is: $1 current is"
 }
 
 _gtb_default_repo_dir() {
@@ -795,21 +796,20 @@ _gtb_check_student_org_for_presence() {
 
     header "Checking student org for presence..."
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME TAGS
     do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
+        if run "gh api /orgs/$ORG 2>/dev/null" | jsonpp | grep --silent "\"login\": \"$ORG\""
         then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                if gh api "/orgs/$ORG" 2>/dev/null | jsonpp | grep --silent "\"login\": \"$ORG\""
-                then
-                    logtf 28 "$TERM_NAME|$FULLNAME|$ORG|$TAGS"
-                else
-                    logtf 161 "$TERM_NAME|$FULLNAME|$ORG|$TAGS"
-                fi
-            fi
+            logtf 28 "$TERM_NAME $FULLNAME $ORG $TAGS"
+        else
+            logtf 161 "$TERM_NAME $FULLNAME $ORG $TAGS"
         fi
-    done < $GTB_STUDENTS_FILE | sort -r | column -s'|' -t
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_check_student_org_for_trainer_role() {
@@ -823,27 +823,26 @@ _gtb_check_student_org_for_trainer_role() {
     local trainer_username=$(_gtb_trainer_username $TRAINER_FULLNAME)
     assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$trainer_username"
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME TAGS
     do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                local membership=$(gh_membership $ORG $trainer_username)
-                if echo $membership | gh_is_active_admin; then
-                    logtf 28 "$ORG|active admin"
-                elif echo $membership | gh_is_pending_admin; then
-                    logtf 32 "$ORG|pending admin"
-                elif echo $membership | gh_is_pending_member; then
-                    logtf 220 "$ORG|pending member"
-                elif echo $membership | gh_is_active_member; then
-                    logtf 13 "$ORG|active member"
-                else
-                    logtf 161 "$ORG|no invitation"
-                fi
-            fi
+        local membership=$(gh_membership $ORG $trainer_username)
+        if echo $membership | gh_is_active_admin; then
+            logtf 28 "$ORG|active admin"
+        elif echo $membership | gh_is_pending_admin; then
+            logtf 32 "$ORG|pending admin"
+        elif echo $membership | gh_is_pending_member; then
+            logtf 220 "$ORG|pending member"
+        elif echo $membership | gh_is_active_member; then
+            logtf 13 "$ORG|active member"
+        else
+            logtf 161 "$ORG|no invitation"
         fi
-    done < $GTB_STUDENTS_FILE | sort -r | column -s'|' -t
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_student_org_check() {
@@ -1089,28 +1088,30 @@ _gtb_student_repo_pick() {
         fail 'error: commits to be picked is not provided. (e.g. gtb student repo pick bronze-java-level-1 extended-tests)'
     fi
 
+    # introduce --filters a,b,c so we can skip updating local repo while no students matched the filters
     _gtb_update_default_repo $REPO_NAME
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    [[ $students_count -eq 0 ]] && fail "error: no students matched by filters: '$@'"
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME TAGS
     do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                local retry_times=3
-                local result=101
+        local retry_times=$GTB_MAX_RETRY_TIMES_REPO_PICK
+        local result=110
 
-                while [[ $retry_times -gt 0 && $result -gt 100 ]]; do
-                    msg=$(_gtb_pick_and_push_commits $ORG $REPO_NAME $commits_to_pick)
-                    result=$?
-                    (( retry_times-- ))
-                done
+        while [[ $retry_times -gt 0 && $result -gt 100 ]]; do
+            msg=$(_gtb_pick_and_push_commits $ORG $REPO_NAME $commits_to_pick)
+            result=$?
+            (( retry_times-- ))
+        done
 
-                [[ $result -eq 0 ]] && font_color=28 || font_color=161
-                logtf $font_color "$FULLNAME|$msg"
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE | _gtb_pv 3 | _gtb_tee1 | _gtb_tabularize 'SUMMARY'
+        [[ $result -eq 0 ]] && font_color=28 || font_color=161
+        logtf $font_color "$FULLNAME|$msg"
+    done | _gtb_pv $students_count | _gtb_tee1 | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_student_repo_delete() {
@@ -1231,13 +1232,13 @@ _gtb_filter_students() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                printf "%s\n" "$TERM_NAME $FULLNAME $USERNAME $TAGS"
+                printf "%s\n" "$FULLNAME $USERNAME $TERM_NAME $TAGS"
             fi
         fi
     done < $GTB_STUDENTS_FILE
 }
 
-count_lines() {
+_gtb_count_lines() {
     if [[ -z "$*" ]]; then
         echo 0
         return
@@ -1247,8 +1248,9 @@ count_lines() {
 
 _gtb_student_list() {
     local students
-    students=$(_gtb_filter_students "$@")
-    printf "%s\n" "$students" | tr ' ' '|' | _gtb_tabularize | cat -n
+    _gtb_filter_students "$@" | while read -r FULLNAME USERNAME TERM_NAME TAGS; do
+        printf "%s\n" "$TERM_NAME $FULLNAME $USERNAME $TAGS"
+    done | tr ' ' '|' | _gtb_tabularize | cat -n
 }
 
 _gtb_student_show() {
