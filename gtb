@@ -1036,7 +1036,7 @@ _gtb_pick_and_push_commits() {
     cd $(_gtb_default_repo_dir $REPO_NAME)
 
     if ! run "git remote | grep --silent $ORG"; then
-        echo "remote not found"
+        echo "remote not found, you may need to publish this repo first."
         return 1
     fi
     run "git cherry-pick --abort 1>/dev/null 2>&1"
@@ -1044,18 +1044,18 @@ _gtb_pick_and_push_commits() {
     run "git checkout master" >&2
     run "git branch -D $ORG 1>/dev/null 2>&1"
     if ! run "git checkout -b $ORG $ORG/master 1>&2"; then
-        echo "failed to create student branch"
+        echo "failed to create student branch."
         return 2
     fi
     for commit in $commits_to_pick; do
         if ! run "git cherry-pick $commit" >&2; then
             run "git cherry-pick --abort 1>/dev/null 2>&1"
-            echo "failed to pick $commit"
+            echo "failed to pick ${commit}."
             return 3
         fi
     done
     if ! run "git push $ORG $ORG:master" >&2; then
-        echo "failed to push"
+        echo "failed to push."
         return 101
     fi
     run "git checkout master" >&2
