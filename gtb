@@ -1070,6 +1070,9 @@ _gtb_student_repo_pick() {
         fail 'error: refs to pick is not provided. (e.g. gtb student repo pick bronze-java-level-1 extended-tests)'
     fi
 
+    # introduce --filters a,b,c so we can skip updating local repo while no students matched the filters
+    _gtb_update_default_repo $REPO_NAME
+
     cd $(_gtb_default_repo_dir $REPO_NAME)
 
     local commits_to_pick=''
@@ -1087,9 +1090,6 @@ _gtb_student_repo_pick() {
     if [[ -z "$commits_to_pick" ]]; then
         fail 'error: commits to be picked is not provided. (e.g. gtb student repo pick bronze-java-level-1 extended-tests)'
     fi
-
-    # introduce --filters a,b,c so we can skip updating local repo while no students matched the filters
-    _gtb_update_default_repo $REPO_NAME
 
     local student_lines
     local students_count
