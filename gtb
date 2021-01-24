@@ -1073,7 +1073,7 @@ _gtb_student_repo_pick() {
     # introduce --filters a,b,c so we can skip updating local repo while no students matched the filters
     _gtb_update_default_repo $REPO_NAME
 
-    cd $(_gtb_default_repo_dir $REPO_NAME)
+    run "cd $(_gtb_default_repo_dir $REPO_NAME)"
 
     local commits_to_pick=''
     while [[ $# -gt 0 ]]; do
