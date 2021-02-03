@@ -395,6 +395,7 @@ update_repo() {
     local student_homework_path=$1
 
     run "cd $student_homework_path"
+    run "git checkout master"
     run "git pull --rebase"
 
     if (($?))
