@@ -201,7 +201,7 @@ gh_is_team_member_invited() {
 
 gh_list_org_teams() {
     local ORG=${1:-$GTB_ORG}
-    local ENDPOINT="/repos/$ORG/teams"
+    local ENDPOINT="/orgs/$ORG/teams"
 
     gh api $ENDPOINT 2>/dev/null | jsonpp | \
         grep '    "name":' | \
@@ -1546,6 +1546,82 @@ _gtb_repo_list() {
 }
 
 _gtb_repo() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_org_team_open() {
+    local TEAM=${1:?Team name is required!}
+    run "open https://github.com/orgs/${GTB_ORG}/teams/${TEAM}/members"
+}
+
+_gtb_org_team_invite() {
+    local TEAM=${1:?Team name is required!}
+
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    do
+        local response=$(gh_invite_user_to_team $GTB_ORG $TEAM $USERNAME)
+        if echo $response | gh_is_team_member_invited; then
+            logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
+        else
+            logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
+            echo $response | jsonpp 1>&2
+        fi
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+}
+
+_gtb_org_team_members() {
+    local TEAM=${1:?Team name is required!}
+    gh_list_org_team_members $GTB_ORG $TEAM
+}
+
+_gtb_org_team_list() {
+    local ORG=${1:-$GTB_ORG}
+    gh_list_org_teams $ORG
+}
+
+_gtb_org_team() {
+    if ! echo $1 | grep --silent '^\(list\|open\|invite\|members\)$'; then
+        set -- list "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_org_invite() {
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    do
+        local response=$(gh_invite_user_to_org $ORG $USERNAME)
+        if echo $response | gh_is_invitation_created; then
+            logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
+        else
+            logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
+            echo $response | jsonpp 1>&2
+        fi
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+}
+
+_gtb_org_open() {
+    local ORG=${1:-$GTB_ORG}
+    run "open https://github.com/${ORG}"
+}
+
+_gtb_org() {
+    assert_students_file_exists
+
+    if ! echo $1 | grep --silent '^\(open\|invite\|team\)$'; then
+        set -- open "$@"
+    fi
+
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
