@@ -940,6 +940,31 @@ _gtb_student_org() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_student_user_check() {
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    do
+        if gh api "/users/$USERNAME" | jsonpp | grep --silent "\"login\": \"$USERNAME\""
+        then
+            logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
+        else
+            logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
+        fi
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+}
+
+_gtb_student_user() {
+    if ! echo $1 | grep --silent '^\(check\)$'; then
+        set -- check "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_student_workflow_runs() {
     local REPO_NAME=${1:?Repo name is required!}
     local WORKFLOW_FILENAME=${2:?Workflow filename is required!}
