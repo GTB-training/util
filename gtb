@@ -147,6 +147,13 @@ gh_invite_user_to_org() {
     gh_create_invitation $ORG $(gh_user_id $USERNAME)
 }
 
+gh_invite_user_to_team() {
+    local ORG=${1:?org is required!}
+    local TEAM=${2:?team is required!}
+    local USERNAME=${3:?username is required!}
+    gh api -X PUT "/orgs/${ORG}/teams/${TEAM}/memberships/${USERNAME}" 2>/dev/null
+}
+
 gh_membership() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
@@ -186,6 +193,33 @@ gh_create_invitation() {
 
 gh_is_invitation_created() {
     cat | grep --silent '"created_at":'
+}
+
+gh_is_team_member_invited() {
+    cat | grep --silent '"role":'
+}
+
+gh_list_org_teams() {
+    local ORG=${1:-$GTB_ORG}
+    local ENDPOINT="/repos/$ORG/teams"
+
+    gh api $ENDPOINT 2>/dev/null | jsonpp | \
+        grep '    "name":' | \
+        tr -d '" ,' | \
+        cut -d':' -f2 | \
+        sort
+}
+
+gh_list_org_team_members() {
+    local ORG=${1:?Organization is required!}
+    local TEAM=${2:?Team is required!}
+    local ENDPOINT="/orgs/${ORG}/teams/${TEAM}/members"
+
+    gh api $ENDPOINT 2>/dev/null | jsonpp | \
+        grep '    "login":' | \
+        tr -d '" ,' | \
+        cut -d':' -f2 | \
+        sort
 }
 
 gh_list_org_repos() {
