@@ -133,6 +133,20 @@ _gtb_run_subcommand() {
     $subcommand_function "$@"
 }
 
+gh_user_id() {
+    local USERNAME=${1:?username is required!}
+    gh api /users/${USERNAME} 2>/dev/null | jsonpp | \
+        grep '"\(id\)"' | \
+        tr -d ' ,' | \
+        cut -d':' -f2
+}
+
+gh_invite_user_to_org() {
+    local ORG=${1:?org is required!}
+    local USERNAME=${2:?username is required!}
+    gh_create_invitation $ORG $(gh_user_id $USERNAME)
+}
+
 gh_membership() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
@@ -166,7 +180,8 @@ gh_is_pending_member() {
 gh_create_invitation() {
     local ORG=${1:?Org is required!}
     local INVITEE_ID=${2:?Invitee ID is required!}
-    gh api /orgs/${ORG}/invitations -F role=admin -F invitee_id=$INVITEE_ID 2>/dev/null
+    local ROLE=${3:-direct_member}
+    gh api /orgs/${ORG}/invitations -F role=$ROLE -F invitee_id=$INVITEE_ID 2>/dev/null
 }
 
 gh_is_invitation_created() {
@@ -752,8 +767,8 @@ _gtb_student_org_invite() {
     local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. qu.hang wang.xiaofeng)}
     shift 1
 
-    local invitee_id=$(_gtb_trainer_id $TRAINER_FULLNAME)
-    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$invitee_id"
+    local TRAINER_USERNAME=$(_gtb_trainer_username $TRAINER_FULLNAME)
+    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$TRAINER_USERNAME"
 
     while read -r FULLNAME ORG TERM_NAME TAGS
     do
@@ -761,7 +776,7 @@ _gtb_student_org_invite() {
         then
             if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                local response=$(gh_create_invitation $ORG $invitee_id)
+                local response=$(gh_invite_user_to_org $ORG $TRAINER_USERNAME admin)
                 if echo $response | gh_is_invitation_created; then
                     info "$ORG $TRAINER_FULLNAME"
                 else
