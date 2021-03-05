@@ -20,6 +20,8 @@ GTB_TERMS_DIR="terms"
 SUBCMD_PREFIX='_gtb'
 GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default}"
 
+GTB_ORG=tws-graduate-program
+
 SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
 shift
 
@@ -172,7 +174,7 @@ gh_is_invitation_created() {
 }
 
 gh_list_org_repos() {
-    local ORG=${1:-tws-graduate-program}
+    local ORG=${1:-$GTB_ORG}
     local TEAM=${2}
 
     local ENDPOINT="/orgs/$ORG/repos?per_page=100"
@@ -1363,7 +1365,7 @@ _gtb_clone_default_repo() {
     local REPO_NAME=${1:?Repo name is required!}
     local repo_dir=$(_gtb_default_repo_dir $REPO_NAME)
 
-    [[ -d $repo_dir ]] || gh_clone_repo tws-graduate-program $REPO_NAME $repo_dir
+    [[ -d $repo_dir ]] || gh_clone_repo $GTB_ORG $REPO_NAME $repo_dir
 }
 
 _gtb_update_default_repo() {
