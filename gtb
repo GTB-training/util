@@ -26,6 +26,7 @@ GTB_REPOS_DIR="repos"
 GTB_TERMS_DIR="terms"
 SUBCMD_PREFIX='_gtb'
 GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default}"
+GTB_PER_PAGE=100
 
 GTB_ORG=tws-graduate-program
 
@@ -230,6 +231,28 @@ gh_list_org_team_members() {
         tr -d '" ,' | \
         cut -d':' -f2 | \
         sort
+}
+
+gh_list_org_members() {
+    local ORG=${1:?Organization is required!}
+    local ENDPOINT="/orgs/${ORG}/members?per_page=$GTB_PER_PAGE&page="
+
+    for page in $(seq 1 10)
+    do
+        local res=$(run "gh api '${ENDPOINT}${page}' 2>/dev/null" | jsonpp | grep '    "login":')
+        local lines_count=$(_gtb_count_lines "$res")
+        if [[ $lines_count -gt 0 ]]
+        then
+            echo "$res"
+        fi
+        if [[ $lines_count -lt $GTB_PER_PAGE ]]
+        then
+            break
+        fi
+    done \
+        | tr -d '" ,' \
+        | cut -d':' -f2 \
+        | sort
 }
 
 gh_list_org_repos() {
@@ -1626,6 +1649,20 @@ _gtb_org_invite() {
     done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
 }
 
+_gtb_org_members() {
+    gh_list_org_members $GTB_ORG | sort | sed 's/^/YES /' | cat -n
+
+    (
+    echo 'No.|Config|Github|Student'
+    join -1 5 -2 2 -a 1 -o '1.1,2.1,0,1.3,1.2,1.6,1.7' -e 'NO' \
+        <(_gtb_filter_students | sort -k4 | sed 's/^/YES /') \
+        <(gh_list_org_members $GTB_ORG | sort | sed 's/^/YES /') \
+        | sort -k1,2 -r \
+        | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
+        | tr ' ' '|'
+    ) | _gtb_tabularize "Members of $GTB_ORG"
+}
+
 _gtb_org_open() {
     local ORG=${1:-$GTB_ORG}
     run "open https://github.com/${ORG}"
@@ -1634,7 +1671,7 @@ _gtb_org_open() {
 _gtb_org() {
     assert_students_file_exists
 
-    if ! echo $1 | grep --silent '^\(open\|invite\|team\)$'; then
+    if ! echo $1 | grep --silent '^\(open\|invite\|team\|members\)$'; then
         set -- open "$@"
     fi
 
