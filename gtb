@@ -1567,6 +1567,7 @@ _gtb_org_team_open() {
 
 _gtb_org_team_invite() {
     local TEAM=${1:?Team name is required!}
+    shift
 
     local student_lines
     local students_count
