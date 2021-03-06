@@ -1590,7 +1590,7 @@ _gtb_org_team_members() {
         | sort -k1,2 -r \
         | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
         | tr ' ' '|'
-    ) | _gtb_tabularize 'SUMMARY' '-r'
+    ) | _gtb_tabularize "Members of ${GTB_ORG}/${GTB_TERM}"
 }
 
 _gtb_org_team_list() {
