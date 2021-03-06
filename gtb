@@ -110,9 +110,9 @@ _gtb_tee1() {
 
 _gtb_tabularize() {
     if [[ -z "$*" ]]; then
-        cat | sort | column -s'|' -t
+        cat | column -s'|' -t
     else
-        cat | sort | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
+        cat | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
     fi
 }
 
@@ -875,7 +875,7 @@ _gtb_check_student_org_for_presence() {
         else
             logtf 161 "$TERM_NAME $FULLNAME $ORG $TAGS"
         fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_check_student_org_for_trainer_role() {
@@ -908,7 +908,7 @@ _gtb_check_student_org_for_trainer_role() {
         else
             logtf 161 "$ORG|no invitation"
         fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_student_org_check() {
@@ -965,7 +965,7 @@ _gtb_student_user_check() {
         else
             logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
         fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_student_user() {
@@ -1202,7 +1202,7 @@ _gtb_student_repo_pick() {
 
         [[ $result -eq 0 ]] && font_color=28 || font_color=161
         logtf $font_color "$FULLNAME|$msg"
-    done | _gtb_pv $students_count | _gtb_tee1 | _gtb_tabularize 'SUMMARY'
+    done | _gtb_pv $students_count | _gtb_tee1 | sort | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_student_repo_delete() {
@@ -1341,7 +1341,7 @@ _gtb_student_list() {
     local students
     _gtb_filter_students "$@" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS; do
         printf "%s\n" "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
-    done | tr ' ' '|' | _gtb_tabularize | cat -n
+    done | tr ' ' '|' | sort | _gtb_tabularize | cat -n
 }
 
 _gtb_student_show() {
@@ -1583,7 +1583,7 @@ _gtb_org_team_invite() {
             logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
             echo $response | jsonpp 1>&2
         fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_org_team_members() {
@@ -1621,7 +1621,7 @@ _gtb_org_invite() {
             logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
             echo $response | jsonpp 1>&2
         fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | _gtb_tabularize 'SUMMARY'
+    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
 }
 
 _gtb_org_open() {
