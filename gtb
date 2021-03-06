@@ -1560,14 +1560,10 @@ _gtb_repo() {
 }
 
 _gtb_org_team_open() {
-    local TEAM=${1:?Team name is required!}
-    run "open https://github.com/orgs/${GTB_ORG}/teams/${TEAM}/members"
+    run "open https://github.com/orgs/${GTB_ORG}/teams/${GTB_TERM}/members"
 }
 
 _gtb_org_team_invite() {
-    local TEAM=${1:?Team name is required!}
-    shift
-
     local student_lines
     local students_count
     student_lines=$(_gtb_filter_students "$@")
@@ -1575,7 +1571,7 @@ _gtb_org_team_invite() {
 
     echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
     do
-        local response=$(gh_invite_user_to_team $GTB_ORG $TEAM $USERNAME)
+        local response=$(gh_invite_user_to_team $GTB_ORG $GTB_TERM $USERNAME)
         if echo $response | gh_is_team_member_invited; then
             logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
         else
@@ -1586,13 +1582,11 @@ _gtb_org_team_invite() {
 }
 
 _gtb_org_team_members() {
-    local TEAM=${1:?Team name is required!}
-
     (
     echo 'No.|Config|Github|Student'
     join -1 5 -2 2 -a 1 -a 2 -o '1.1,2.1,0,1.3,1.2,1.6,1.7' -e 'NO' \
         <(_gtb_filter_students | sort -k4 | sed 's/^/YES /') \
-        <(gh_list_org_team_members $GTB_ORG $TEAM | sort | sed 's/^/YES /') \
+        <(gh_list_org_team_members $GTB_ORG $GTB_TERM | sort | sed 's/^/YES /') \
         | sort -k1,2 -r \
         | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
         | tr ' ' '|'
