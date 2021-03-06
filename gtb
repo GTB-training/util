@@ -224,7 +224,7 @@ gh_list_org_teams() {
 gh_list_org_team_members() {
     local ORG=${1:?Organization is required!}
     local TEAM=${2:?Team is required!}
-    local ENDPOINT="/orgs/${ORG}/teams/${TEAM}/members"
+    local ENDPOINT="/orgs/${ORG}/teams/${TEAM}/members?per_page=100"
 
     gh api $ENDPOINT 2>/dev/null | jsonpp | \
         grep '    "login":' | \
