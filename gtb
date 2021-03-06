@@ -1321,7 +1321,7 @@ _gtb_filter_students() {
     do
         if echo "$TERM_NAME" | grep --silent "\<$GTB_TERM\>"
         then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
                 printf "%s\n" "$FULLNAME $ORG $TERM_NAME $USERNAME $TAGS"
             fi
