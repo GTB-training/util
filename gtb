@@ -1612,9 +1612,11 @@ _gtb_org_invite() {
 
     echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
     do
-        local response=$(gh_invite_user_to_org $ORG $USERNAME)
-        if echo $response | gh_is_invitation_created; then
+        local response=$(gh_invite_user_to_org $GTB_ORG $USERNAME)
+        if echo $response | gh_is_already_part_of_this_org; then
             logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
+        elif echo $response | gh_is_invitation_created; then
+            logtf 32 "$ORG $FULLNAME $USERNAME $TAGS"
         else
             logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
             echo $response | jsonpp 1>&2
