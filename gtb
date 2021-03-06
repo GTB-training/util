@@ -1588,7 +1588,16 @@ _gtb_org_team_invite() {
 
 _gtb_org_team_members() {
     local TEAM=${1:?Team name is required!}
-    gh_list_org_team_members $GTB_ORG $TEAM
+
+    (
+    echo 'No.|Config|Github|Student'
+    join -1 5 -2 2 -a 1 -a 2 -o '1.1,2.1,0,1.3,1.2,1.6,1.7' -e 'NO' \
+        <(_gtb_filter_students | sort -k4 | sed 's/^/YES /') \
+        <(gh_list_org_team_members $GTB_ORG $TEAM | sort | sed 's/^/YES /') \
+        | sort -k1,2 -r \
+        | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
+        | tr ' ' '|'
+    ) | _gtb_tabularize 'SUMMARY' '-r'
 }
 
 _gtb_org_team_list() {
