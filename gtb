@@ -142,7 +142,7 @@ _gtb_run_subcommand() {
 
 gh_user_id() {
     local USERNAME=${1:?username is required!}
-    gh api /users/${USERNAME} 2>/dev/null | jsonpp | \
+    run "gh api /users/${USERNAME} 2>/dev/null" | jsonpp | \
         grep '"\(id\)"' | \
         tr -d ' ,' | \
         cut -d':' -f2
