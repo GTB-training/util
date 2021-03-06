@@ -110,7 +110,7 @@ _gtb_tabularize() {
 }
 
 _gtb_pv() {
-    cat | pv -ptbelSs $1 -i 0.3 -N "total is: $1 current is"
+    cat | pv -tbelSs $1 -i 0.3 -N "total is: $1 current is"
 }
 
 _gtb_default_repo_dir() {
