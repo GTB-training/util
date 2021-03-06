@@ -191,19 +191,19 @@ gh_is_pending_member() {
     cat | grep -A1 '"state": "pending"' | grep --silent '"role": "member"'
 }
 
-gh_create_invitation() {
-    local ORG=${1:?Org is required!}
-    local INVITEE_ID=${2:?Invitee ID is required!}
-    local ROLE=${3:-direct_member}
-    gh api /orgs/${ORG}/invitations -F role=$ROLE -F invitee_id=$INVITEE_ID 2>/dev/null
-}
-
 gh_is_invitation_created() {
     cat | grep --silent '"created_at":'
 }
 
 gh_is_team_member_invited() {
     cat | grep --silent '"role":'
+}
+
+gh_create_invitation() {
+    local ORG=${1:?Org is required!}
+    local INVITEE_ID=${2:?Invitee ID is required!}
+    local ROLE=${3:-direct_member}
+    run "gh api /orgs/${ORG}/invitations -F role=$ROLE -F invitee_id=$INVITEE_ID 2>/dev/null"
 }
 
 gh_list_org_teams() {
