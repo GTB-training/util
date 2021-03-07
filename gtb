@@ -1623,7 +1623,7 @@ _gtb_org_team_list() {
 
 _gtb_org_team() {
     if ! echo $1 | grep --silent '^\(list\|open\|invite\|members\)$'; then
-        set -- list "$@"
+        set -- open "$@"
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
