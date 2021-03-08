@@ -169,6 +169,21 @@ gh_membership() {
     run "gh api '/orgs/${ORG}/memberships/${USERNAME}' 2>/dev/null" | jsonpp
 }
 
+gh_set_org_membership() {
+    local ORG=${1:?org is required!}
+    local USERNAME=${2:?username is required!}
+    local ROLE=${3:?role is required!(admin|member)}
+
+    run "gh api -X PUT '/orgs/${ORG}/memberships/${USERNAME}' -F role='$ROLE' 2>/dev/null" \
+        | jsonpp \
+        | grep '^  "\(state\|role\)":' \
+        | tr -d '" ,' \
+        | sed 's/:/|/' \
+        | cut -d'|' -f2 \
+        | paste -d ' ' - - \
+        | sed "s/^/$ORG $USERNAME /"
+}
+
 gh_is_pending() {
     cat | grep --silent '"state": "pending"'
 }
@@ -409,6 +424,30 @@ gh_create_org_repo() {
 
     error $response
     return 1
+}
+
+gh_list_org_invitations() {
+    local ORG=${1:?Org is required!}
+
+    run "gh api /orgs/$ORG/invitations 2>/dev/null" | jsonpp | \
+        grep '^    "\(id\|login\|role\|created_at\)":' | \
+        tr -d '" ,' | \
+        sed 's/:/|/' | \
+        cut -d'|' -f2 | \
+        paste -d ' ' - - - - | \
+        sed "s/^/$ORG /" | \
+        awk '{ print $3, $1, $2, $4, $5}'
+}
+
+gh_cancel_org_invitations() {
+    local ORG=${1:?Org is required!}
+
+    while read -r LOGIN ORG ID REST
+    do
+        run "gh api -X DELETE /orgs/$ORG/invitations/$ID 2>/dev/null"
+        [[ $? -eq 0 ]] && status='✅' || status="❌"
+        echo $status $ORG $ID $LOGIN
+    done < <(gh_list_org_invitations $ORG)
 }
 
 gh_delete_repo() {
@@ -830,7 +869,24 @@ _gtb_student_random() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
-_gtb_student_org_invite() {
+_gtb_student_org_invite_cancel() {
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    do
+        gh_cancel_org_invitations $ORG | tr '\n' '|'
+    done | _gtb_pv $students_count \
+        | _gtb_tee1 \
+        | tr '|' '\n' \
+        | tr ' ' '|' \
+        | sort \
+        | _gtb_tabularize 'List of All Pending Student Org Invitations'
+}
+
+_gtb_student_org_invite_create() {
     assert_trainers_file_exists
 
     local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. qu.hang wang.xiaofeng)}
@@ -855,6 +911,66 @@ _gtb_student_org_invite() {
             fi
         fi
     done < $GTB_STUDENTS_FILE
+}
+
+_gtb_student_org_invite_list() {
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    do
+        gh_list_org_invitations $ORG | tr '\n' '|'
+    done | _gtb_pv $students_count \
+        | _gtb_tee1 \
+        | tr '|' '\n' \
+        | tr ' ' '|' \
+        | sort \
+        | _gtb_tabularize "List of All Pending Invitations of Student Org"
+}
+
+_gtb_student_org_invite() {
+    if ! echo $1 | grep --silent '^\(list\|create\|cancel\)$'; then
+        set -- list "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_student_org_membership_role() {
+    assert_trainers_file_exists
+
+    local ROLE=${1:?Role is required!(admin|member)}
+    shift 1
+    local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. qu.hang wang.xiaofeng)}
+    shift 1
+
+    local TRAINER_USERNAME=$(_gtb_trainer_username $TRAINER_FULLNAME)
+    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$TRAINER_USERNAME"
+
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    do
+        gh_set_org_membership $ORG $TRAINER_USERNAME $ROLE | tr '\n' '|'
+    done | _gtb_pv $students_count \
+        | _gtb_tee1 \
+        | tr '|' '\n' \
+        | tr ' ' '|' \
+        | sort \
+        | _gtb_tabularize "Set Membership for Student Org"
+}
+
+_gtb_student_org_membership() {
+    if ! echo $1 | grep --silent '^\(role\)$'; then
+        set -- role "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_student_org_join() {
@@ -968,7 +1084,7 @@ _gtb_student_org_open() {
 }
 
 _gtb_student_org() {
-    if ! echo $1 | grep --silent '^\(open\|check\|invite\|join\)$'; then
+    if ! echo $1 | grep --silent '^\(open\|check\|invite\|join\|membership\)$'; then
         set -- check "$@"
     fi
 
