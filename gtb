@@ -166,7 +166,7 @@ gh_invite_user_to_team() {
 gh_membership() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
-    gh api "/orgs/${ORG}/memberships/${USERNAME}" 2>/dev/null | jsonpp
+    run "gh api '/orgs/${ORG}/memberships/${USERNAME}' 2>/dev/null" | jsonpp
 }
 
 gh_is_pending() {
