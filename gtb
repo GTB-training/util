@@ -151,7 +151,8 @@ gh_user_id() {
 gh_invite_user_to_org() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
-    gh_create_invitation $ORG $(gh_user_id $USERNAME)
+    local ROLE=${3:-direct_member}
+    gh_create_invitation $ORG $(gh_user_id $USERNAME) $ROLE
 }
 
 gh_invite_user_to_team() {
