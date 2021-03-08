@@ -877,9 +877,10 @@ _gtb_student_org_invite_cancel() {
 
     echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
     do
-        gh_cancel_org_invitations $ORG | tr '\n' '|'
+        echo $(gh_cancel_org_invitations $ORG | tr '\n' '|')
     done | _gtb_pv $students_count \
         | _gtb_tee1 \
+        | sed 's/|$//' \
         | tr '|' '\n' \
         | tr ' ' '|' \
         | sort \
@@ -921,9 +922,10 @@ _gtb_student_org_invite_list() {
 
     echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
     do
-        gh_list_org_invitations $ORG | tr '\n' '|'
+        echo $(gh_list_org_invitations $ORG | tr '\n' '|')
     done | _gtb_pv $students_count \
         | _gtb_tee1 \
+        | sed 's/|$//' \
         | tr '|' '\n' \
         | tr ' ' '|' \
         | sort \
@@ -956,9 +958,10 @@ _gtb_student_org_membership_role() {
 
     echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
     do
-        gh_set_org_membership $ORG $TRAINER_USERNAME $ROLE | tr '\n' '|'
+        echo $(gh_set_org_membership $ORG $TRAINER_USERNAME $ROLE | tr '\n' '|')
     done | _gtb_pv $students_count \
         | _gtb_tee1 \
+        | sed 's/|$//' \
         | tr '|' '\n' \
         | tr ' ' '|' \
         | sort \
