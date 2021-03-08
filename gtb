@@ -110,10 +110,11 @@ _gtb_tee1() {
 }
 
 _gtb_tabularize() {
-    if [[ ! -z "$*" ]]; then
-        echo "===> $1"
+    if [[ -z "$*" ]]; then
+        cat | column -s'|' -t
+    else
+        cat | column -s'|' -t | sed $'1s/^/\\\n'"==> $1"$'\\\n/'
     fi
-    cat | column -s'|' -t
 }
 
 _gtb_pv() {
