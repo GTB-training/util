@@ -360,12 +360,12 @@ gh_remove_repo_secret() {
 
     local response=$(gh secret -R $ORG/$REPO_NAME remove $NAME 2>&1)
 
-    if echo $response | grep --silent "Removed secret wang from"; then
+    if echo $response | grep --silent "Removed secret ${NAME} from"; then
         echo "✓ Removed secret $NAME from $ORG/$REPO_NAME"
         return 0
     fi
 
-    if echo $response | grep --silent 'failed to delete secret wang: HTTP 404'; then
+    if echo $response | grep --silent "failed to delete secret ${NAME}: HTTP 404"; then
         echo "✓ Removed secret $NAME from $ORG/$REPO_NAME"
         return 0
     fi
