@@ -1800,7 +1800,7 @@ _gtb_org() {
 }
 
 _gtb_dashboard() {
-    run "open ${GTB_DASHBOARD_ADDRESS%/api}"
+    run "open ${GTB_DASHBOARD_ADDRESS%/api}?term=${GTB_TERM}"
 }
 
 _gtb_comments() {
