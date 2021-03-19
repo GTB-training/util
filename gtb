@@ -107,6 +107,10 @@ strip_colors() {
     done
 }
 
+_gtb_urlencode() {
+    node --eval "console.log(encodeURIComponent(process.argv[1]))" "$*"
+}
+
 _gtb_tee1() {
     cat | tee /dev/tty
 }
@@ -1802,11 +1806,16 @@ _gtb_org() {
 }
 
 _gtb_trello_cards_create() {
-    local LIST_ID=${1:?Trello list ID is required!}
-    local CARD_NAME=${2:?Card name is required!}
-    local CARD_DESC=${3:-''}
+    if [[ $# -lt 2 ]]
+    then
+        fail 'Card name is required!'
+    fi
 
-    http POST "$GTB_TRELLO_API/cards?idList=${LIST_ID}&pos=top&name=$CARD_NAME&desc=$CARD_DESC&key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" \
+    local LIST_ID=${1:?Trello list ID is required!}
+    shift
+    local CARD_NAME=$(_gtb_urlencode "$*")
+
+    http POST "$GTB_TRELLO_API/cards?idList=${LIST_ID}&pos=top&name=$CARD_NAME&key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" \
         | jsonpp \
         | grep '^  "\(name\|idShort\|shortUrl\)": ' \
         | sed -e 's/^  "name": "//' -e 's/^  "idShort": //' -e 's/^  "shortUrl": "//' -e 's/",$//' -e 's/,$//' \
