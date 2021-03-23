@@ -1483,7 +1483,7 @@ _gtb_count_lines() {
         echo 0
         return
     fi
-    echo "$*" | wc -l
+    echo "$*" | wc -l | tr -d ' '
 }
 
 _gtb_student_list() {
