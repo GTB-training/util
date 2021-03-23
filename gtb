@@ -1777,8 +1777,6 @@ _gtb_org_invite() {
 }
 
 _gtb_org_members() {
-    gh_list_org_members $GTB_ORG | sort | sed 's/^/YES /' | cat -n
-
     (
     echo 'No.|Config|Github|Student'
     join -1 5 -2 2 -a 1 -o '1.1,2.1,0,1.3,1.2,1.6,1.7' -e 'NO' \
