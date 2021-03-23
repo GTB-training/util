@@ -1604,7 +1604,7 @@ _gtb_add_student_repo_as_remote() {
     fi
 
     local repo_url="git@github.com:$ORG/${REPO_NAME}.git"
-    run "git remote add $ORG $repo_url"
+    echo $ORG $repo_url | parallel --jobs 1 --verbose --retries 50 --colsep ' ' "git remote add {1} {2}"
 }
 
 _gtb_create_repo_in_student_org() {
