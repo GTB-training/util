@@ -386,7 +386,8 @@ gh_set_repo_secret() {
     local NAME=${3:?Secret name is required!}
     local VALUE=${4:?Secret value is required!}
 
-    gh secret -R $ORG/$REPO_NAME set $NAME -b"$VALUE"
+    echo $ORG $REPO_NAME $NAME $VALUE \
+        | parallel --jobs 1 --verbose --retries 3 --colsep ' ' "gh secret -R {1}/{2} set {3} -b{4}"
 }
 
 gh_init_repo_secrets() {
