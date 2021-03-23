@@ -1610,7 +1610,47 @@ _gtb_update_default_repo() {
     run "git fetch origin --prune --prune-tags"
 }
 
+_gtb_repo_publishjob() {
+    set -- $*
+
+    local REPO_NAME=${1:?Repo name is required!}
+    local FULLNAME=${2:?Fullname is required!}
+    local ORG=${3:?Student org is required!}
+    local TERM_NAME=${4:?Term name is required!}
+
+    header "Publish repo $REPO_NAME to $ORG..."
+    _gtb_create_repo_in_student_org $ORG $REPO_NAME || return 1
+    gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
+    _gtb_push_to_student_repo $ORG $REPO_NAME
+}
+
 _gtb_repo_publish() {
+    local JOBS=1
+
+    PARAMS=""
+    while (( "$#" )); do
+        case "$1" in
+            --jobs)
+                if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                    JOBS=$2
+                    shift 2
+                else
+                    fail "Error: Argument for $1 is missing"
+                fi
+                ;;
+            -*|--*=) # unsupported flags
+                warn "Unsupported flag $1"
+                shift
+                ;;
+            *) # preserve positional arguments
+                PARAMS="$PARAMS $1"
+                shift
+                ;;
+        esac
+    done
+
+    eval set -- "$PARAMS"
+
     local REPO_NAME=$1
     shift
 
@@ -1626,20 +1666,14 @@ _gtb_repo_publish() {
         fail "Failed to update default repo '$REPO_NAME'."
     fi
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                echo
-                header "Publish repo $REPO_NAME to $ORG..."
-                _gtb_create_repo_in_student_org $ORG $REPO_NAME || continue
-                gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
-                _gtb_push_to_student_repo $ORG $REPO_NAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines
+    local students_count
+    student_lines=$(_gtb_filter_students "$@")
+    students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" \
+        | cut -d' ' -f1-3 \
+        | parallel --jobs $JOBS --colsep ' ' --tagstring {2} --bar --verbose --linebuffer gtb repo publishjob $REPO_NAME {}
 }
 
 _gtb_repo_remove() {
