@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
-GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (term01, term02, etc.)}"
+GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (gtb-101, gtb-201, etc.)}"
 GTB_CONFIG_REPO=config
 GTB_CONFIG_DIR="$GTB_ROOT/$GTB_CONFIG_REPO"
 GTB_TRAINERS_FILE="${GTB_TRAINERS_FILE:-$GTB_CONFIG_DIR/trainers.txt}"
@@ -2165,6 +2165,10 @@ _gtb_init() {
     mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
 
     [[ -d $GTB_CONFIG_DIR ]] || gh_clone_repo GTB-training $GTB_CONFIG_REPO $GTB_CONFIG_DIR
+}
+
+_gtb_term() {
+    echo $GTB_TERM
 }
 
 _gtb_help() {
