@@ -1766,6 +1766,9 @@ _gtb_repo_publish() {
         | tr ' ' '|' \
         | _gtb_tabularize \
         | cat -n
+
+    _gtb_student_repo_check $REPO_NAME "$@"
+    _gtb_student_secret_check $REPO_NAME "$@"
 }
 
 _gtb_repo_remove() {
