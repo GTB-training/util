@@ -1415,17 +1415,11 @@ _gtb_student_repo_delete() {
         return 1
     fi
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                gh_delete_repo $ORG $REPO_NAME
-                _gtb_remove_remote_student_repo $ORG $REPO_NAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines=$(_gtb_filter_students "$@")
+
+    echo "$student_lines" | cut -d' ' -f2 \
+        | _gtb_remove_remote_student_repo $REPO_NAME \
+        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_delete_repo {1} {2}
 }
 
 _gtb_student_repo_create() {
