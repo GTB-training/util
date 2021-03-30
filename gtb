@@ -1265,6 +1265,31 @@ _gtb_student_secret_set() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_student_secret_check() {
+    local REPO_NAME=${1:?Repo name is required!}
+    shift
+
+    local MAX_JOBS=$JOBS
+    if [[ $MAX_JOBS -gt 20 ]]
+    then
+        MAX_JOBS=20
+    fi
+
+    local student_lines=$(_gtb_filter_students "$@")
+
+    join -1 1 -2 2 -a 1 -a 2 -o '2.1,1.1' -e '0' \
+        <(echo "$student_lines" | cut -d' ' -f2 | sort) \
+        <(echo "$student_lines" | cut -d' ' -f2 \
+            | env_parallel --jobs $MAX_JOBS --colsep ' ' --tagstring {1} --bar --linebuffer gh_secret_list {1} $REPO_NAME \
+            | cut -f1 \
+            | sort | uniq -c | tr -s ' ' \
+            | sort -k2) \
+        | sort -k1,2 -nr \
+        | tr ' ' '|' \
+        | _gtb_tabularize \
+        | cat -n
+}
+
 _gtb_student_secret_list() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
@@ -1282,7 +1307,7 @@ _gtb_student_secret_list() {
 }
 
 _gtb_student_secret() {
-    if ! echo $1 | grep --silent '^\(list\|set\|remove\|init\)$'; then
+    if ! echo $1 | grep --silent '^\(list\|check\|set\|remove\|init\)$'; then
         set -- list "$@"
     fi
 
