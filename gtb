@@ -1427,16 +1427,13 @@ _gtb_student_repo_create() {
 }
 
 _gtb_student_repo_list() {
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                gh_list_org_repos $ORG
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines
+    student_lines=$(_gtb_filter_students "$@")
+
+    echo "$student_lines" \
+        | cut -d' ' -f2 \
+        | env_parallel --jobs $JOBS --colsep ' ' --tagstring {1} --bar --linebuffer \
+        gh_list_org_repos {1}
 }
 
 _gtb_student_repo_show() {
@@ -2209,6 +2206,8 @@ while (( "$#" )); do
 done
 
 eval set -- "$PARAMS"
+
+source `which env_parallel.bash`
 
 ${SUBCMD_PREFIX}_${SUBCOMMAND} $@
 
