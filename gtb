@@ -483,10 +483,12 @@ gh_delete_repo() {
     local response=$(run "gh api -X DELETE /repos/$OWNER/$REPO_NAME 2>/dev/null")
 
     if [[ "$response" == "" ]]; then
+        echo $OWNER $REPO_NAME
         return 0
     fi
 
     if echo $response | grep --silent '"message":"Not Found"'; then
+        echo $OWNER $REPO_NAME
         return 0
     fi
 
@@ -1419,7 +1421,10 @@ _gtb_student_repo_delete() {
 
     echo "$student_lines" | cut -d' ' -f2 \
         | _gtb_remove_remote_student_repo $REPO_NAME \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_delete_repo {1} {2}
+        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_delete_repo {1} {2} \
+        | tr ' ' '|' \
+        | _gtb_tabularize \
+        | cat -n
 }
 
 _gtb_student_repo_create() {
