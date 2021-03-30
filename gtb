@@ -433,6 +433,8 @@ gh_init_repo_secrets() {
     if ! echo $secrets | grep --silent STUDENT_NAME; then
         gh_set_repo_secret $ORG $REPO_NAME STUDENT_NAME $FULLNAME
     fi
+
+    echo $*
 }
 
 gh_create_org_repo() {
@@ -1608,8 +1610,10 @@ _gtb_push_to_student_repo() {
 
     cd $(_gtb_default_repo_dir $REPO_NAME)
 
-    run "git push $ORG origin/master:refs/heads/master"
-    run "git push --force $ORG origin/master:refs/heads/latest"
+    run "git push $ORG origin/master:refs/heads/master 1>&2"
+    run "git push --force $ORG origin/master:refs/heads/latest 1>&2"
+
+    echo $*
 }
 
 _gtb_last_commit_of_branch() {
@@ -1645,28 +1649,42 @@ _gtb_remove_remote_student_repo() {
 }
 
 _gtb_add_student_repo_as_remote() {
-    local ORG=${1:?Org is required!}
-    local REPO_NAME=${2:?Repo name is required!}
+    local REPO_NAME=${1:?Repo name is required!}
+    local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
+    [[ -d $REPO_DIR ]] || fail "Cannot find local directory for repo '$REPO_NAME'!"
 
-    cd $(_gtb_default_repo_dir $REPO_NAME)
+    run "cd $REPO_DIR"
 
-    if git remote | grep --silent "$ORG"; then
-        return 0
-    fi
+    local REMOTES=$(run "git remote")
 
-    local repo_url="git@github.com:$ORG/${REPO_NAME}.git"
-    echo $ORG $repo_url | parallel --jobs 1 --verbose --retries 50 --colsep ' ' "git remote add {1} {2}"
+    while read -r ORG REPO_NAME TERM_NAME FULLNAME
+    do
+        if echo "$REMOTES" | grep -v --silent "$ORG"; then
+            local repo_url="git@github.com:$ORG/${REPO_NAME}.git"
+            run "git remote add $ORG $repo_url"
+        fi
+
+        echo $ORG $REPO_NAME $TERM_NAME $FULLNAME
+    done
+}
+
+_gtb_delete_existing_remote() {
+    local REPO_NAME=${1:?Repo name is required!}
+    local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
+    [[ -d $REPO_DIR ]] || fail "Cannot find local directory for repo '$REPO_NAME'!"
+
+    run "cd $REPO_DIR"
+
+    while read -r FULLNAME ORG TERM_NAME
+    do
+        run "git remote remove $ORG 2>/dev/null"
+        echo $ORG $REPO_NAME $TERM_NAME $FULLNAME
+    done
 }
 
 _gtb_create_repo_in_student_org() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
-
-    cd $(_gtb_default_repo_dir $REPO_NAME)
-
-    if git remote | grep --silent "$ORG"; then
-        return 0
-    fi
 
     gh_create_org_repo $ORG $REPO_NAME
     local result=$?
@@ -1675,7 +1693,7 @@ _gtb_create_repo_in_student_org() {
         return $result
     fi
 
-    _gtb_add_student_repo_as_remote $ORG $REPO_NAME
+    echo $*
 }
 
 _gtb_clone_default_repo() {
@@ -1691,20 +1709,6 @@ _gtb_update_default_repo() {
 
     run "cd $repo_dir"
     run "git fetch origin --prune --prune-tags"
-}
-
-_gtb_repo_publishjob() {
-    set -- $*
-
-    local REPO_NAME=${1:?Repo name is required!}
-    local FULLNAME=${2:?Fullname is required!}
-    local ORG=${3:?Student org is required!}
-    local TERM_NAME=${4:?Term name is required!}
-
-    header "Publish repo $REPO_NAME to $ORG..."
-    _gtb_create_repo_in_student_org $ORG $REPO_NAME || return 1
-    gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
-    _gtb_push_to_student_repo $ORG $REPO_NAME
 }
 
 _gtb_repo_publish() {
@@ -1723,14 +1727,20 @@ _gtb_repo_publish() {
         fail "Failed to update default repo '$REPO_NAME'."
     fi
 
-    local student_lines
-    local students_count
-    student_lines=$(_gtb_filter_students "$@")
-    students_count=$(_gtb_count_lines "$student_lines")
+    local student_lines=$(_gtb_filter_students "$@")
 
-    echo "$student_lines" \
-        | cut -d' ' -f1-3 \
-        | parallel --jobs $JOBS --colsep ' ' --tagstring {2} --bar --verbose --linebuffer gtb repo publishjob $REPO_NAME {}
+    join -1 1 -2 1 -a 1 -a 2 -o '1.1,2.2' -e 'FAILED' \
+        <(echo "$student_lines" | cut -d' ' -f2 | sort) \
+        <(echo "$student_lines" | cut -d' ' -f1-3 \
+            | _gtb_delete_existing_remote $REPO_NAME \
+            | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer _gtb_create_repo_in_student_org {1} {2} {3} {4} \
+            | _gtb_add_student_repo_as_remote $REPO_NAME \
+            | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_init_repo_secrets {1} {2} {3} {4} \
+            | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer _gtb_push_to_student_repo {1} {2} \
+            | sort -k1) \
+        | tr ' ' '|' \
+        | _gtb_tabularize \
+        | cat -n
 }
 
 _gtb_repo_remove() {
