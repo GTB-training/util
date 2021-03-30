@@ -304,7 +304,7 @@ gh_show_org_repo() {
     local ENDPOINT="/repos/$ORG/$REPO_NAME"
     local OUTPUT="$ORG $REPO_NAME"
 
-    gh api $ENDPOINT 1>/dev/null 2>&1
+    run "gh api $ENDPOINT 1>/dev/null"
 
     local result=$?
     if [[ $result -eq 0 ]]; then
