@@ -32,9 +32,6 @@ GTB_ORG=tws-graduate-program
 
 GTB_TRELLO_API='https://api.trello.com/1'
 
-SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
-shift
-
 cuts() {
     cat | cut -d' ' "$@"
 }
@@ -2212,12 +2209,6 @@ _gtb_help() {
     exit 0
 }
 
-# main method starts from here...
-if [[ "$(type -t ${SUBCMD_PREFIX}_$SUBCOMMAND)" != 'function' ]]; then
-    error "Subcommand \`$SUBCOMMAND\` is INVALID!"
-    exit 2
-fi
-
 OPTIND=1
 
 JOBS=1
@@ -2272,6 +2263,15 @@ done
 eval set -- "$PARAMS"
 
 source `which env_parallel.bash`
+
+SUBCOMMAND=${1:?Subcommand is required! (e.g. init, clone, build, update, join, test, up, down, check, show, help.)}
+shift
+
+# main method starts from here...
+if [[ "$(type -t ${SUBCMD_PREFIX}_$SUBCOMMAND)" != 'function' ]]; then
+    error "Subcommand \`$SUBCOMMAND\` is INVALID!"
+    exit 2
+fi
 
 ${SUBCMD_PREFIX}_${SUBCOMMAND} $@
 
