@@ -1267,17 +1267,16 @@ _gtb_student_secret_list() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                logt 15 27 "List repository secrets from $ORG/$REPO_NAME..." 1>&2
-                gh_secret_list $ORG $REPO_NAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local MAX_JOBS=$JOBS
+    if [[ $MAX_JOBS -gt 20 ]]
+    then
+        MAX_JOBS=20
+    fi
+
+    local student_lines=$(_gtb_filter_students "$@")
+
+    echo "$student_lines" | cut -d' ' -f2 \
+        | env_parallel --jobs $MAX_JOBS --colsep ' ' --bar --linebuffer gh_secret_list {1} $REPO_NAME
 }
 
 _gtb_student_secret() {
