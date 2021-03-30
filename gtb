@@ -1479,10 +1479,12 @@ _gtb_student_repo_show() {
 
     local student_lines=$(_gtb_filter_students "$@")
 
-    echo "$student_lines" \
-        | cut -d' ' -f2 \
-        | env_parallel --jobs $JOBS --bar --linebuffer gh_show_org_repo {1} $REPO_NAME \
-        | sort \
+    join -1 1 -2 2 -a 1 -a 2 -o '2.1,1.1' -e 'NotFound' \
+        <(echo "$student_lines" | cut -d' ' -f2 | sort) \
+        <(echo "$student_lines" | cut -d' ' -f2 \
+            | env_parallel --jobs $JOBS --bar --linebuffer gh_show_org_repo {1} $REPO_NAME \
+            | sort -k2) \
+        | sort -k1,2 \
         | tr ' ' '|' \
         | _gtb_tabularize \
         | cat -n
