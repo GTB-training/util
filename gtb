@@ -1767,11 +1767,12 @@ _gtb_repo_publish() {
         | _gtb_tabularize \
         | cat -n
 
+    local result_of_repo_check=$(_gtb_student_repo_check $REPO_NAME "$@" | tr '\t' ' ' | tr -s ' ' | sort -k3)
+    local result_of_secret_check=$(_gtb_student_secret_check $REPO_NAME "$@" |  tr '\t' ' ' | tr -s ' ' | sort -k3)
+
     (
     echo 'No.|Last Commit|Secrets Count|Student'
-    join -1 3 -2 3 -a 1 -a 2 -o '1.2,2.2,1.3' -e 'MISSING' \
-        <(_gtb_student_repo_check $REPO_NAME "$@" | tr '\t' ' ' | tr -s ' ' | sort -k3) \
-        <(_gtb_student_secret_check $REPO_NAME "$@" |  tr '\t' ' ' | tr -s ' ' | sort -k3) \
+    join -1 3 -2 3 -a 1 -a 2 -o '1.2,2.2,1.3' -e 'MISSING' <(echo "$result_of_repo_check") <(echo "$result_of_secret_check") \
         | sort -k1,2 -rn \
         | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
         | tr ' ' '|'
