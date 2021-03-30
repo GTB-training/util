@@ -340,7 +340,7 @@ gh_secret_list() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
 
-    gh secret list -R $ORG/$REPO_NAME 2>/dev/null
+    run "gh secret list -R $ORG/$REPO_NAME"
 }
 
 gh_list_repo_workflow_runs() {
