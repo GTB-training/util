@@ -328,9 +328,9 @@ gh_show_org_repo() {
 
     local result=$?
     if [[ $result -eq 0 ]]; then
-        echo $OUTPUT
+        echo "✅" $ORG
     else
-        error $OUTPUT
+        echo "❌" $ORG
     fi
 
     return $result
