@@ -297,6 +297,26 @@ gh_list_org_repos() {
         sed -e 's/ true$//' -e 's/false$/🟢/'
 }
 
+gh_show_org_repo_commit() {
+    local ORG=${1:?Org is required!}
+    local REPO_NAME=${2:?Repo name is required!}
+    local COMMIT_REF=${3:?Commit ref is required!}
+
+    local ENDPOINT="/repos/$ORG/$REPO_NAME/commits/$COMMIT_REF"
+    local OUTPUT="$ORG $REPO_NAME"
+
+    run "gh api $ENDPOINT 1>/dev/null"
+
+    local result=$?
+    if [[ $result -eq 0 ]]; then
+        echo "✅" $ORG
+    else
+        echo "❌" $ORG
+    fi
+
+    return $result
+}
+
 gh_show_org_repo() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
@@ -1436,6 +1456,23 @@ _gtb_student_repo_list() {
         gh_list_org_repos {1}
 }
 
+_gtb_student_repo_check() {
+    local REPO_NAME=${1:?Repo name is required!}
+    shift 1
+    local COMMIT_REF=$(_gtb_last_commit_of_branch $REPO_NAME master)
+    local student_lines=$(_gtb_filter_students "$@")
+
+    join -1 1 -2 2 -a 1 -a 2 -o '2.1,1.1' -e 'Not Found' \
+        <(echo "$student_lines" | cut -d' ' -f2 | sort) \
+        <(echo "$student_lines" | cut -d' ' -f2 \
+            | env_parallel --jobs $JOBS --bar --linebuffer gh_show_org_repo_commit {1} $REPO_NAME $COMMIT_REF \
+            | sort -k2) \
+        | sort -k1,2 \
+        | tr ' ' '|' \
+        | _gtb_tabularize \
+        | cat -n
+}
+
 _gtb_student_repo_show() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
@@ -1472,7 +1509,7 @@ _gtb_student_repo_open() {
 }
 
 _gtb_student_repo() {
-    if ! echo $1 | grep --silent '^\(show\|list\|create\|delete\|open\|pick\)$'; then
+    if ! echo $1 | grep --silent '^\(show\|check\|list\|create\|delete\|open\|pick\)$'; then
         set -- list "$@"
     fi
 
@@ -1571,6 +1608,22 @@ _gtb_push_to_student_repo() {
 
     run "git push $ORG origin/master:refs/heads/master"
     run "git push --force $ORG origin/master:refs/heads/latest"
+}
+
+_gtb_last_commit_of_branch() {
+    local REPO_NAME=${1:?Repo name is required!}
+    local BRANCH=${2:?Branch name is required!}
+    local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
+
+    [[ -d $REPO_DIR ]] || fail "Cannot find local directory for repo '$REPO_NAME'!"
+
+    cd $REPO_DIR
+
+    if ! git remote | grep --silent "$ORG"; then
+        return 0
+    fi
+
+    run "git rev-parse $BRANCH"
 }
 
 _gtb_remove_remote_student_repo() {
