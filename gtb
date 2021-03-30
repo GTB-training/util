@@ -407,7 +407,7 @@ gh_set_repo_secret() {
     local VALUE=${4:?Secret value is required!}
 
     echo $ORG $REPO_NAME $NAME $VALUE \
-        | parallel --jobs 1 --verbose --retries 3 --colsep ' ' "gh secret -R {1}/{2} set {3} -b{4}"
+        | env_parallel --jobs 1 --retries 3 --colsep ' ' "run gh secret -R {1}/{2} set {3} -b{4}"
 }
 
 gh_init_repo_secrets() {
