@@ -1724,6 +1724,12 @@ _gtb_repo_publish() {
         fail "Failed to update default repo '$REPO_NAME'."
     fi
 
+    local MAX_JOBS=$JOBS
+    if [[ $MAX_JOBS -gt 20 ]]
+    then
+        MAX_JOBS=20
+    fi
+
     local student_lines=$(_gtb_filter_students "$@")
 
     join -1 1 -2 1 -a 1 -a 2 -o '1.1,2.2' -e 'FAILED' \
@@ -1732,7 +1738,7 @@ _gtb_repo_publish() {
             | _gtb_delete_existing_remote $REPO_NAME \
             | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer _gtb_create_repo_in_student_org {1} {2} {3} {4} \
             | _gtb_add_student_repo_as_remote $REPO_NAME \
-            | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_init_repo_secrets {1} {2} {3} {4} \
+            | env_parallel --jobs $MAX_JOBS --colsep ' ' --bar --linebuffer gh_init_repo_secrets {1} {2} {3} {4} \
             | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer _gtb_push_to_student_repo {1} {2} \
             | sort -k1) \
         | tr ' ' '|' \
