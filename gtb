@@ -289,7 +289,7 @@ gh_list_org_repos() {
     fi
 
     run "gh api $ENDPOINT 2>/dev/null" | jsonpp | \
-        grep '    "name":\|    "private":' | \
+        grep '^    "name":\|^    "private":' | \
         tr -d '", ' | \
         cut -d':' -f2 | \
         paste -d' ' - - | \
