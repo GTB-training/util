@@ -2185,42 +2185,56 @@ fi
 
 OPTIND=1
 
+JOBS=1
 AUTO_UPDATE="false"
 AUTO_BUILD="false"
 AUTO_ACCEPT="true"
 AUTO_TEST="false"
 CHECK_ROLE_ONLY="false"
 
-while :; do
-    case $1 in
+PARAMS=""
+while (( "$#" )); do
+    case "$1" in
+        --jobs)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                JOBS=$2
+                shift 2
+            else
+                fail "Error: Argument for $1 is missing"
+            fi
+            ;;
         -u|--update)
             AUTO_UPDATE="true"
+            shift
             ;;
         -b|--build)
             AUTO_BUILD="true"
+            shift
             ;;
         -l|--list)
             AUTO_ACCEPT="false"
+            shift
             ;;
         -t|--test)
             AUTO_TEST="true"
+            shift
             ;;
         --role)
             CHECK_ROLE_ONLY="true"
-            ;;
-        --)
             shift
-            break
             ;;
-        -?*)
-            error "WARN: Unknown option (ignored): $1"
+        -*|--*=)
+            warn "Unsupported flag $1"
+            shift
             ;;
-        *)               # Default case: No more options, so break out of the loop.
-            break
+        *)
+            PARAMS="$PARAMS $1"
+            shift
+            ;;
     esac
-
-    shift
 done
+
+eval set -- "$PARAMS"
 
 ${SUBCMD_PREFIX}_${SUBCOMMAND} $@
 
