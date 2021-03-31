@@ -144,6 +144,19 @@ _gtb_run_subcommand() {
     $subcommand_function "$@"
 }
 
+_gtb_filter_students() {
+    while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    do
+        if echo "$TERM_NAME" | grep --silent "\<$GTB_TERM\>"
+        then
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            then
+                printf "%s\n" "$FULLNAME $ORG $TERM_NAME $USERNAME $TAGS"
+            fi
+        fi
+    done < $GTB_STUDENTS_FILE
+}
+
 gh_user_id() {
     local USERNAME=${1:?username is required!}
     run "gh api /users/${USERNAME} 2>/dev/null" | jsonpp | \
@@ -1552,19 +1565,6 @@ _gtb_student_group() {
         sed 's: N/A::' | \
         cat -n | \
         column -t
-}
-
-_gtb_filter_students() {
-    while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "\<$GTB_TERM\>"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                printf "%s\n" "$FULLNAME $ORG $TERM_NAME $USERNAME $TAGS"
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
 }
 
 _gtb_count_lines() {
