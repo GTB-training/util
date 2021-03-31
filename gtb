@@ -477,18 +477,18 @@ gh_cancel_org_invitations() {
 }
 
 gh_delete_repo() {
-    local OWNER=${1:?Owner is required!}
+    local ORG=${1:?ORG is required!}
     local REPO_NAME=${2:?Repo name is required!}
 
-    local response=$(run "gh api -X DELETE /repos/$OWNER/$REPO_NAME 2>/dev/null")
+    local response=$(run "gh api -X DELETE /repos/$ORG/$REPO_NAME 2>/dev/null")
 
     if [[ "$response" == "" ]]; then
-        echo $OWNER $REPO_NAME
+        echo $ORG $REPO_NAME
         return 0
     fi
 
     if echo $response | grep --silent '"message":"Not Found"'; then
-        echo $OWNER $REPO_NAME
+        echo $ORG $REPO_NAME
         return 0
     fi
 
@@ -497,11 +497,11 @@ gh_delete_repo() {
 }
 
 gh_clone_repo() {
-    local OWNER=${1:?Owner is required!}
+    local ORG=${1:?ORG is required!}
     local REPO_NAME=${2:?Repo name is required!}
     local DIR=${3:?Director is required!}
 
-    run "git clone git@github.com:$OWNER/$REPO_NAME $DIR"
+    run "git clone git@github.com:$ORG/$REPO_NAME $DIR"
 }
 
 build_repo() {
