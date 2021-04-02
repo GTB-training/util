@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VERSION=9.9.9
+
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
 GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (gtb-101, gtb-201, etc.)}"
 GTB_CONFIG_REPO=config
@@ -2251,6 +2253,11 @@ _gtb_version() {
 _gtb_help() {
     echo "Please refer to the README doc:"
     info "https://github.com/GTB-training/util/blob/master/README.md"
+    exit 0
+}
+
+_gtb_version() {
+    echo "gtb version $VERSION"
     exit 0
 }
 
