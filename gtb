@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VERSION=1.51.0
+
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
 GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (gtb-101, gtb-201, etc.)}"
 GTB_CONFIG_REPO=config
@@ -2245,7 +2247,8 @@ _gtb_term() {
 }
 
 _gtb_version() {
-    run "brew info GTB-training/gtb/util"
+    echo "gtb $VERSION"
+    exit 0
 }
 
 _gtb_help() {

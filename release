@@ -14,6 +14,8 @@ log() {
 
 [[ -z "$REF" ]] && REF=HEAD
 
+run "sed -i '' -e \"s/^\(VERSION\=\).*/\1${VERSION#v}/\" ./gtb"
+run "git add gtb && git commit -m \"bump version to $VERSION\""
 run "git tag $VERSION $REF"
 run "git push origin master && git push --tags"
 run "sleep 3"
