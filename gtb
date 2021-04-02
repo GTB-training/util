@@ -2295,7 +2295,7 @@ while (( "$#" )); do
             shift
             ;;
         -*|--*=)
-            warn "Unsupported flag $1"
+            fail "Unsupported flag $1"
             shift
             ;;
         *)
