@@ -2244,6 +2244,10 @@ _gtb_term() {
     echo $GTB_TERM
 }
 
+_gtb_version() {
+    run "brew info GTB-training/gtb/util"
+}
+
 _gtb_help() {
     echo "Please refer to the README doc:"
     info "https://github.com/GTB-training/util/blob/master/README.md"
