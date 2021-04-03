@@ -178,7 +178,7 @@ gh_invite_user_to_team() {
     local ORG=${1:?org is required!}
     local TEAM=${2:?team is required!}
     local USERNAME=${3:?username is required!}
-    gh api -X PUT "/orgs/${ORG}/teams/${TEAM}/memberships/${USERNAME}" 2>/dev/null
+    run "gh api -X PUT \"/orgs/${ORG}/teams/${TEAM}/memberships/${USERNAME}\""
 }
 
 gh_membership() {
