@@ -126,6 +126,14 @@ _gtb_pv() {
     cat | pv -tbelSs $1 -i 0.3 -N "total is: $1 current is"
 }
 
+_gtb_unformat() {
+    cat | tr '\t' ' ' | tr -s ' ' | sed 's/^ //'
+}
+
+_gtb_cuts() {
+    cat | cut -d ' ' -f "${*}"
+}
+
 _gtb_default_repo_dir() {
     local REPO_NAME=${1:?Repo name is required!}
     echo "$GTB_DEFAULT_REPO_ROOT/$REPO_NAME"
