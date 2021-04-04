@@ -147,13 +147,13 @@ _gtb_run_subcommand() {
 }
 
 _gtb_filter_students() {
-    while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
+    while read -r FULLNAME ORG TERM_NAME USERNAME TRELLO_EMAIL TAGS
     do
         if echo "$TERM_NAME" | grep --silent "\<$GTB_TERM\>"
         then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
+            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$*" | grep --silent "\<${TRELLO_EMAIL}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
             then
-                printf "%s\n" "$FULLNAME $ORG $TERM_NAME $USERNAME $TAGS"
+                printf "%s\n" "$FULLNAME $ORG $TERM_NAME $USERNAME $TRELLO_EMAIL $TAGS"
             fi
         fi
     done < $GTB_STUDENTS_FILE
