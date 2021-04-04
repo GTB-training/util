@@ -1918,7 +1918,7 @@ _gtb_org() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
-_gtb_trello_cards_create() {
+_gtb_trello_card_create() {
     if [[ $# -lt 2 ]]
     then
         fail 'Card name is required!'
@@ -1936,7 +1936,7 @@ _gtb_trello_cards_create() {
         | column -s'^' -t | cat -n
 }
 
-_gtb_trello_cards_list() {
+_gtb_trello_card_list() {
     local LIST_ID=${1:?Trello list ID is required!}
 
     http "$GTB_TRELLO_API/lists/${LIST_ID}/cards?key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" \
@@ -1947,7 +1947,7 @@ _gtb_trello_cards_list() {
         | column -s'^' -t | cat -n
 }
 
-_gtb_trello_cards() {
+_gtb_trello_card() {
     if ! echo $1 | grep --silent '^\(list\|create\)$'; then
         set -- "$@"
     fi
@@ -1955,7 +1955,7 @@ _gtb_trello_cards() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
-_gtb_trello_lists_list() {
+_gtb_trello_list_list() {
     local BOARD_ID=${1:?Trello board ID is required!}
 
     http "$GTB_TRELLO_API/boards/${BOARD_ID}/lists?key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" \
@@ -1966,7 +1966,7 @@ _gtb_trello_lists_list() {
         | column -s'^' -t | cat -n
 }
 
-_gtb_trello_lists() {
+_gtb_trello_list() {
     if ! echo $1 | grep --silent '^\(list\)$'; then
         set -- list "$@"
     fi
@@ -1974,7 +1974,7 @@ _gtb_trello_lists() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
-_gtb_trello_boards() {
+_gtb_trello_board() {
     http "$GTB_TRELLO_API/members/panda1010/boards?key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" \
         | jsonpp \
         | grep '^    "\(name\|id\)": ' \
@@ -1988,7 +1988,7 @@ _gtb_trello() {
     GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
     GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
 
-    if ! echo $1 | grep --silent '^\(boards\|lists\|cards\)$'; then
+    if ! echo $1 | grep --silent '^\(board\|list\|card\)$'; then
         set -- boards "$@"
     fi
 
