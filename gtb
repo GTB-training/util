@@ -527,6 +527,25 @@ gh_clone_repo() {
     run "git clone git@github.com:$ORG/$REPO_NAME $DIR"
 }
 
+_gtb_trello_invite_member_to_board() {
+    GTB_TRELLO_BOARD_ID="${GTB_TRELLO_BOARD_ID:?Trello board ID is required! Specify by --board <ID>.}"
+    GTB_TRELLO_MEMBER_TYPE="${GTB_TRELLO_MEMBER_TYPE:?Trello member type is required! Specify by --type <admin|normal|observer>.}"
+
+    local ORG=${1:?Student org is required!}
+    local TRELLO_EMAIL=${2:?Trell member email is required!}
+
+    local response=$(http PUT "$GTB_TRELLO_API/boards/${GTB_TRELLO_BOARD_ID}/members?email=${TRELLO_EMAIL}&key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" 2>&1)
+
+    if echo $response | grep --silent '^{"id":'; then
+        echo "✅ $ORG $TRELLO_EMAIL"
+        return 0
+    fi
+
+    echo "❌ $ORG $TRELLO_EMAIL"
+    error $response
+    return 1
+}
+
 build_repo() {
     local repo_name=$1
     local fullname=$2
@@ -1982,6 +2001,15 @@ _gtb_trello_list() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_trello_board_invite() {
+    _gtb_filter_students "$@" \
+        | _gtb_unformat \
+        | _gtb_cuts '2,5' \
+        | env_parallel --jobs $JOBS --colsep ' ' --tagstring {1} --bar --linebuffer \
+            _gtb_trello_invite_member_to_board {1} {2} \
+        | sort | column -s'^' -t | cat -n
+}
+
 _gtb_trello_board_list() {
     GTB_TRELLO_USERNAME="${GTB_TRELLO_USERNAME:?Trello username is required! Specify by GTB_TRELLO_USERNAME or --username.}"
 
@@ -2282,6 +2310,22 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: Trello username specified by '$1' is missing"
+            fi
+            ;;
+        --board)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_BOARD_ID=$2
+                shift 2
+            else
+                fail "Error: Trello board ID specified by '$1' is missing"
+            fi
+            ;;
+        --type)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_MEMBER_TYPE=$2
+                shift 2
+            else
+                fail "Error: Trello member type specified by '$1' is missing"
             fi
             ;;
         -u|--update)
