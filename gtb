@@ -32,6 +32,7 @@ GTB_PER_PAGE=100
 
 GTB_ORG=tws-graduate-program
 
+GTB_TRELLO_USERNAME="${GTB_TRELLO_USERNAME:-gtb-trello-username-required}"
 GTB_TRELLO_API='https://api.trello.com/1'
 
 cuts() {
@@ -1975,7 +1976,7 @@ _gtb_trello_list() {
 }
 
 _gtb_trello_board() {
-    http "$GTB_TRELLO_API/members/panda1010/boards?key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" \
+    http "$GTB_TRELLO_API/members/${GTB_TRELLO_USERNAME}/boards?key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" \
         | jsonpp \
         | grep '^    "\(name\|id\)": ' \
         | sed -e 's/^    "name": "//' -e 's/^    "id": "//' -e 's/",$//' \
@@ -1984,7 +1985,6 @@ _gtb_trello_board() {
 }
 
 _gtb_trello() {
-    GTB_TRELLO_USERNAME="${GTB_TRELLO_USERNAME:?Trello username should be set! 'https://trello.com/'}"
     GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
     GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
 
@@ -2257,6 +2257,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: Argument for $1 is missing"
+            fi
+            ;;
+        --username)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_USERNAME=$2
+                shift 2
+            else
+                fail "Error: Trello username specified by '$1' is missing"
             fi
             ;;
         -u|--update)
