@@ -1104,12 +1104,7 @@ _gtb_check_student_org_for_presence() {
 
     header "Checking student org for presence..."
 
-    local student_lines
-    local students_count
-    student_lines=$(_gtb_filter_students "$@")
-    students_count=$(_gtb_count_lines "$student_lines")
-
-    echo "$student_lines" | cut -d' ' -f2 \
+    _gtb_filter_students "$@" | cut -d' ' -f2 \
         | env_parallel --jobs $JOBS --bar --linebuffer gh_find_org {1} \
         | sort -k1,2 \
         | tr ' ' '|' \
