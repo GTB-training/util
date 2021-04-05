@@ -189,6 +189,17 @@ gh_invite_user_to_team() {
     run "gh api -X PUT \"/orgs/${ORG}/teams/${TEAM}/memberships/${USERNAME}\""
 }
 
+gh_find_org() {
+    local ORG=${1:?org is required!}
+
+    if run "gh api /orgs/$ORG" | jsonpp | grep --silent "\"login\": \"$ORG\""
+    then
+        echo "✅" $ORG
+    else
+        echo "❌" $ORG
+    fi
+}
+
 gh_membership() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
@@ -1080,15 +1091,12 @@ _gtb_check_student_org_for_presence() {
     student_lines=$(_gtb_filter_students "$@")
     students_count=$(_gtb_count_lines "$student_lines")
 
-    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if run "gh api /orgs/$ORG 2>/dev/null" | jsonpp | grep --silent "\"login\": \"$ORG\""
-        then
-            logtf 28 "$TERM_NAME $FULLNAME $ORG $TAGS"
-        else
-            logtf 161 "$TERM_NAME $FULLNAME $ORG $TAGS"
-        fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
+    echo "$student_lines" | cut -d' ' -f2 \
+        | env_parallel --jobs $JOBS --bar --linebuffer gh_find_org {1} \
+        | sort -k1,2 \
+        | tr ' ' '|' \
+        | _gtb_tabularize \
+        | cat -n
 }
 
 _gtb_check_student_org_for_trainer_role() {
