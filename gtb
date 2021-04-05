@@ -534,7 +534,7 @@ _gtb_trello_invite_member_to_board() {
     local ORG=${1:?Student org is required!}
     local TRELLO_EMAIL=${2:?Trell member email is required!}
 
-    local response=$(http PUT "$GTB_TRELLO_API/boards/${GTB_TRELLO_BOARD_ID}/members?email=${TRELLO_EMAIL}&key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" 2>&1)
+    local response=$(http PUT "$GTB_TRELLO_API/boards/${GTB_TRELLO_BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}&key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN" 2>&1)
 
     if echo $response | grep --silent '^{"id":'; then
         echo "✅ $ORG $TRELLO_EMAIL"
