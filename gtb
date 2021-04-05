@@ -2,6 +2,8 @@
 
 VERSION=1.54.1
 
+GTB_DEBUG=${GTB_DEBUG:-false}
+
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
 GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (gtb-101, gtb-201, etc.)}"
 GTB_CONFIG_REPO=config
@@ -55,7 +57,7 @@ debug() {
 }
 
 run() {
-    echo "$(tput setaf 22)$*$(tput sgr 0)" 1>&2
+    [[ "$GTB_DEBUG" == "true" ]] && echo "$(tput setaf 22)$*$(tput sgr 0)" 1>&2
     eval $*
 }
 
@@ -104,6 +106,10 @@ strip_colors() {
         echo "$line" | \
             sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g'
     done
+}
+
+_gtb_mute_stderr() {
+    [[ "$GTB_DEBUG" == "true" ]] && echo '' || echo '2>/dev/null'
 }
 
 _gtb_urlencode() {
@@ -192,7 +198,7 @@ gh_invite_user_to_team() {
 gh_find_org() {
     local ORG=${1:?org is required!}
 
-    if run "gh api /orgs/$ORG" | jsonpp | grep --silent "\"login\": \"$ORG\""
+    if run "gh api /orgs/$ORG $(_gtb_mute_stderr)" | jsonpp | grep --silent "\"login\": \"$ORG\""
     then
         echo "✅" $ORG
     else
@@ -2333,6 +2339,10 @@ while (( "$#" )); do
             else
                 fail "Error: Trello member type specified by '$1' is missing"
             fi
+            ;;
+        -D|--debug)
+            GTB_DEBUG="true"
+            shift
             ;;
         -u|--update)
             AUTO_UPDATE="true"
