@@ -206,6 +206,24 @@ gh_membership() {
     run "gh api '/orgs/${ORG}/memberships/${USERNAME}' 2>/dev/null" | jsonpp
 }
 
+gh_membership_check() {
+    local ORG=${1:?org is required!}
+    local TRAINER_USERNAME=${2:?trainer usersname is required!}
+
+    local membership=$(gh_membership $ORG $TRAINER_USERNAME)
+    if echo $membership | gh_is_active_admin; then
+        logtf 28 "$ORG|active admin"
+    elif echo $membership | gh_is_pending_admin; then
+        logtf 32 "$ORG|pending admin"
+    elif echo $membership | gh_is_pending_member; then
+        logtf 220 "$ORG|pending member"
+    elif echo $membership | gh_is_active_member; then
+        logtf 13 "$ORG|active member"
+    else
+        logtf 161 "$ORG|no invitation"
+    fi
+}
+
 gh_set_org_membership() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
@@ -1110,26 +1128,11 @@ _gtb_check_student_org_for_trainer_role() {
     local trainer_username=$(_gtb_trainer_username $TRAINER_FULLNAME)
     assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$trainer_username"
 
-    local student_lines
-    local students_count
-    student_lines=$(_gtb_filter_students "$@")
-    students_count=$(_gtb_count_lines "$student_lines")
-
-    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        local membership=$(gh_membership $ORG $trainer_username)
-        if echo $membership | gh_is_active_admin; then
-            logtf 28 "$ORG|active admin"
-        elif echo $membership | gh_is_pending_admin; then
-            logtf 32 "$ORG|pending admin"
-        elif echo $membership | gh_is_pending_member; then
-            logtf 220 "$ORG|pending member"
-        elif echo $membership | gh_is_active_member; then
-            logtf 13 "$ORG|active member"
-        else
-            logtf 161 "$ORG|no invitation"
-        fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
+    _gtb_filter_students "$@" | cut -d' ' -f2 \
+        | env_parallel --jobs $JOBS --bar --linebuffer gh_membership_check {1} $trainer_username \
+        | sort -t'|' -k2,1 -r \
+        | _gtb_tabularize \
+        | cat -n
 }
 
 _gtb_student_org_check() {
