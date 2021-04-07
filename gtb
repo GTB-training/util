@@ -1979,21 +1979,19 @@ _gtb_org() {
 }
 
 _gtb_trello_card_create() {
-    if [[ $# -lt 2 ]]
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+    GTB_TRELLO_LIST_NAME="${GTB_TRELLO_LIST_NAME:?Trello list name is required! Specify by --list <NAME>.}"
+
+    local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
+    local CARD_NAME=$(_gtb_urlencode "$*")
+
+    if [[ $# -lt 1 ]]
     then
         fail 'Card name is required!'
     fi
 
-    local LIST_ID=${1:?Trello list ID is required!}
-    shift
-    local CARD_NAME=$(_gtb_urlencode "$*")
-
     http POST "$GTB_TRELLO_API/cards?idList=${LIST_ID}&pos=top&name=$CARD_NAME&$GTB_TRELLO_AUTH" \
-        | jsonpp \
-        | grep '^  "\(name\|idShort\|shortUrl\)": ' \
-        | sed -e 's/^  "name": "//' -e 's/^  "idShort": //' -e 's/^  "shortUrl": "//' -e 's/",$//' -e 's/,$//' \
-        | paste -d '^' - - - \
-        | column -s'^' -t | cat -n
+        | jq -r '.shortUrl, .name'
 }
 
 _gtb_trello_card_check() {
