@@ -2000,7 +2000,7 @@ _gtb_trello_card_check() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     GTB_TRELLO_LIST_NAME="${GTB_TRELLO_LIST_NAME:?Trello list name is required! Specify by --list <NAME>.}"
 
-    local LIST_ID=$(_gtb_trello_find_list_id $GTB_TRELLO_BOARD_NAME $GTB_TRELLO_LIST_NAME)
+    local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
     assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
 
     local cards_info=$(http GET "$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH" \
@@ -2022,7 +2022,7 @@ _gtb_trello_card_list() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     GTB_TRELLO_LIST_NAME="${GTB_TRELLO_LIST_NAME:?Trello list name is required! Specify by --list <NAME>.}"
 
-    local LIST_ID=$(_gtb_trello_find_list_id $GTB_TRELLO_BOARD_NAME $GTB_TRELLO_LIST_NAME)
+    local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
     assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
 
     http GET "$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH" \
