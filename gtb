@@ -161,6 +161,8 @@ _gtb_run_subcommand() {
 }
 
 _gtb_filter_students() {
+    [ ! -t 0 ] && set -- $* $(cat | tr '\n' ' ')
+
     grep "\<$GTB_TERM\>" $GTB_STUDENTS_FILE | while read -r FULLNAME ORG TERM_NAME USERNAME TRELLO_EMAIL NICKNAME CHINESE_NAME TAGS
     do
         if [[ -z "$*" ]] \
