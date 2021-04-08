@@ -161,16 +161,37 @@ _gtb_run_subcommand() {
 }
 
 _gtb_filter_students() {
-    while read -r FULLNAME ORG TERM_NAME USERNAME TRELLO_EMAIL TAGS
+    grep "\<$GTB_TERM\>" $GTB_STUDENTS_FILE | while read -r FULLNAME ORG TERM_NAME USERNAME TRELLO_EMAIL NICKNAME CHINESE_NAME TAGS
     do
-        if echo "$TERM_NAME" | grep --silent "\<$GTB_TERM\>"
+        if [[ -z "$*" ]] \
+            || echo "$*" | grep --silent "\<${FULLNAME}\>" \
+            || echo "$*" | grep --silent "\<${USERNAME}\>"  \
+            || echo "$*" | grep --silent "\<${TRELLO_EMAIL}\>" \
+            || echo "$*" | grep --silent "\<${NICKNAME}\>" \
+            || echo "$*" | grep --silent "\<${ORG}\>"
         then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$*" | grep --silent "\<${TRELLO_EMAIL}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                printf "%s\n" "$FULLNAME $ORG $TERM_NAME $USERNAME $TRELLO_EMAIL $TAGS"
-            fi
+            printf "%s\n" "$FULLNAME $ORG $TERM_NAME $USERNAME $TRELLO_EMAIL $NICKNAME $CHINESE_NAME $TAGS"
+            continue
         fi
-    done < $GTB_STUDENTS_FILE
+
+        for FILTER in "$@"
+        do
+            if echo "$TAGS" | grep --silent "\<${FILTER}\>"
+            then
+                printf "%s\n" "$FULLNAME $OWNER $TERM_NAME $USERNAME $TRELLO_EMAIL $NICKNAME $CHINESE_NAME $TAGS"
+                continue
+            fi
+        done
+
+        for FILTER in "$@"
+        do
+            if [[ "$CHINESE_NAME" == "${FILTER}" ]]
+            then
+                printf "%s\n" "$FULLNAME $OWNER $TERM_NAME $USERNAME $TRELLO_EMAIL $NICKNAME $CHINESE_NAME $TAGS"
+                continue
+            fi
+        done
+    done
 }
 
 gh_user_id() {
