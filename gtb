@@ -1772,12 +1772,14 @@ _gtb_repo_publish() {
     local REPO_NAME=$1
     shift
 
-    header "Preparing local default repo $REPO_NAME..."
+    header "Clone repo $REPO_NAME..."
 
     _gtb_clone_default_repo $REPO_NAME
     if [[ $? -ne 0 ]]; then
         fail "Failed to clone default repo '$REPO_NAME'."
     fi
+
+    header "Update repo $REPO_NAME..."
 
     _gtb_update_default_repo $REPO_NAME
     if [[ $? -ne 0 ]]; then
