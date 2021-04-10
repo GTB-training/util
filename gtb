@@ -426,7 +426,7 @@ gh_list_repo_workflow_runs() {
     local REPO_NAME=${2:?Repo name is required!}
     local WORKFLOW_FILENAME=${3:?Workflow filename is required!}
 
-    run "gh api /repos/$ORG/$REPO_NAME/actions/workflows/$WORKFLOW_FILENAME/runs?per_page=10 2>/dev/null" | \
+    run "gh api /repos/$ORG/$REPO_NAME/actions/workflows/$WORKFLOW_FILENAME/runs?per_page=10" | \
         jsonpp | \
         sed -e 's/: "//' -e 's/",//' | \
         sed -e 's/": /"/' -e 's/,$//' | \
