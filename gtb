@@ -1642,22 +1642,19 @@ _gtb_student_list() {
     done | tr ' ' '|' | sort | _gtb_tabularize | cat -n
 }
 
+_gtb_student_show_format() {
+    cat | tr ' ' '\n' | cat -n
+}
+
 _gtb_student_show() {
     local STUDENT_FULLNAME=${1:?Trainee fullname is required! (e.g. zhang.san, li.si, etc.)}
 
-    while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ "$FULLNAME" == "$STUDENT_FULLNAME" ]]
-            then
-                echo "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
-                return 0
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
-
-    return 1
+    _gtb_filter_students \
+        | grep "\<$STUDENT_FULLNAME\>" \
+        | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS; do
+            printf "%s\n" "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
+        done \
+        | ${FUNCNAME[0]}_format
 }
 
 _gtb_student() {
