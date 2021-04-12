@@ -36,6 +36,9 @@ GTB_ORG=tws-graduate-program
 
 GTB_TRELLO_API='https://api.trello.com/1'
 
+GTB_FIELDS="1-"
+GTB_RAW="false"
+
 cuts() {
     cat | cut -d' ' "$@"
 }
@@ -1635,11 +1638,22 @@ _gtb_count_lines() {
     echo "$*" | wc -l | tr -d ' '
 }
 
+_gtb_student_list_format() {
+    if [[ "$GTB_RAW" == "true" ]]
+    then
+        cat
+        return 0
+    fi
+
+    cat | tr ' ' '|' | sort | _gtb_tabularize | cat -n
+}
+
 _gtb_student_list() {
-    local students
     _gtb_filter_students "$@" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS; do
         printf "%s\n" "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
-    done | tr ' ' '|' | sort | _gtb_tabularize | cat -n
+    done \
+        | _gtb_cuts "$GTB_FIELDS" \
+        | ${FUNCNAME[0]}_format
 }
 
 _gtb_student_show_format() {
@@ -2410,6 +2424,18 @@ while (( "$#" )); do
             else
                 fail "Error: Trello member type specified by '$1' is missing"
             fi
+            ;;
+        -f|--fields)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_FIELDS=$2
+                shift 2
+            else
+                fail "Error: Fields to display specified by '$1' is missing"
+            fi
+            ;;
+        --raw)
+            GTB_RAW="true"
+            shift
             ;;
         -D|--debug)
             GTB_DEBUG="true"
