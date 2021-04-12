@@ -108,6 +108,11 @@ strip_colors() {
     done
 }
 
+_gtb_open() {
+    [[ $# -lt 1 ]] && fail "Arguments required for open command!"
+    run "open ${*}"
+}
+
 _gtb_mute_stderr() {
     [[ "$GTB_DEBUG" == "true" ]] && echo '' || echo '2>/dev/null'
 }
