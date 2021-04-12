@@ -2138,6 +2138,112 @@ _gtb_trello() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_tag_stat() {
+    local POSITION=${1:?Tag position, starts from 1, is required!}
+    shift
+
+    local total_fields=$(head -n1 $GTB_STUDENTS_FILE | wc -w)
+
+    if [[ "$POSITION" -lt 1 ]] || [[ "$POSITION" -gt $total_fields ]]
+    then
+        fail "error: position '$POSITION' is out of range."
+    fi
+
+    GTB_RAW="true"
+    GTB_FIELDS="$POSITION"
+
+    _gtb_student_list "$@" | _gtb_count
+}
+
+_gtb_tag_remove() {
+    local POSITION=${1:?Tag position, starts from 1, is required!}
+
+    local total_fields=$(head -n1 $GTB_STUDENTS_FILE | wc -w)
+
+    if [[ "$POSITION" -lt 1 ]] || [[ "$POSITION" -gt $total_fields ]]
+    then
+        fail "error: position '$POSITION' is out of range."
+    fi
+
+    local BACKUP_FILE="/tmp/${GTB_STUDENTS_FILE##*/}"
+    run "cp $GTB_STUDENTS_FILE $BACKUP_FILE"
+
+    [[ -f "$BACKUP_FILE" ]] || fail "error: cannot backup students file to '$BACKUP_FILE'."
+
+    local fields=$(seq 1 $total_fields | tr '\n' ',' | sed "s/${POSITION},//" | sed 's/,$//')
+    run "cat $BACKUP_FILE | cut -d' ' -f${fields} > $GTB_STUDENTS_FILE"
+
+    _gtb_config_diff
+}
+
+_gtb_tag_replace() {
+    local FROM_TAG=${1:?Source tag is required!}
+    local TO_TAG=${2:?Target tag is required!}
+    shift 2
+
+    if ! grep -w --color --silent "$FROM_TAG" "$GTB_STUDENTS_FILE" 1>&2
+    then
+        fail 'error: source tag not found, please make sure you are using the correct value.'
+    fi
+
+    if grep -w --color "$TO_TAG" "$GTB_STUDENTS_FILE" 1>&2
+    then
+        fail 'error: new tag conficts with existing entires shown as above, please change a new one.'
+    fi
+
+    _gtb_filter_students "$@" \
+        | _gtb_cuts 1 \
+        | env_parallel --linebuffer --jobs 1 --bar "sed -i '' -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
+
+    _gtb_config_diff
+}
+
+_gtb_tag_add() {
+    local TAG=${1:?Tag is required!}
+
+    if grep -w --color "$TAG" "$GTB_STUDENTS_FILE" 1>&2
+    then
+        fail 'error: new tag conficts with existing entires shown as above, please change a new one.'
+    fi
+
+    local total_fields=$(head -n1 $GTB_STUDENTS_FILE | wc -w)
+    local POSITION=${GTB_POSITION:-$((total_fields + 1))}
+
+    if [[ "$POSITION" -le 1 ]]
+    then
+        run "sed -i '' 's/^/$TAG /g' $GTB_STUDENTS_FILE"
+    elif [[ "$POSITION" -gt $total_fields ]]
+    then
+        run "sed -i '' 's/$/ $TAG/g' $GTB_STUDENTS_FILE"
+    else
+        local BACKUP_FILE="/tmp/${GTB_STUDENTS_FILE##*/}"
+        run "cp $GTB_STUDENTS_FILE $BACKUP_FILE"
+
+        [[ -f "$BACKUP_FILE" ]] || fail "error: cannot backup students file to '$BACKUP_FILE'."
+
+        paste -d ' ' \
+            <(cat $BACKUP_FILE | _gtb_cuts "1-$((POSITION - 1))") \
+            <(jot -n -b "$TAG" $(wc -l $BACKUP_FILE)) \
+            <(cat $BACKUP_FILE | _gtb_cuts "$((POSITION))-") \
+            > $GTB_STUDENTS_FILE
+    fi
+
+    _gtb_config_diff
+}
+
+_gtb_tag_index() {
+    head -n1 $GTB_STUDENTS_FILE | _gtb_student_show_format
+}
+
+_gtb_tag() {
+    assert_students_file_exists
+
+    if ! echo $1 | grep --silent '^\(index\|add\|replace\|remove\|stat\)$'; then
+        set -- index "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
 
 _gtb_config_pull() {
     run "cd '$GTB_CONFIG_DIR'"
@@ -2493,6 +2599,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: Fields to display specified by '$1' is missing"
+            fi
+            ;;
+        --position)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_POSITION=$2
+                shift 2
+            else
+                fail "Error: Position of new tag specified by '$1' is missing"
             fi
             ;;
         --raw)
