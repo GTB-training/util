@@ -148,6 +148,15 @@ _gtb_cuts() {
     cat | cut -d ' ' -f "${*}"
 }
 
+_gtb_count() {
+    local input="$(cat)"
+    local lines_count=$(_gtb_count_lines "$input")
+    {
+        echo "$input" | sort | uniq -c | sed -E 's/^ +//g'
+        echo -e "$lines_count TOTAL"
+    } | column -t
+}
+
 _gtb_default_repo_dir() {
     local REPO_NAME=${1:?Repo name is required!}
     echo "$GTB_DEFAULT_REPO_ROOT/$REPO_NAME"
