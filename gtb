@@ -2138,6 +2138,59 @@ _gtb_trello() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+
+_gtb_config_pull() {
+    run "cd '$GTB_CONFIG_DIR'"
+    run "git pull --rebase --autostash"
+}
+
+_gtb_config_push() {
+    run "cd '$GTB_CONFIG_DIR'"
+    run "git pull --rebase --autostash"
+    run "git push"
+}
+
+_gtb_config_commit() {
+    run "cd '$GTB_CONFIG_DIR'"
+    run "git add students*.txt"
+    run "git commit -m '$*'"
+}
+
+_gtb_config_show() {
+    local TERM_NAME=${1:-$GTB_TERM}
+    less -N "$GTB_CONFIG_DIR/students-${TERM_NAME}.txt"
+}
+
+_gtb_config_edit() {
+    local TERM_NAME=${1:-$GTB_TERM}
+    vim "$GTB_CONFIG_DIR/students-${TERM_NAME}.txt"
+}
+
+_gtb_config_diff() {
+    run "cd '$GTB_CONFIG_DIR'"
+    run 'git diff --stat'
+    run 'git diff --color-words students*.txt'
+}
+
+_gtb_config_list() {
+    run "cd '$GTB_CONFIG_DIR'"
+    run 'ls -l students*.txt'
+}
+
+_gtb_config_dir() {
+    echo "$GTB_CONFIG_DIR"
+}
+
+_gtb_config() {
+    assert_students_file_exists
+
+    if ! echo $1 | grep --silent '^\(dir\|list\|diff\|edit\|show\|commit\|push\|pull\)$'; then
+        set -- dir "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_dashboard() {
     run "open ${GTB_DASHBOARD_ADDRESS%/api}?term=${GTB_TERM}"
 }
