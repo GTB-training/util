@@ -1205,16 +1205,13 @@ _gtb_student_org_open() {
         fail 'At least one filter is required to match student with name, term, or tags, etc. (e.g. gtb student org open zhang.san)'
     fi
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                open "https://github.com/$ORG"
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    _gtb_filter_students "$@" \
+        | _gtb_cuts 2 \
+        | env_parallel \
+            --linebuffer \
+            --jobs 1 \
+            --bar \
+            _gtb_open "https://github.com/{}"
 }
 
 _gtb_student_org() {
@@ -1599,16 +1596,13 @@ _gtb_student_repo_open() {
         fail 'At least one filter is required to match student with name, term, or tags, etc. (e.g. gtb student repo open bronze-java-level-1 zhang.san)'
     fi
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                open "https://github.com/$ORG/$REPO_NAME"
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    _gtb_filter_students "$@" \
+        | _gtb_cuts 2 \
+        | env_parallel \
+            --linebuffer \
+            --jobs 1 \
+            --bar \
+            _gtb_open "https://github.com/{}/$REPO_NAME"
 }
 
 _gtb_student_repo() {
