@@ -1582,8 +1582,12 @@ _gtb_student_repo_list() {
 
     echo "$student_lines" \
         | cut -d' ' -f2 \
-        | env_parallel --jobs $JOBS --colsep ' ' --tagstring {1} --bar --linebuffer \
-        gh_list_org_repos {1}
+        | env_parallel \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --tagstring {1} \
+            --bar --linebuffer \
+            gh_list_org_repos {1}
 }
 
 _gtb_student_repo_check() {
