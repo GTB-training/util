@@ -2515,7 +2515,7 @@ _gtb_init() {
     mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
     mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
 
-    [[ -d $GTB_CONFIG_DIR ]] || gh_clone_repo GTB-training $GTB_CONFIG_REPO $GTB_CONFIG_DIR
+    [[ -d $GTB_CONFIG_DIR ]] || gh_clone_repo $GTB_ORG $GTB_CONFIG_REPO $GTB_CONFIG_DIR
 }
 
 _gtb_term() {
