@@ -1554,6 +1554,26 @@ _gtb_student_repo_create() {
     done < $GTB_STUDENTS_FILE
 }
 
+_gtb_student_repo_stat() {
+    local student_lines=$(_gtb_filter_students "$@")
+
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    local result=$(echo "$student_lines" \
+        | cut -d' ' -f2 \
+        | env_parallel \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --tagstring {1} \
+            --bar --linebuffer \
+            gh_list_org_repos {1})
+
+    pr -m -t \
+        <(echo "$result" | cut -f1 | sort | uniq -c | sort -nr) \
+        <(echo "$result" | cut -f2 | sort | uniq -c | sort -nr) \
+        | cat -n
+}
+
 _gtb_student_repo_list() {
     local student_lines
     student_lines=$(_gtb_filter_students "$@")
@@ -1618,7 +1638,7 @@ _gtb_student_repo_open() {
 }
 
 _gtb_student_repo() {
-    if ! echo $1 | grep --silent '^\(show\|check\|list\|create\|delete\|open\|pick\)$'; then
+    if ! echo $1 | grep --silent '^\(show\|check\|list\|stat\|create\|delete\|open\|pick\)$'; then
         set -- list "$@"
     fi
 
