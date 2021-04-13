@@ -1558,7 +1558,7 @@ _gtb_student_repo_list() {
     local student_lines
     student_lines=$(_gtb_filter_students "$@")
 
-    assert_not_empty "Cannot find any students with filter: '$@'!" "$student_lines"
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     echo "$student_lines" \
         | cut -d' ' -f2 \
