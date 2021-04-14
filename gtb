@@ -228,6 +228,12 @@ gh_invite_user_to_org() {
     gh_create_invitation $ORG $(gh_user_id $USERNAME) $ROLE
 }
 
+gh_remove_user_from_org() {
+    local ORG=${1:?org is required!}
+    local USERNAME=${2:?username is required!}
+    run "gh api -X DELETE /orgs/${ORG}/members/$USERNAME 1>/dev/null 2>&1"
+}
+
 gh_invite_user_to_team() {
     local ORG=${1:?org is required!}
     local TEAM=${2:?team is required!}
@@ -1999,6 +2005,32 @@ _gtb_org_team() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_org_remove() {
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" \
+        | _gtb_cuts 2,4,7 \
+        | sort \
+        | column -t \
+        | cat -n
+
+    read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
+
+    _gtb_filter_students "$@" \
+        | _gtb_cuts 2,4 \
+        | env_parallel \
+            --bar \
+            --colsep ' ' \
+            --linebuffer \
+            --jobs $JOBS \
+            gh_remove_user_from_org $GTB_ORG {2}
+}
+
 _gtb_org_invite() {
     local student_lines
     local students_count
@@ -2039,7 +2071,7 @@ _gtb_org_open() {
 _gtb_org() {
     assert_students_file_exists
 
-    if ! echo $1 | grep --silent '^\(open\|invite\|team\|members\)$'; then
+    if ! echo $1 | grep --silent '^\(open\|invite\|remove\|team\|members\)$'; then
         set -- open "$@"
     fi
 
