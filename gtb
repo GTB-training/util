@@ -1203,6 +1203,19 @@ _gtb_check_student_org_for_trainer_role() {
         | cat -n
 }
 
+_gtb_student_org_delete() {
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" \
+        | _gtb_cuts 2 \
+        | env_parallel \
+            --linebuffer \
+            --jobs 1 \
+            --bar \
+            _gtb_open "https://github.com/organizations/{}/settings/profile#rename-org-dialog"
+}
+
 _gtb_student_org_check() {
     if [[ "$CHECK_ROLE_ONLY" == "false" ]]; then
         _gtb_check_student_org_for_presence "$@"
@@ -1232,7 +1245,7 @@ _gtb_student_org_open() {
 }
 
 _gtb_student_org() {
-    if ! echo $1 | grep --silent '^\(open\|check\|invite\|join\|membership\)$'; then
+    if ! echo $1 | grep --silent '^\(open\|check\|delete\|invite\|join\|membership\)$'; then
         set -- check "$@"
     fi
 
