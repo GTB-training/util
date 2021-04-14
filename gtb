@@ -1219,11 +1219,10 @@ _gtb_student_org_check() {
 }
 
 _gtb_student_org_open() {
-    if [[ $# -eq 0 ]]; then
-        fail 'At least one filter is required to match student with name, term, or tags, etc. (e.g. gtb student org open zhang.san)'
-    fi
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
-    _gtb_filter_students "$@" \
+    echo "$student_lines" \
         | _gtb_cuts 2 \
         | env_parallel \
             --linebuffer \
