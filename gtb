@@ -2143,10 +2143,6 @@ _gtb_trello_card_list() {
 }
 
 _gtb_trello_card() {
-    if ! echo $1 | grep --silent '^\(list\|create\)$'; then
-        set -- "$@"
-    fi
-
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
@@ -2198,10 +2194,6 @@ _gtb_trello() {
     GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
     GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
     GTB_TRELLO_AUTH="key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN"
-
-    if ! echo $1 | grep --silent '^\(board\|list\|card\)$'; then
-        set -- board "$@"
-    fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
