@@ -1841,7 +1841,9 @@ _gtb_clone_default_repo() {
     local REPO_NAME=${1:?Repo name is required!}
     local repo_dir=$(_gtb_default_repo_dir $REPO_NAME)
 
-    [[ -d $repo_dir ]] || gh_clone_repo $GTB_ORG $REPO_NAME $repo_dir
+    [[ -d $repo_dir ]] && run "rm -rf '$repo_dir'"
+
+    gh_clone_repo $GTB_ORG $REPO_NAME $repo_dir
 }
 
 _gtb_update_default_repo() {
@@ -1860,14 +1862,7 @@ _gtb_repo_publish() {
 
     _gtb_clone_default_repo $REPO_NAME
     if [[ $? -ne 0 ]]; then
-        fail "Failed to clone default repo '$REPO_NAME'."
-    fi
-
-    header "Update repo $REPO_NAME..."
-
-    _gtb_update_default_repo $REPO_NAME
-    if [[ $? -ne 0 ]]; then
-        fail "Failed to update default repo '$REPO_NAME'."
+        fail "Failed to clone repo '$REPO_NAME'."
     fi
 
     local MAX_JOBS=$JOBS
