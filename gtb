@@ -2241,17 +2241,19 @@ _gtb_tag_replace() {
     local TO_TAG=${2:?Target tag is required!}
     shift 2
 
-    if ! grep -w --color --silent "$FROM_TAG" "$GTB_STUDENTS_FILE" 1>&2
+    local student_lines=$(_gtb_filter_students "$@")
+
+    if ! grep -w --color --silent "$FROM_TAG" <(echo "$student_lines") 1>&2
     then
         fail 'error: source tag not found, please make sure you are using the correct value.'
     fi
 
-    if grep -w --color "$TO_TAG" "$GTB_STUDENTS_FILE" 1>&2
+    if grep -w --color "$TO_TAG" <(echo "$student_lines") 1>&2
     then
         fail 'error: new tag conficts with existing entires shown as above, please change a new one.'
     fi
 
-    _gtb_filter_students "$@" \
+    echo "$student_lines" \
         | _gtb_cuts 1 \
         | env_parallel --linebuffer --jobs 1 --bar "sed -i '' -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
 
