@@ -2228,7 +2228,7 @@ _gtb_tag_remove() {
     local fields=$(seq 1 $total_fields | tr '\n' ',' | sed "s/${POSITION},//" | sed 's/,$//')
     run "cat $BACKUP_FILE | cut -d' ' -f${fields} > $GTB_STUDENTS_FILE"
 
-    _gtb_config_diff
+    _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
 
 _gtb_tag_replace() {
@@ -2252,7 +2252,7 @@ _gtb_tag_replace() {
         | _gtb_cuts 1 \
         | env_parallel --linebuffer --jobs 1 --bar "sed -i '' -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
 
-    _gtb_config_diff
+    _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
 
 _gtb_tag_add() {
@@ -2285,7 +2285,7 @@ _gtb_tag_add() {
             > $GTB_STUDENTS_FILE
     fi
 
-    _gtb_config_diff
+    _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
 
 _gtb_tag_index() {
@@ -2330,9 +2330,10 @@ _gtb_config_edit() {
 }
 
 _gtb_config_diff() {
+    local FILES="${1:-.}"
     run "cd '$GTB_CONFIG_DIR'"
-    run 'git diff --stat'
-    run 'git diff --color-words students*.txt'
+    run "git diff --stat $FILES"
+    run "git diff --color-words $FILES"
 }
 
 _gtb_config_list() {
