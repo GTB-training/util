@@ -626,6 +626,28 @@ _gtb_trello_find_list_id() {
         | jq -r ".[] | select(.name == \"$LIST_NAME\") | .id"
 }
 
+_gtb_trello_remove_member_from_board() {
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+
+    local ORG=${1:?Student org is required!}
+    local TRELLO_EMAIL=${2:?Trell member email is required!}
+
+    local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
+    assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
+
+    local trello_username=$(run "http --print b GET '$GTB_TRELLO_API/search/members?${GTB_TRELLO_AUTH}&idBoard=${BOARD_ID}&query=${TRELLO_EMAIL}' | jq -r '.[0].username'")
+    local trello_id_member=$(run "http --print b GET '$GTB_TRELLO_API/boards/${BOARD_ID}/members?${GTB_TRELLO_AUTH}' | jq -r '.[] | select(.username == \"$trello_username\") | .id'")
+    local board_json=$(run "http --print b DELETE '$GTB_TRELLO_API/boards/${BOARD_ID}/members/${trello_id_member}?$GTB_TRELLO_AUTH'")
+
+    if echo $board_json | grep --silent "$trello_username"; then
+        echo "❌ $ORG $trello_username $TRELLO_EMAIL"
+        return 0
+    fi
+
+    echo "✅ $ORG $trello_username $TRELLO_EMAIL"
+    return 1
+}
+
 _gtb_trello_invite_member_to_board() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     GTB_TRELLO_MEMBER_TYPE="${GTB_TRELLO_MEMBER_TYPE:?Trello member type is required! Specify by --type <admin|normal|observer>.}"
@@ -2158,6 +2180,36 @@ _gtb_trello_list() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_trello_board_remove() {
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" \
+        | _gtb_cuts 2,4,7 \
+        | sort \
+        | column -t \
+        | cat -n
+
+    read -p "about to REMOVE ${students_count} students from Trello board $GTB_TRELLO_BOARD_NAME? (y|n) " -n 1 -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
+
+    _gtb_filter_students "$@" \
+        | _gtb_unformat \
+        | _gtb_cuts '2,5' \
+        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer \
+            _gtb_trello_remove_member_from_board {1} {2} \
+        | sort \
+        | column -t \
+        | cat -n
+}
+
 _gtb_trello_board_invite() {
     _gtb_filter_students "$@" \
         | _gtb_unformat \
@@ -2178,7 +2230,7 @@ _gtb_trello_board_list() {
 }
 
 _gtb_trello_board() {
-    if ! echo $1 | grep --silent '^\(list\|invite\)$'; then
+    if ! echo $1 | grep --silent '^\(list\|invite\|remove\)$'; then
         set -- list "$@"
     fi
 
