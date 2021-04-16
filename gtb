@@ -2410,7 +2410,13 @@ _gtb_config() {
 }
 
 _gtb_dashboard() {
-    run "open ${GTB_DASHBOARD_ADDRESS%/api}?term=${GTB_TERM}"
+    assert_students_file_exists
+
+    if ! echo $1 | grep --silent '^\(open\|student\|submission\)$'; then
+        set -- open "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_comments() {
