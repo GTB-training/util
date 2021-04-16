@@ -472,12 +472,12 @@ gh_workflow_list() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
 
-    run "gh api /repos/$ORG/$REPO_NAME/actions/workflows 2>/dev/null" | jsonpp | \
-        grep '^      "\(name\|path\|state\)":' | \
-        cut -d'"' -f4 | \
-        paste -d'|' - - - | \
-        column -s'|' -t | \
-        sort
+    run "gh api /repos/$ORG/$REPO_NAME/actions/workflows" \
+        | jq -r '.workflows[] | select(.state=="active") | .path' \
+        | sed 's#.*/##' \
+        | sort \
+        | paste -s -d' ' - \
+        | sed "s/^/$REPO_NAME $ORG /"
 }
 
 gh_remove_repo_secret() {
@@ -1341,17 +1341,19 @@ _gtb_student_workflow_list() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                header "List repository workflows from $ORG/$REPO_NAME..."
-                gh_workflow_list $ORG $REPO_NAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" \
+        | _gtb_cuts 2 \
+        | env_parallel \
+            --linebuffer \
+            --jobs $JOBS \
+            --bar \
+            gh_workflow_list "{}" "$REPO_NAME" \
+        | sort -k2 \
+        | column -t \
+        | cat -n
 }
 
 _gtb_student_workflow() {
