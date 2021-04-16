@@ -2052,7 +2052,7 @@ _gtb_org_remove() {
         return 1
     fi
 
-    _gtb_filter_students "$@" \
+    echo "$student_lines" \
         | _gtb_cuts 2,4 \
         | env_parallel \
             --bar \
@@ -2202,7 +2202,7 @@ _gtb_trello_board_remove() {
         return 1
     fi
 
-    _gtb_filter_students "$@" \
+    echo "$student_lines" \
         | _gtb_unformat \
         | _gtb_cuts '2,5' \
         | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer \
