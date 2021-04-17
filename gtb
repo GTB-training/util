@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=1.65.0
+VERSION=1.66.0
 
 GTB_DEBUG=${GTB_DEBUG:-false}
 
