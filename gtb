@@ -410,19 +410,34 @@ gh_list_org_repos() {
     local ORG=${1:-$GTB_ORG}
     local TEAM=${2}
 
-    local ENDPOINT="/orgs/$ORG/repos?per_page=100"
+    local ENDPOINT="/orgs/$ORG/repos?per_page=100&page="
     if [[ -n "$TEAM" ]]
     then
-        ENDPOINT="/orgs/$ORG/teams/$TEAM/repos?per_page=100"
+        ENDPOINT="/orgs/$ORG/teams/$TEAM/repos?per_page=100&page="
     fi
 
-    run "gh api $ENDPOINT 2>/dev/null" | jsonpp | \
-        grep '^    "name":\|^    "private":' | \
-        tr -d '", ' | \
-        cut -d':' -f2 | \
-        paste -d' ' - - | \
-        sort | \
-        sed -e 's/ true$//' -e 's/false$/🟢/'
+    for page in $(seq 1 10)
+    do
+        local res=$(run "gh api '${ENDPOINT}${page}' 2>/dev/null" | jsonpp \
+            | grep '^    "name":\|^    "private":' \
+            | tr -d '", ' \
+            | cut -d':' -f2 \
+            | paste -d' ' - -)
+
+        local lines_count=$(_gtb_count_lines "$res")
+        if [[ $lines_count -gt 0 ]]
+        then
+            echo "$res"
+        fi
+
+        if [[ $lines_count -lt $GTB_PER_PAGE ]]
+        then
+            break
+        fi
+    done  \
+        | sort \
+        | sed 's/ true$//;s/false$/🟢/' \
+        | nl
 }
 
 gh_show_org_repo_commit() {
