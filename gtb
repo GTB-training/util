@@ -2977,7 +2977,7 @@ _gtb_help() {
 
 OPTIND=1
 
-JOBS=1
+JOBS=${GTB_DEFAULT_JOBS:-30}
 AUTO_UPDATE="false"
 AUTO_BUILD="false"
 AUTO_ACCEPT="true"
