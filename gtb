@@ -39,6 +39,9 @@ GTB_TRELLO_API='https://api.trello.com/1'
 GTB_FIELDS="1-"
 GTB_RAW="false"
 
+SYMBOL_OK='✅'
+SYMBOL_ERROR='❌'
+
 cuts() {
     cat | cut -d' ' "$@"
 }
