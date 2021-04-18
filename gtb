@@ -149,6 +149,10 @@ _gtb_table_format() {
     fi
 }
 
+_gtb_print_in_columns() {
+    cat | pr -${1:-3} -t -w $(tput cols)
+}
+
 _gtb_pv() {
     cat | pv -tbelSs $1 -i 0.3 -N "total is: $1 current is"
 }
