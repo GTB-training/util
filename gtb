@@ -68,9 +68,10 @@ run() {
 }
 
 header() {
-    tput setaf 15
-    tput setab 8
-    printf "%-80s" "$*" 1>&2
+    tput bold
+    tput setaf 19
+    tput setab 251
+    printf "%-$(tput cols)s" "$*" 1>&2
     tput sgr0
     printf "\n" 1>&2
 }
