@@ -2029,6 +2029,7 @@ _gtb_repo_publish() {
     local students_count=$(_gtb_count_lines "$student_lines")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
+    echo
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
     echo
     read -p "about to publish repo '$REPO_NAME' to above $students_count students? (y|n) " -n 1 -r
@@ -2703,9 +2704,12 @@ _gtb_dashboard_submission_delete() {
 _gtb_dashboard_submission_create() {
     # gtb dashboard submission add --repo bronze-java-level-1 --start 2021041609 --basic 8H --refactor 14d w02fri1
     local REPO_NAME=${GTB_REPO:?repo name should be provided using --repo option.}
-    local START_AT=${GTB_START_AT:?start time should be provided using --start optoin, e.g. 2021041609}
+    local START_AT=${GTB_START_AT:?start time should be provided using --start optoin, e.g. 2022-06-01 09:30:00, 2021041609}
     local DURATION_BASIC=${GTB_DURATION_BASIC:-$GTB_DURATION_REFACTOR}
     local DURATION_REFACTOR=${GTB_DURATION_REFACTOR:?refactoring duration should be specified using --refactor option, e.g. 14d, 21d, 8h, 10h, etc}
+
+    START_AT=$(echo $START_AT | sed -E 's/[^0-9]//g' | cut -c1-12)
+    START_AT=$(echo $(($START_AT * 1000000)) | cut -c1-12)
 
     DURATION_BASIC=$(echo $DURATION_BASIC | tr 'h' 'H')
     DURATION_REFACTOR=$(echo $DURATION_REFACTOR | tr 'h' 'H')
@@ -2717,7 +2721,7 @@ _gtb_dashboard_submission_create() {
         -v$(echo $START_AT | cut -c5-6)m \
         -v$(echo $START_AT | cut -c7-8)d \
         -v$(echo $START_AT | cut -c9-10)H \
-        -v0M \
+        -v$(echo $START_AT | cut -c11-12)M \
         -v0S \
         '+%Y-%m-%dT%H:%M:%S%z' | sed -E 's/(..)$/:\1/')
     local first_measurement_time=$(date \
