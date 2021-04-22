@@ -2026,7 +2026,16 @@ _gtb_repo_publish() {
     shift
 
     local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
+    echo
+    read -p "about to publish repo '$REPO_NAME' to above $students_count students? (y|n) " -n 1 -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
 
     header "Clone repo $REPO_NAME..."
     _gtb_clone_default_repo $REPO_NAME
