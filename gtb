@@ -2087,6 +2087,8 @@ _gtb_repo_publish() {
         return 1
     fi
 
+    _gtb_auto_schedule
+
     header "Clone repo $REPO_NAME..."
     _gtb_clone_default_repo $REPO_NAME
 
