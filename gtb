@@ -38,6 +38,7 @@ GTB_TRELLO_API='https://api.trello.com/1'
 
 GTB_FIELDS="1-"
 GTB_RAW="false"
+GTB_SORT_BY="total"
 
 SYMBOL_OK='✅'
 SYMBOL_ERROR='❌'
@@ -2587,6 +2588,14 @@ _gtb_dashboard_deactivate_student() {
     return 1
 }
 
+_gtb_dashboard_list_scores() {
+    run "http --print b GET $GTB_DASHBOARD_ADDRESS/terms/${GTB_TERM}/submissions" \
+        | jq -r '.[] | .student.gtbUsername, .evaluationAverageScore, .homeworkAverageScore, .performanceAverageScore' \
+        | paste -d' ' - - - - \
+        | awk '{print $1, $2 + $3, $2, $3, $4}' \
+        | sort -k1
+}
+
 _gtb_dashboard_list_submissions() {
     run "http --print b GET $GTB_DASHBOARD_ADDRESS/terms/${GTB_TERM}/submissions" \
         | jq -r '[.[].submissions[]] | .[] | .assignmentType, .repository, .gtbUsername, .displayName, .firstMeasurementTestStatus, .firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore, .startTime, .firstMeasurementTime, .finalMeasurementTime' \
@@ -2860,11 +2869,40 @@ _gtb_dashboard_open() {
     run "open ${GTB_DASHBOARD_ADDRESS%/api}?term=${GTB_TERM}"
 }
 
+_gtb_dashboard_list() {
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    local score_records="$(_gtb_dashboard_list_scores)"
+    local sort_column=7 # default to sort by total avg score
+    case "$GTB_SORT_BY" in
+        evaluation)
+            sort_column=8
+            ;;
+        homework)
+            sort_column=9
+            ;;
+        performance)
+            sort_column=10
+            ;;
+        *)
+            sort_column=7
+            ;;
+    esac
+
+    join -1 1 -2 1 -a 1 -o '1.2,2.1,1.3,1.6,1.4,1.5,2.2,2.3,2.4,2.5' -e 'MISSING' \
+        <(echo "$student_lines" | cut -d' ' -f1,2,7-10 | sort) \
+        <(echo "$score_records") \
+        | sort -nr -k${sort_column},10 \
+        | column -t \
+        | nl
+}
+
 _gtb_dashboard() {
     assert_students_file_exists
 
-    if ! echo $1 | grep --silent '^\(open\|student\|st\|submission\|sub\)$'; then
-        set -- open "$@"
+    if ! echo $1 | grep --silent '^\(list\|open\|student\|st\|submission\|sub\)$'; then
+        set -- list "$@"
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
@@ -3212,6 +3250,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: evaluation refactor part duration specified by '$1' is missing, e.g. 14d, 21d, 8h, 10h"
+            fi
+            ;;
+        --sort)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_SORT_BY=$2
+                shift 2
+            else
+                fail "Error: column to sort with specified by '$1' is missing, e.g. total, evaluation, homework, performance"
             fi
             ;;
         --raw)
