@@ -608,6 +608,7 @@ gh_workflow_list() {
         | sed 's#.*/##' \
         | sort \
         | paste -s -d' ' - \
+        | awk '{print NF, $0}' \
         | sed "s/^/$REPO_NAME $ORG /"
 }
 
