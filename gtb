@@ -255,7 +255,7 @@ _gtb_quotes_line() {
 
 _gtb_join_lines() {
     local SEPARATOR="${1:-,}"
-    cat | paste -s -d, - | tr -d '\n'
+    cat | paste -s -d"$SEPARATOR" - | tr -d '\n'
 }
 
 _gtb_default_repo_dir() {
