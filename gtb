@@ -203,7 +203,6 @@ _gtb_auto_schedule() {
         fail 'error: scheduled time should be after the current time.'
     fi
 
-    echo
     echo "this command is scheduled running at '$time_to_start'"
     read -p "do you want to start countdown? (y|n) " -n 1 -r
     echo
@@ -1572,9 +1571,7 @@ _gtb_student_secret_check() {
             | sort | uniq -c | tr -s ' ' \
             | sort -k2) \
         | sort -k1,2 -nr \
-        | tr ' ' '|' \
-        | _gtb_tabularize \
-        | cat -n
+        | _gtb_table_format
 }
 
 _gtb_student_secret_list() {
@@ -1708,7 +1705,6 @@ _gtb_student_repo_delete() {
 
 
     echo "$student_lines" | _gtb_table_format
-    echo
     read -p "Are you SURE to delete repo '$(red $REPO_NAME)' from above $(red $students_count) students? (y|n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
@@ -1786,9 +1782,7 @@ _gtb_student_repo_check() {
             | env_parallel --jobs $JOBS --bar --linebuffer gh_show_org_repo_commit {1} $REPO_NAME $COMMIT_REF \
             | sort -k2) \
         | sort -k1,2 \
-        | tr ' ' '|' \
-        | _gtb_tabularize \
-        | cat -n
+        | _gtb_table_format
 }
 
 _gtb_student_repo_show() {
