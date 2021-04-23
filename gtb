@@ -48,6 +48,10 @@ cuts() {
     cat | cut -d' ' "$@"
 }
 
+red() {
+    echo -n "$(tput setaf 196)$(tput bold)$*$(tput sgr 0)"
+}
+
 info() {
     echo "$(tput setaf 4)$(tput bold)$*$(tput sgr 0)"
 }
@@ -1699,12 +1703,13 @@ _gtb_student_repo_delete() {
     shift
 
     local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
 
     echo "$student_lines" | _gtb_table_format
     echo
-    read -p "Are you SURE to delete repo '$REPO_NAME' from above students? (y|n) " -n 1 -r
+    read -p "Are you SURE to delete repo '$(red $REPO_NAME)' from above $(red $students_count) students? (y|n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
@@ -2111,7 +2116,7 @@ _gtb_repo_publish() {
     echo
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
     echo
-    read -p "about to publish repo '$REPO_NAME' to above $students_count students? (y|n) " -n 1 -r
+    read -p "about to publish repo '$(red $REPO_NAME)' to above $(red $students_count) students? (y|n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
@@ -2817,7 +2822,7 @@ _gtb_dashboard_submission_create() {
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
-    read -p "about to create submission for $students_count students above? (y|n) " -n 1 -r
+    read -p "about to create submission of repo '$(red $REPO_NAME)' for $(red $students_count) students above? (y|n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
@@ -2825,7 +2830,7 @@ _gtb_dashboard_submission_create() {
     fi
 
     info "submission information:"
-    echo "$REPO_NAME"
+    echo "$(red $REPO_NAME)"
     echo "$start_time"
     echo "$first_measurement_time"
     echo "$final_measurement_time"
