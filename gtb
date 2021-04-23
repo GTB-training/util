@@ -1655,7 +1655,7 @@ _gtb_student_repo_pick() {
     fi
 
     {
-        echo "ID ORG ADD_REMOTE FETCH_REMOTE CREATE_BRANCH PICK_REF PUSH_TO_REMOTE RUN_WORKFLOW ACTIONS_URL"
+        echo "ID ORG ADD FETCH BRANCH PICK PUSH RUN ACTIONS"
         pr -m -t -s' ' \
             <(echo "$student_lines" | _gtb_cuts 2 | sort) \
             <(echo "$result_add_remote") \
