@@ -258,6 +258,10 @@ _gtb_join_lines() {
     cat | paste -s -d"$SEPARATOR" - | tr -d '\n'
 }
 
+_gtb_nl() {
+    cat | nl | _gtb_unformat
+}
+
 _gtb_default_repo_dir() {
     local REPO_NAME=${1:?Repo name is required!}
     echo "$GTB_DEFAULT_REPO_ROOT/$REPO_NAME"
@@ -1688,8 +1692,8 @@ _gtb_student_repo_pick() {
             <(echo "$result_pick_ref") \
             <(echo "$result_push_to_remote") \
             <(echo "$result_run_workflow") \
-            | nl | tr '\t' ' ' | tr -s ' ' | sed 's/^ //'
-    } | column -t
+            | _gtb_nl
+    } | _gtb_table_format -N
 }
 
 _gtb_student_repo_delete() {
@@ -2153,12 +2157,11 @@ _gtb_repo_publish() {
     local result_of_secret_check=$(_gtb_student_secret_check $REPO_NAME "$@" |  tr '\t' ' ' | tr -s ' ' | sort -k3)
 
     (
-    echo 'No.|Last Commit|Secrets Count|Student'
+    echo 'No. LastCommit SecretsCount Student'
     join -1 3 -2 3 -a 1 -a 2 -o '1.2,2.2,1.3' -e 'MISSING' <(echo "$result_of_repo_check") <(echo "$result_of_secret_check") \
         | sort -k1,2 -rn \
-        | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
-        | tr ' ' '|'
-    ) | _gtb_tabularize
+        | _gtb_nl
+    ) | _gtb_table_format -N
 }
 
 _gtb_repo_remove() {
@@ -2251,14 +2254,13 @@ _gtb_org_team_invite() {
 
 _gtb_org_team_members() {
     (
-    echo 'No.|Config|Github|Student'
+    echo 'No. Config Github Student'
     join -1 5 -2 2 -a 1 -a 2 -o '1.1,2.1,0,1.3,1.2,1.6,1.7' -e 'NO' \
         <(_gtb_filter_students | sort -k4 | sed 's/^/YES /') \
         <(gh_list_org_team_members $GTB_ORG $GTB_TERM | sort | sed 's/^/YES /') \
         | sort -k1,2 -r \
-        | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
-        | tr ' ' '|'
-    ) | _gtb_tabularize "Members of ${GTB_ORG}/${GTB_TERM}"
+        | _gtb_nl
+    ) | _gtb_table_format -N
 }
 
 _gtb_org_team_list() {
@@ -2322,14 +2324,13 @@ _gtb_org_invite() {
 
 _gtb_org_members() {
     (
-    echo 'No.|Config|Github|Student'
+    echo 'No. Config Github Student'
     join -1 5 -2 2 -a 1 -o '1.1,2.1,0,1.3,1.2,1.6,1.7' -e 'NO' \
         <(_gtb_filter_students | sort -k4 | sed 's/^/YES /') \
         <(gh_list_org_members $GTB_ORG | sort | sed 's/^/YES /') \
         | sort -k1,2 -r \
-        | cat -n | tr '\t' ' ' | tr -s ' ' | sed 's/^ //' \
-        | tr ' ' '|'
-    ) | _gtb_tabularize "Members of $GTB_ORG"
+        | _gtb_nl
+    ) | _gtb_table_format -N
 }
 
 _gtb_org_open() {
