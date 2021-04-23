@@ -2981,11 +2981,18 @@ _gtb_dashboard_list() {
             ;;
     esac
 
-    join -1 1 -2 1 -a 1 -o '1.2,2.1,1.3,1.6,1.4,1.5,2.2,2.3,2.4,2.5' -e 'MISSING' \
+    local sorted_results=$(join -1 1 -2 1 -a 1 -o '1.2,2.1,1.3,1.6,1.4,1.5,2.2,2.3,2.4,2.5' -e 'MISSING' \
         <(echo "$student_lines" | cut -d' ' -f1,2,7-10 | sort) \
         <(echo "$score_records") \
         | sort -nr -k${sort_column},10 \
-        | _gtb_table_format
+        | _gtb_nl)
+    local fullnames="$(echo "$student_lines" | _gtb_cuts 1 | _gtb_join_lines '|')"
+    local filtered_results=$(echo "$sorted_results" | grep -wE "$fullnames")
+
+    {
+        echo "ID RANK ORG FULLNAME CN_NAME MAJOR CLASS TEAM TOTAL QUIZ EX. PERF."
+        echo "$filtered_results" | _gtb_nl
+    } | _gtb_table_format -N
 }
 
 _gtb_dashboard() {
