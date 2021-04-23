@@ -2960,8 +2960,7 @@ _gtb_dashboard_list() {
         <(echo "$student_lines" | cut -d' ' -f1,2,7-10 | sort) \
         <(echo "$score_records") \
         | sort -nr -k${sort_column},10 \
-        | column -t \
-        | nl
+        | _gtb_table_format
 }
 
 _gtb_dashboard() {
