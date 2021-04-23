@@ -1563,7 +1563,7 @@ _gtb_student_secret_check() {
 
     local student_lines=$(_gtb_filter_students "$@")
 
-    join -1 1 -2 2 -a 1 -a 2 -o '2.1,1.1' -e '0' \
+    join -1 1 -2 2 -a 1 -o '2.1,1.1' -e '0' \
         <(echo "$student_lines" | cut -d' ' -f2 | sort) \
         <(echo "$student_lines" | cut -d' ' -f2 \
             | env_parallel --jobs $MAX_JOBS --colsep ' ' --tagstring {1} --bar --linebuffer gh_secret_list {1} $REPO_NAME \
@@ -1779,7 +1779,7 @@ _gtb_student_repo_check() {
     local COMMIT_REF=$(_gtb_last_commit_of_branch $REPO_NAME master)
     local student_lines=$(_gtb_filter_students "$@")
 
-    join -1 1 -2 2 -a 1 -a 2 -o '2.1,1.1' -e 'NotFound' \
+    join -1 1 -2 2 -a 1 -o '2.1,1.1' -e 'NotFound' \
         <(echo "$student_lines" | cut -d' ' -f2 | sort) \
         <(echo "$student_lines" | cut -d' ' -f2 \
             | env_parallel --jobs $JOBS --bar --linebuffer gh_show_org_repo_commit {1} $REPO_NAME $COMMIT_REF \
