@@ -1700,21 +1700,23 @@ _gtb_student_repo_delete() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
 
-    read -p "Are you SURE to delete repo '$REPO_NAME' from students' organizaion? (y|n) " -n 1 -r
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+
+    echo "$student_lines" | _gtb_table_format
+    echo
+    read -p "Are you SURE to delete repo '$REPO_NAME' from above students? (y|n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
     fi
 
-    local student_lines=$(_gtb_filter_students "$@")
-
     echo "$student_lines" | cut -d' ' -f2 \
         | _gtb_remove_remote_student_repo $REPO_NAME \
         | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_delete_repo {1} {2} \
-        | tr ' ' '|' \
-        | _gtb_tabularize \
-        | cat -n
+        | _gtb_table_format
 }
 
 _gtb_student_repo_create() {
