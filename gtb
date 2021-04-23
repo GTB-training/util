@@ -189,9 +189,9 @@ _gtb_auto_schedule() {
         -v$(echo $START_AT | cut -c9-10)H \
         -v$(echo $START_AT | cut -c11-12)M \
         -v0S \
-        '+%Y-%m-%d %H:%M:%S')
+        '+%Y-%m-%d %A %H:%M:%S')
     local timestamp_to_start=$(date \
-        -j -f '%Y-%m-%d %H:%M:%S' "$time_to_start" '+%s')
+        -j -f '%Y-%m-%d %A %H:%M:%S' "$time_to_start" '+%s')
 
     local secs=$(( $timestamp_to_start - $(date +%s) ))
     if [[ "$secs" -le 0 ]]
@@ -199,7 +199,6 @@ _gtb_auto_schedule() {
         fail 'error: scheduled time should be after the current time.'
     fi
 
-    echo
     echo
     echo "this command is scheduled running at '$time_to_start'"
     read -p "do you want to start countdown? (y|n) " -n 1 -r
