@@ -38,6 +38,7 @@ GTB_TRELLO_API='https://api.trello.com/1'
 
 GTB_FIELDS="1-"
 GTB_RAW="false"
+GTB_LINE_NUMBERS="true"
 GTB_SORT_BY="total"
 
 SYMBOL_OK='✅'
@@ -142,12 +143,35 @@ _gtb_tabularize() {
 }
 
 _gtb_table_format() {
+    while (( "$#" )); do
+        case "$1" in
+            --raw)
+                GTB_RAW="true"
+                shift
+                ;;
+            -N|--no-line-numbers)
+                GTB_LINE_NUMBERS="false"
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
     if [[ "$GTB_RAW" == "true" ]]
     then
         cat
-    else
-        cat | column -t | cat -n
+        return
     fi
+
+    if [[ "$GTB_LINE_NUMBERS" != "true" ]]
+    then
+        cat | column -t
+        return
+    fi
+
+    cat | _gtb_nl | column -t
 }
 
 _gtb_auto_schedule() {
