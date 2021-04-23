@@ -2149,9 +2149,7 @@ _gtb_repo_publish() {
     join -1 1 -2 1 -a 1 -a 2 -o '1.1,2.2' -e 'FAILED' \
         <(echo "$student_lines" | cut -d' ' -f2 | sort) \
         <(echo "$result_push" | sort -k1) \
-        | tr ' ' '|' \
-        | _gtb_tabularize \
-        | cat -n
+        | _gtb_table_format
 
     header "Check commits of student's repo..."
     local result_of_repo_check=$(_gtb_student_repo_check $REPO_NAME "$@" | tr '\t' ' ' | tr -s ' ' | sort -k3)
