@@ -203,12 +203,11 @@ _gtb_auto_schedule() {
     echo
     echo "this command is scheduled running at '$time_to_start'"
     read -p "do you want to start countdown? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         fail 'error: user canceled the schedule, abort running'
     fi
-
-    echo
 
     secs=$(( $timestamp_to_start - $(date +%s) ))
     while [[ "$secs" -gt 0 ]]
@@ -2114,6 +2113,7 @@ _gtb_repo_publish() {
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
     echo
     read -p "about to publish repo '$REPO_NAME' to above $students_count students? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
@@ -2289,6 +2289,7 @@ _gtb_org_remove() {
         | cat -n
 
     read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
@@ -2438,6 +2439,7 @@ _gtb_trello_board_remove() {
         | cat -n
 
     read -p "about to REMOVE ${students_count} students from Trello board $GTB_TRELLO_BOARD_NAME? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
@@ -2741,13 +2743,13 @@ _gtb_dashboard_submission_remove() {
     echo "$found_submissions" | _gtb_table_format
 
     read -p "about to DELETE submissions above? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
     fi
 
-    echo
-    info "delete submissions..."
+    info "Delete submissions..."
     echo "$found_submissions" \
         | _gtb_cuts 2,3 \
         | env_parallel \
@@ -2759,8 +2761,7 @@ _gtb_dashboard_submission_remove() {
         | sort \
         | cat -n
 
-    echo
-    info "query submissions..."
+    info "Query submissions..."
     GTB_RAW="true"
     local left_submissions="$(_gtb_dashboard_submission_list "$@")"
     local left_submissions_count=$(_gtb_count_lines "$left_submissions")
@@ -2820,18 +2821,19 @@ _gtb_dashboard_submission_create() {
 
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
     read -p "about to create submission for $students_count students above? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
     fi
 
-    echo
     info "submission information:"
     echo "$REPO_NAME"
     echo "$start_time"
     echo "$first_measurement_time"
     echo "$final_measurement_time"
     read -p "please confirm submission information above? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
@@ -2839,7 +2841,6 @@ _gtb_dashboard_submission_create() {
 
     local fullnames="$(echo "$student_lines" | _gtb_cuts 1 | _gtb_quotes_line | _gtb_join_lines)"
 
-    echo
     info "create submissions..."
     _gtb_dashboard_create_submission \
         "$REPO_NAME" \
@@ -2848,7 +2849,6 @@ _gtb_dashboard_submission_create() {
         "$final_measurement_time" \
         "$fullnames"
 
-    echo
     info "query created submissions..."
     GTB_RAW="true"
     local created_submissions="$(_gtb_dashboard_submission_list "$@")"
@@ -2919,6 +2919,7 @@ _gtb_dashboard_student_deactivate() {
         | cat -n
 
     read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
+    echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
         return 1
