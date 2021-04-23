@@ -2966,32 +2966,32 @@ _gtb_dashboard_list() {
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     local score_records="$(_gtb_dashboard_list_scores)"
-    local sort_column=7 # default to sort by total avg score
+    local sort_column=8 # default to sort by total avg score
     case "$GTB_SORT_BY" in
         evaluation)
-            sort_column=8
-            ;;
-        homework)
             sort_column=9
             ;;
-        performance)
+        homework)
             sort_column=10
             ;;
+        performance)
+            sort_column=11
+            ;;
         *)
-            sort_column=7
+            sort_column=8
             ;;
     esac
 
-    local sorted_results=$(join -1 1 -2 1 -a 1 -o '1.2,2.1,1.3,1.6,1.4,1.5,2.2,2.3,2.4,2.5' -e 'MISSING' \
-        <(echo "$student_lines" | cut -d' ' -f1,2,7-10 | sort) \
+    local sorted_results=$(join -1 1 -2 1 -a 1 -o '1.2,2.1,1.3,1.4,1.7,1.5,1.6,2.2,2.3,2.4,2.5' -e 'MISSING' \
+        <(echo "$student_lines" | cut -d' ' -f1,2,6-10 | sort) \
         <(echo "$score_records") \
-        | sort -nr -k${sort_column},10 \
+        | sort -nr -k${sort_column},11 \
         | _gtb_nl)
     local fullnames="$(echo "$student_lines" | _gtb_cuts 1 | _gtb_join_lines '|')"
     local filtered_results=$(echo "$sorted_results" | grep -wE "$fullnames")
 
     {
-        echo "ID RANK ORG FULLNAME CN_NAME MAJOR CLASS TEAM TOTAL QUIZ EX. PERF."
+        echo "ID RANK ORG FULLNAME NICKNAME CN_NAME MAJOR CLASS TEAM TOTAL QUIZ EX. PERF."
         echo "$filtered_results" | _gtb_nl
     } | _gtb_table_format -N
 }
