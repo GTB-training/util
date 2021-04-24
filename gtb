@@ -203,7 +203,7 @@ _gtb_auto_schedule() {
         fail 'error: scheduled time should be after the current time.'
     fi
 
-    echo "this command is scheduled running at '$time_to_start'"
+    echo "this command is scheduled running at '$(red $time_to_start)'"
     read -p "do you want to start countdown? (y|n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
