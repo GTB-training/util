@@ -234,6 +234,28 @@ _gtb_time_format_for_api() {
     date -jf '%s' "$TIMESTAMP" '+%Y-%m-%dT%H:%M:%S%z' | sed -E 's/(..)$/:\1/'
 }
 
+_gtb_time_format_convert_time_zone() {
+    # .assignmentType, .repository, .gtbUsername, .displayName,
+    #.firstMeasurementTestStatus, firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore,
+    # .startTime, .firstMeasurementTime, .finalMeasurementTime'
+    while read -r f1 f2 f3 f4 f5 f6 f7 f8 start_time first_measurment_time final_measurment_time rest
+    do
+        local local_start_time=$(date -jf '%Y-%m-%dT%H:%M:%S%z' \
+            "$(echo $start_time | sed -E 's/(.*)Z$/\1+0000/g')" \
+            '+%Y-%m-%d %H:%M:%S %a' \
+            | tr ' ' '_')
+        local local_first_measurment_time=$(date -jf '%Y-%m-%dT%H:%M:%S%z' \
+            "$(echo $first_measurment_time | sed -E 's/(.*)Z$/\1+0000/g')" \
+            '+%Y-%m-%d %H:%M:%S %a' \
+            | tr ' ' '_')
+        local local_final_measurment_time=$(date -jf '%Y-%m-%dT%H:%M:%S%z' \
+            "$(echo $final_measurment_time | sed -E 's/(.*)Z$/\1+0000/g')" \
+            '+%Y-%m-%d %H:%M:%S %a' \
+            | tr ' ' '_')
+        echo "$f1 $f2 $f3 $f4 $f5 $f6 $f7 $f8 $local_start_time $local_first_measurment_time $local_final_measurment_time"
+    done
+}
+
 _gtb_print_in_columns() {
     cat | pr -${1:-3} -t -w $(tput cols)
 }
@@ -3019,7 +3041,9 @@ _gtb_dashboard_submission_list() {
         submissions="$(echo "$submissions" | grep --color=never -w -E $fullnames)"
     fi
 
-    echo "$submissions" | _gtb_table_format
+    echo "$submissions" \
+        | _gtb_time_format_convert_time_zone \
+        | _gtb_table_format
 }
 
 _gtb_dashboard_submission() {
