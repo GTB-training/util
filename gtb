@@ -238,7 +238,7 @@ _gtb_time_format_convert_time_zone() {
     # .assignmentType, .repository, .gtbUsername, .displayName,
     #.firstMeasurementTestStatus, firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore,
     # .startTime, .firstMeasurementTime, .finalMeasurementTime'
-    while read -r f1 f2 f3 f4 f5 f6 f7 f8 start_time first_measurment_time final_measurment_time rest
+    while read -r f1 f2 f3 f4 f5 f6 f7 f8 f9 start_time first_measurment_time final_measurment_time rest
     do
         local local_start_time=$(date -jf '%Y-%m-%dT%H:%M:%S%z' \
             "$(echo $start_time | sed -E 's/(.*)Z$/\1+0000/g')" \
@@ -252,7 +252,7 @@ _gtb_time_format_convert_time_zone() {
             "$(echo $final_measurment_time | sed -E 's/(.*)Z$/\1+0000/g')" \
             '+%Y-%m-%d %H:%M:%S %a' \
             | tr ' ' '_')
-        echo "$f1 $f2 $f3 $f4 $f5 $f6 $f7 $f8 $local_start_time $local_first_measurment_time $local_final_measurment_time"
+        echo "$f1 $f2 $f3 $f4 $f5 $f6 $f7 $f8 $f9 $local_start_time $local_first_measurment_time $local_final_measurment_time"
     done
 }
 
@@ -2847,9 +2847,9 @@ _gtb_dashboard_list_scores() {
 
 _gtb_dashboard_list_submissions() {
     run "http --print b GET $GTB_DASHBOARD_ADDRESS/terms/${GTB_TERM}/submissions" \
-        | jq -r '[.[].submissions[]] | .[] | .assignmentType, .repository, .gtbUsername, .displayName, .firstMeasurementTestStatus, .firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore, .startTime, .firstMeasurementTime, .finalMeasurementTime' \
-        | paste -d' ' - - - - - - - - - - - \
-        | sort -k1,1 -k9,9
+        | jq -r '[.[].submissions[]] | .[] | .assignmentType, .repository, .gtbUsername, .displayName, .firstMeasurementTestStatus, .firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore, .extendTestPassPercentage, .startTime, .firstMeasurementTime, .finalMeasurementTime' \
+        | paste -d' ' - - - - - - - - - - - - \
+        | sort -k5,5r -k7,7r -k6,6rn -k8,8rn -k9,9rn -k3,3
 }
 
 _gtb_dashboard_create_submission() {
