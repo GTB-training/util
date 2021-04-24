@@ -2229,6 +2229,10 @@ _gtb_repo_list() {
 }
 
 _gtb_repo() {
+    if ! echo $1 | grep --silent '^\(list\|add\|remove\|publish\|pick\)$'; then
+        set -- list "$@"
+    fi
+
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
