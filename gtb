@@ -2225,7 +2225,7 @@ _gtb_repo_add() {
 }
 
 _gtb_repo_list() {
-    gh_list_org_repos "$@"
+    gh_list_org_repos
 }
 
 _gtb_repo() {
