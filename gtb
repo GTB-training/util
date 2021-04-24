@@ -1146,6 +1146,34 @@ _gtb_trainer() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_git_verify_refs() {
+    local REPO_NAME=${1:?Repo name is required!}
+    local GTB_REFS=${2:-}
+
+    if [[ -z "$GTB_REFS" ]]; then
+        return
+    fi
+
+    _gtb_clone_default_repo $REPO_NAME
+
+    run "cd $(_gtb_default_repo_dir $REPO_NAME)"
+
+    local REFS=$(echo "$GTB_REFS" | tr ',' ' ' | tr -s ' ')
+    local commits_to_pick=''
+
+    for ref in $REFS; do
+        if _gtb_is_valid_git_ref $ref; then
+            commits_to_pick="$commits_to_pick $ref"
+        fi
+    done
+
+    if [[ -z "$commits_to_pick" ]]; then
+        return
+    fi
+
+    echo "$commits_to_pick" | sed -E 's/^ +//g'
+}
+
 _gtb_is_valid_git_ref() {
     local REF=${1:?Ref is required!}
 
@@ -2097,6 +2125,99 @@ _gtb_update_default_repo() {
 
     run "cd $repo_dir"
     run "git fetch origin --prune --prune-tags"
+}
+
+_gtb_repo_pick() {
+    local REPO_NAME=${GTB_REPO:?repo name should be provided using --repo option.}
+
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    header "Verifying refs '$GTB_REFS'..."
+    local commits_to_pick=$(_gtb_git_verify_refs "$REPO_NAME" "$GTB_REFS")
+    if [[ -z "$commits_to_pick" ]]; then
+        fail 'error: no valid commits is to be picked not provided. (e.g. gtb student repo pick --refs "origin/extended-tests" ...)'
+    fi
+
+    echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
+    echo
+    echo "$commits_to_pick" | tr ' ' '\n' | _gtb_nl
+    read -p "about to pick these refs to above $(red $students_count) students? (y|n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
+
+    _gtb_auto_schedule
+
+    header "Clone repo $REPO_NAME..."
+    _gtb_clone_default_repo $REPO_NAME
+
+    header "Filter students..."
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+
+    [[ $students_count -eq 0 ]] && fail "error: no students matched by filters: '$@'"
+
+    header "Add students' repo as remote..."
+    local result_add_remote=$(echo "$student_lines" \
+        | _gtb_cuts 1-2 \
+        | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_add_student_repo_as_remote {2} $REPO_NAME $(_gtb_mute_stderr)" \
+        | sort \
+        | _gtb_cuts 3)
+
+    header "Fetch all remotes..."
+    local result_fetch_remote=$(echo "$student_lines" \
+        | _gtb_cuts 1-2 \
+        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "_gtb_fetch_remote $REPO_NAME {2} $(_gtb_mute_stderr)" \
+        | sort -k2 \
+        | _gtb_cuts 1)
+
+    header "Create local branches..."
+    local result_create_branch=$(echo "$student_lines" \
+        | _gtb_cuts 1-2 \
+        | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_create_local_branch $REPO_NAME {2} $(_gtb_mute_stderr)" \
+        | sort -k2 \
+        | _gtb_cuts 1)
+
+    header "Pick refs..."
+    local result_pick_ref=$(echo "$student_lines" \
+        | _gtb_cuts 1-2 \
+        | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_pick_refs $REPO_NAME {2} $commits_to_pick $(_gtb_mute_stderr)" \
+        | sort -k2 \
+        | _gtb_cuts 1)
+
+    header "Push to remotes..."
+    local result_push_to_remote=$(echo "$student_lines" \
+        | _gtb_cuts 1-2 \
+        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "_gtb_push_master $REPO_NAME {2} $(_gtb_mute_stderr)" \
+        | sort -k2 \
+        | _gtb_cuts 1)
+
+    if [[ -n $WORKFLOW_FILENAME ]]
+    then
+        header "Run workflows..."
+        local result_run_workflow=$(echo "$student_lines" \
+            | _gtb_cuts 1-2 \
+            | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "gh_run_repo_workflow {2} $REPO_NAME $WORKFLOW_FILENAME" \
+            | sort -k2 \
+            | _gtb_cuts 1,3)
+    fi
+
+    {
+        echo "ID ORG ADD FETCH BRANCH PICK PUSH RUN ACTIONS"
+        pr -m -t -s' ' \
+            <(echo "$student_lines" | _gtb_cuts 2 | sort) \
+            <(echo "$result_add_remote") \
+            <(echo "$result_fetch_remote") \
+            <(echo "$result_create_branch") \
+            <(echo "$result_pick_ref") \
+            <(echo "$result_push_to_remote") \
+            <(echo "$result_run_workflow") \
+            | _gtb_nl
+    } | _gtb_table_format -N
 }
 
 _gtb_repo_publish() {
@@ -3330,6 +3451,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: repository name specified by '$1' is missing"
+            fi
+            ;;
+        --refs)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_REFS=$2
+                shift 2
+            else
+                fail "Error: refs to pick specified by '$1' is missing, comma separated, e.g. origin/extended-tests,origin/fix"
             fi
             ;;
         --start)
