@@ -39,7 +39,7 @@ GTB_TRELLO_API='https://api.trello.com/1'
 GTB_FIELDS="1-"
 GTB_RAW="false"
 GTB_LINE_NUMBERS="true"
-GTB_SORT_BY="total"
+GTB_SORT_BY="default"
 
 SYMBOL_OK='✅'
 SYMBOL_ERROR='❌'
@@ -2845,11 +2845,28 @@ _gtb_dashboard_list_scores() {
         | sort -k1
 }
 
+_gtb_sort_submission_list() {
+    case "$GTB_SORT_BY" in
+        type)
+            cat | sort -k1,1 -k10,10 -k2,2
+            ;;
+        name)
+            cat | sort -k2,2 -k3,3
+            ;;
+        score)
+            cat | sort -k5,5r -k7,7r -k6,6rn -k8,8rn -k9,9rn -k3,3
+            ;;
+        *) # default to start time
+            cat | sort -k10,10 -k2,2 -k3,3
+            ;;
+    esac
+}
+
 _gtb_dashboard_list_submissions() {
     run "http --print b GET $GTB_DASHBOARD_ADDRESS/terms/${GTB_TERM}/submissions" \
         | jq -r '[.[].submissions[]] | .[] | .assignmentType, .repository, .gtbUsername, .displayName, .firstMeasurementTestStatus, .firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore, .extendTestPassPercentage, .startTime, .firstMeasurementTime, .finalMeasurementTime' \
         | paste -d' ' - - - - - - - - - - - - \
-        | sort -k5,5r -k7,7r -k6,6rn -k8,8rn -k9,9rn -k3,3
+        | _gtb_sort_submission_list
 }
 
 _gtb_dashboard_create_submission() {
@@ -3117,31 +3134,35 @@ _gtb_dashboard_open() {
     run "open ${GTB_DASHBOARD_ADDRESS%/api}?term=${GTB_TERM}"
 }
 
+_gtb_sort_dashboard_list() {
+    case "$GTB_SORT_BY" in
+        team)
+            cat | sort -k7,7 -k8,8nr -k9,9nr -k10,10nr -k11,11nr -k2
+            ;;
+        evaluation|quiz)
+            cat | sort -k9,9nr -k8,8nr -k10,10nr -k11,11nr -k2
+            ;;
+        homework|exercise|ex.)
+            cat | sort -k10,10nr -k8,8nr -k9,9nr -k11,11nr -k2
+            ;;
+        performance|perf)
+            cat | sort -k11,11nr -k8,8nr -k9,9nr -k10,10nr -k2
+            ;;
+        *)
+            cat | sort -k8,8nr -k9,9nr -k10,10nr -k11,11nr -k2
+            ;;
+    esac
+}
+
 _gtb_dashboard_list() {
     local student_lines=$(_gtb_filter_students "$@")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     local score_records="$(_gtb_dashboard_list_scores)"
-    local sort_column=8 # default to sort by total avg score
-    case "$GTB_SORT_BY" in
-        evaluation)
-            sort_column=9
-            ;;
-        homework)
-            sort_column=10
-            ;;
-        performance)
-            sort_column=11
-            ;;
-        *)
-            sort_column=8
-            ;;
-    esac
-
     local sorted_results=$(join -1 1 -2 1 -a 1 -o '1.2,2.1,1.3,1.4,1.7,1.5,1.6,2.2,2.3,2.4,2.5' -e 'MISSING' \
         <(_gtb_filter_students | cut -d' ' -f1,2,6-10 | sort) \
         <(echo "$score_records") \
-        | sort -nr -k${sort_column},11 \
+        | _gtb_sort_dashboard_list \
         | _gtb_nl)
     local fullnames="$(echo "$student_lines" | _gtb_cuts 1 | _gtb_join_lines '|')"
     local filtered_results=$(echo "$sorted_results" | grep -wE "$fullnames")
