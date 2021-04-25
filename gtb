@@ -235,25 +235,12 @@ _gtb_time_format_for_api() {
 }
 
 _gtb_time_format_convert_time_zone() {
-    # .assignmentType, .repository, .gtbUsername, .displayName,
-    #.firstMeasurementTestStatus, firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore,
-    # .startTime, .firstMeasurementTime, .finalMeasurementTime'
-    while read -r f1 f2 f3 f4 f5 f6 f7 f8 f9 start_time first_measurment_time final_measurment_time rest
-    do
-        local local_start_time=$(date -jf '%Y-%m-%dT%H:%M:%S%z' \
-            "$(echo $start_time | sed -E 's/(.*)Z$/\1+0000/g')" \
-            '+%Y-%m-%d %H:%M:%S %a' \
-            | tr ' ' '_')
-        local local_first_measurment_time=$(date -jf '%Y-%m-%dT%H:%M:%S%z' \
-            "$(echo $first_measurment_time | sed -E 's/(.*)Z$/\1+0000/g')" \
-            '+%Y-%m-%d %H:%M:%S %a' \
-            | tr ' ' '_')
-        local local_final_measurment_time=$(date -jf '%Y-%m-%dT%H:%M:%S%z' \
-            "$(echo $final_measurment_time | sed -E 's/(.*)Z$/\1+0000/g')" \
-            '+%Y-%m-%d %H:%M:%S %a' \
-            | tr ' ' '_')
-        echo "$f1 $f2 $f3 $f4 $f5 $f6 $f7 $f8 $f9 $local_start_time $local_first_measurment_time $local_final_measurment_time"
-    done
+    local DATETIME=${1:?Datetime is required!}
+
+    date -jf '%Y-%m-%dT%H:%M:%S%z' \
+        "$(echo $DATETIME | sed -E 's/(.*)Z$/\1+0000/g')" \
+        '+%Y-%m-%d %H:%M:%S %a' \
+        | tr ' ' '_'
 }
 
 _gtb_print_in_columns() {
@@ -3038,6 +3025,19 @@ _gtb_dashboard_submission_add() {
     _gtb_dashboard_submission_create "$@"
 }
 
+_format_submission_time_fields() {
+    # .assignmentType, .repository, .gtbUsername, .displayName,
+    #.firstMeasurementTestStatus, firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore,
+    # .startTime, .firstMeasurementTime, .finalMeasurementTime'
+    while read -r f1 f2 f3 f4 f5 f6 f7 f8 f9 start_time first_measurment_time final_measurment_time rest
+    do
+        local local_start_time=$(_gtb_time_format_convert_time_zone $start_time)
+        local local_first_measurment_time=$(_gtb_time_format_convert_time_zone $first_measurment_time)
+        local local_final_measurment_time=$(_gtb_time_format_convert_time_zone $final_measurment_time)
+        echo "$f1 $f2 $f3 $f4 $f5 $f6 $f7 $f8 $f9 $local_start_time $local_first_measurment_time $local_final_measurment_time"
+    done
+}
+
 _gtb_dashboard_submission_list() {
     local student_lines=$(_gtb_filter_students "$@")
     local students_count=$(_gtb_count_lines "$student_lines")
@@ -3059,7 +3059,7 @@ _gtb_dashboard_submission_list() {
     fi
 
     echo "$submissions" \
-        | _gtb_time_format_convert_time_zone \
+        | _format_submission_time_fields \
         | _gtb_table_format
 }
 
