@@ -1802,6 +1802,20 @@ _gtb_student_repo_stat() {
         | nl
 }
 
+_gtb_sort() {
+    local DEFAULT_SORT_ORDER="${1:?default sort keys are required! (e.g. '9,9nr;2,2')}"
+
+    GTB_SORT_ORDER=${GTB_SORT_ORDER:-$DEFAULT_SORT_ORDER}
+
+    local SORT_KEYS=""
+    for KEY in $(echo $GTB_SORT_ORDER | tr ';' ' ')
+    do
+        SORT_KEYS="$SORT_KEYS -k${KEY}"
+    done
+
+    cat | sort $SORT_KEYS
+}
+
 _gtb_student_repo_list() {
     local student_lines=$(_gtb_filter_students "$@")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
@@ -1813,8 +1827,8 @@ _gtb_student_repo_list() {
             --colsep ' ' \
             --bar --linebuffer \
             gh_list_org_repos {1} \
-        | sort -k4,4 -k2,2 \
         | _format_repo_time_fields \
+        | _gtb_sort "4,4;2,2" \
         | _gtb_table_format \
         | sed "s/ public / $(red public) /"
 }
