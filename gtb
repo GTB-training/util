@@ -39,7 +39,7 @@ GTB_TRELLO_API='https://api.trello.com/1'
 GTB_FIELDS="1-"
 GTB_RAW="false"
 GTB_LINE_NUMBERS="true"
-GTB_SORT_BY="default"
+GTB_SORT_ORDER=""
 
 SYMBOL_OK='✅'
 SYMBOL_ERROR='❌'
@@ -2901,7 +2901,7 @@ _gtb_dashboard_list_scores() {
 }
 
 _gtb_sort_submission_list() {
-    case "$GTB_SORT_BY" in
+    case "$GTB_SORT_ORDER" in
         type)
             cat | sort -k1,1 -k10,10 -k2,2
             ;;
@@ -3203,7 +3203,7 @@ _gtb_dashboard_open() {
 }
 
 _gtb_sort_dashboard_list() {
-    case "$GTB_SORT_BY" in
+    case "$GTB_SORT_ORDER" in
         team)
             cat | sort -k7,7 -k8,8nr -k9,9nr -k10,10nr -k11,11nr -k2
             ;;
@@ -3605,10 +3605,10 @@ while (( "$#" )); do
             ;;
         --sort)
             if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
-                GTB_SORT_BY=$2
+                GTB_SORT_ORDER=$2
                 shift 2
             else
-                fail "Error: column to sort with specified by '$1' is missing, e.g. total, evaluation, homework, performance"
+                fail "Error: column to sort with specified by '$1' is missing, e.g. total, evaluation, homework, performance, '1,1nr;2,2'"
             fi
             ;;
         --schedule)
