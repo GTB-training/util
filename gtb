@@ -516,9 +516,8 @@ gh_list_org_repos() {
 
     for page in $(seq 1 10)
     do
-        local res=$(run "gh api '${ENDPOINT}${page}' 2>/dev/null" | jsonpp \
-            | jq -r '.[] | .owner.login, .name, .private, .created_at' \
-            | paste -d' ' - - - -)
+        local res=$(run "gh api '${ENDPOINT}${page}' 2>/dev/null" \
+            | jq -jr '.[] | .owner.login, " ", .name, " ", .private, " ", .created_at, "\n"')
 
         local lines_count=$(_gtb_count_lines "$res")
         if [[ $lines_count -gt 0 ]]
