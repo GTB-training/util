@@ -1898,6 +1898,38 @@ _gtb_count_lines() {
     echo "$*" | wc -l | tr -d ' '
 }
 
+_gtb_student_delete() {
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    local students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" \
+        | sort \
+        | _gtb_table_format
+
+    read -p "about to DELETE $(red ${students_count}) students from $(red $GTB_STUDENTS_FILE)? (y|n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
+
+    echo "$student_lines" \
+        | _gtb_cuts 1 \
+        | env_parallel \
+            --bar \
+            --linebuffer \
+            --jobs 1 \
+            "sed -i '' -E '/^{}/d' '$GTB_STUDENTS_FILE'"
+
+    _gtb_config_diff "$GTB_STUDENTS_FILE"
+}
+
+_gtb_student_remove() {
+    _gtb_student_delete "$@"
+}
+
 _gtb_student_list_format() {
     if [[ "$GTB_RAW" == "true" ]]
     then
