@@ -1898,6 +1898,36 @@ _gtb_count_lines() {
     echo "$*" | wc -l | tr -d ' '
 }
 
+_gtb_student_quit() {
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    local students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" \
+        | sort \
+        | _gtb_table_format
+
+    read -p "about to QUIT above $(red ${students_count}) students? (y|n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    then
+        return 1
+    fi
+
+    _gtb_org_remove "$@"
+    _gtb_student_org_delete "$@"
+    _gtb_student_org_delete "$@"
+    GTB_TRELLO_BOARD_NAME=$(echo $GTB_TERM | sed 's/gtb/GTB/')
+    _gtb_trello_board_remove "$@"
+    GTB_TRELLO_BOARD_NAME="GTB-Resource"
+    _gtb_trello_board_remove "$@"
+    _gtb_dashboard_student_deactivate "$@"
+    _gtb_student_delete "$@"
+    _gtb_config_commit "chore: $GTB_TERM quit students $@"
+    _gtb_config_push
+}
+
 _gtb_student_delete() {
     local student_lines=$(_gtb_filter_students "$@")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
