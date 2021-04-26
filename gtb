@@ -2915,6 +2915,12 @@ _gtb_dashboard_list_scores() {
 }
 
 _gtb_sort_submission_list() {
+    if echo "$GTB_SORT_ORDER" | grep --silent -E '\d'
+    then
+        _gtb_sort "$GTB_SORT_ORDER"
+        return
+    fi
+
     case "$GTB_SORT_ORDER" in
         type)
             cat | sort -k1,1 -k10,10 -k2,2
@@ -3217,6 +3223,12 @@ _gtb_dashboard_open() {
 }
 
 _gtb_sort_dashboard_list() {
+    if echo "$GTB_SORT_ORDER" | grep --silent -E '\d'
+    then
+        _gtb_sort "$GTB_SORT_ORDER"
+        return
+    fi
+
     case "$GTB_SORT_ORDER" in
         team)
             cat | sort -k7,7 -k8,8nr -k9,9nr -k10,10nr -k11,11nr -k2
