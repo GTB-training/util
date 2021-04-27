@@ -2601,18 +2601,17 @@ _gtb_trello_card_check() {
     assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
 
     local cards_info=$(http GET "$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH" \
-        | jq -r '.[] | .name,.shortUrl' \
-        | paste -d ' ' - -)
+        | jq -jr '.[] | .pos, " ", .name, " ", .badges.checkItemsChecked, " ", .badges.checkItems, " ", .id, " ", .shortUrl, "\n"')
 
     local student_lines=$(_gtb_filter_students "$@")
     echo "$student_lines" | cut -d' ' -f2,7 | while read -r ORG CHINESE_NAME REST
     do
-        local card_info=$(echo "$cards_info" | grep "$CHINESE_NAME")
+        local card_info=$(echo "$cards_info" | grep --color=never "$CHINESE_NAME")
         [[ -n "$card_info" ]] && status='✅' || status="❌"
         echo $status $ORG $card_info
-    done | sort \
-        | column -t \
-        | cat -n
+    done \
+        | _gtb_sort '1,1;5,5n;6,6n;7,7' \
+        | _gtb_table_format
 }
 
 _gtb_trello_card_list() {
