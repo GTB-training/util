@@ -187,6 +187,12 @@ _gtb_table_format() {
     cat | _gtb_nl | column -s"$GTB_TABLE_FORMAT_SEPARATOR" -t
 }
 
+_gtb_tr_symbols() {
+    cat | sed -E \
+        -e "s/(^| )(OK)( |$)/ $SYMBOL_OK /" \
+        -e "s/(^| )(ER)( |$)/ $SYMBOL_ERROR /"
+}
+
 _gtb_auto_schedule() {
     [[ -z "$GTB_SCHEDULE" ]] && return
 
@@ -815,11 +821,11 @@ _gtb_trello_invite_member_to_board() {
     local response=$(run "http PUT '$GTB_TRELLO_API/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}&$GTB_TRELLO_AUTH'" 2>&1)
 
     if echo $response | grep --silent '^{"id":'; then
-        echo "✅ $ORG $TRELLO_EMAIL"
+        echo "OK $ORG $TRELLO_EMAIL"
         return 0
     fi
 
-    echo "❌ $ORG $TRELLO_EMAIL"
+    echo "ER $ORG $TRELLO_EMAIL"
     error $response
     return 1
 }
@@ -2616,11 +2622,12 @@ _gtb_trello_card_check() {
     echo "$student_lines" | cut -d' ' -f2,7 | while read -r ORG CHINESE_NAME REST
     do
         local card_info=$(echo "$cards_info" | grep --color=never "$CHINESE_NAME")
-        [[ -n "$card_info" ]] && status='✅' || status="❌"
+        [[ -n "$card_info" ]] && status='OK' || status="ER"
         echo $status $ORG $card_info
     done \
-        | _gtb_sort '1,1;5,5n;6,6n;7,7' \
-        | _gtb_table_format
+        | _gtb_sort '1,1r;5,5n;6,6n;7,7' \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 }
 
 _gtb_trello_card_list() {
@@ -2692,9 +2699,11 @@ _gtb_trello_board_invite() {
     _gtb_filter_students "$@" \
         | _gtb_unformat \
         | _gtb_cuts '2,5' \
-        | env_parallel --jobs $JOBS --colsep ' ' --tagstring {1} --bar --linebuffer \
+        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer \
             _gtb_trello_invite_member_to_board {1} {2} \
-        | sort | column -s'^' -t | cat -n
+        | _gtb_sort 1r \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 }
 
 _gtb_trello_board_list() {
