@@ -2032,6 +2032,14 @@ _gtb_student() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_stu() {
+    _gtb_student "$@"
+}
+
+_gtb_st() {
+    _gtb_student "$@"
+}
+
 remove_repo_from_team() {
     local ORG=$1
     local TEAM=$2
