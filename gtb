@@ -376,7 +376,13 @@ gh_invite_user_to_org() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
     local ROLE=${3:-direct_member}
-    gh_create_invitation $ORG $(gh_user_id $USERNAME) $ROLE
+    local result=$(gh_create_invitation $ORG $(gh_user_id $USERNAME) $ROLE \
+        | jq -r 'if .created_at or .errors[0].message == "Invitee is already a part of this org" then "OK" else "ER" end')
+    if [[ -z "$result" ]]
+    then
+        result='ER'
+    fi
+    echo "$result $*"
 }
 
 gh_remove_user_from_org() {
@@ -389,7 +395,13 @@ gh_invite_user_to_team() {
     local ORG=${1:?org is required!}
     local TEAM=${2:?team is required!}
     local USERNAME=${3:?username is required!}
-    run "gh api -X PUT \"/orgs/${ORG}/teams/${TEAM}/memberships/${USERNAME}\""
+    local result=$(run "gh api -X PUT '/orgs/${ORG}/teams/${TEAM}/memberships/${USERNAME}' $(_gtb_mute_stderr)" \
+        | jq -r 'if .role then "OK" else "ER" end')
+    if [[ -z "$result" ]]
+    then
+        result='ER'
+    fi
+    echo "$result $*"
 }
 
 gh_find_org() {
@@ -466,23 +478,11 @@ gh_is_pending_member() {
     cat | grep -A1 '"state": "pending"' | grep --silent '"role": "member"'
 }
 
-gh_is_invitation_created() {
-    cat | grep --silent '"created_at":'
-}
-
-gh_is_already_part_of_this_org() {
-    cat | grep --silent 'Invitee is already a part of this org'
-}
-
-gh_is_team_member_invited() {
-    cat | grep --silent '"role":'
-}
-
 gh_create_invitation() {
     local ORG=${1:?Org is required!}
     local INVITEE_ID=${2:?Invitee ID is required!}
     local ROLE=${3:-direct_member}
-    run "gh api /orgs/${ORG}/invitations -F role=$ROLE -F invitee_id=$INVITEE_ID 2>/dev/null"
+    run "gh api /orgs/${ORG}/invitations -F role=$ROLE -F invitee_id=$INVITEE_ID $(_gtb_mute_stderr)"
 }
 
 gh_list_org_teams() {
@@ -1289,29 +1289,26 @@ _gtb_student_org_invite_create() {
     local TRAINER_USERNAME=$(_gtb_trainer_username $TRAINER_FULLNAME)
     assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$TRAINER_USERNAME"
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                local response=$(gh_invite_user_to_org $ORG $TRAINER_USERNAME admin)
-                if echo $response | gh_is_invitation_created; then
-                    info "$ORG $TRAINER_FULLNAME"
-                else
-                    error "$ORG $TRAINER_FULLNAME"
-                    echo $response | jsonpp 1>&2
-                fi
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" \
+        | env_parallel \
+            --linebuffer \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --bar \
+            gh_invite_user_to_org "{2}" "$TRAINER_USERNAME" 'admin' "{7}" \
+        | _gtb_sort '1,1r;2,2' \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 }
 
 _gtb_student_org_invite_list() {
-    local student_lines
-    local students_count
-    student_lines=$(_gtb_filter_students "$@")
-    students_count=$(_gtb_count_lines "$student_lines")
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
     do
@@ -1326,10 +1323,6 @@ _gtb_student_org_invite_list() {
 }
 
 _gtb_student_org_invite() {
-    if ! echo $1 | grep --silent '^\(list\|create\|cancel\)$'; then
-        set -- list "$@"
-    fi
-
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
@@ -1485,7 +1478,7 @@ _gtb_student_user_check() {
             --colsep ' ' \
             --bar \
             gh_check_user "{4}" "{2}" "{7}" \
-        | _gtb_sort '1r;3;3' \
+        | _gtb_sort '1,1r;3;3' \
         | _gtb_table_format \
         | _gtb_tr_symbols
 }
@@ -2489,21 +2482,20 @@ _gtb_org_team_open() {
 }
 
 _gtb_org_team_invite() {
-    local student_lines
-    local students_count
-    student_lines=$(_gtb_filter_students "$@")
-    students_count=$(_gtb_count_lines "$student_lines")
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
-    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
-    do
-        local response=$(gh_invite_user_to_team $GTB_ORG $GTB_TERM $USERNAME)
-        if echo $response | gh_is_team_member_invited; then
-            logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
-        else
-            logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
-            echo $response | jsonpp 1>&2
-        fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
+    echo "$student_lines" \
+        | env_parallel \
+            --linebuffer \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --bar \
+            gh_invite_user_to_team "$GTB_ORG" "$GTB_TERM" "{4}" "{2}" "{7}" \
+        | _gtb_sort '1,1r;4,4' \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 }
 
 _gtb_org_team_members() {
@@ -2558,23 +2550,20 @@ _gtb_org_remove() {
 }
 
 _gtb_org_invite() {
-    local student_lines
-    local students_count
-    student_lines=$(_gtb_filter_students "$@")
-    students_count=$(_gtb_count_lines "$student_lines")
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
-    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
-    do
-        local response=$(gh_invite_user_to_org $GTB_ORG $USERNAME)
-        if echo $response | gh_is_already_part_of_this_org; then
-            logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
-        elif echo $response | gh_is_invitation_created; then
-            logtf 32 "$ORG $FULLNAME $USERNAME $TAGS"
-        else
-            logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
-            echo $response | jsonpp 1>&2
-        fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
+    echo "$student_lines" \
+        | env_parallel \
+            --linebuffer \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --bar \
+            gh_invite_user_to_org "$GTB_ORG" "{4}" 'direct_member' "{2}" "{7}" \
+        | _gtb_sort '1,1r;2,2' \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 }
 
 _gtb_org_members() {
