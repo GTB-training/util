@@ -353,6 +353,17 @@ _gtb_filter_students() {
     done
 }
 
+gh_check_user() {
+    local USERNAME=${1:?username is required!}
+    local result=$(run "gh api '/users/$USERNAME' $(_gtb_mute_stderr)" \
+        | jq -r 'if .login then "OK" else "ER" end')
+    if [[ -z "$result" ]]
+    then
+        result='ER'
+    fi
+    echo "$result $*"
+}
+
 gh_user_id() {
     local USERNAME=${1:?username is required!}
     run "gh api /users/${USERNAME} 2>/dev/null" | jsonpp | \
@@ -1463,20 +1474,20 @@ _gtb_student_org() {
 }
 
 _gtb_student_user_check() {
-    local student_lines
-    local students_count
-    student_lines=$(_gtb_filter_students "$@")
-    students_count=$(_gtb_count_lines "$student_lines")
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
-    echo "$student_lines" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS
-    do
-        if gh api "/users/$USERNAME" | jsonpp | grep --silent "\"login\": \"$USERNAME\""
-        then
-            logtf 28 "$ORG $FULLNAME $USERNAME $TAGS"
-        else
-            logtf 161 "$ORG $FULLNAME $USERNAME $TAGS"
-        fi
-    done | _gtb_pv $students_count | _gtb_tee1 | tr ' ' '|' | sort | _gtb_tabularize 'SUMMARY'
+    echo "$student_lines" \
+        | env_parallel \
+            --linebuffer \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --bar \
+            gh_check_user "{4}" "{2}" "{7}" \
+        | _gtb_sort '1r;3;3' \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 }
 
 _gtb_student_user() {
