@@ -40,6 +40,7 @@ GTB_FIELDS="1-"
 GTB_RAW="false"
 GTB_LINE_NUMBERS="true"
 GTB_SORT_ORDER=""
+GTB_TABLE_FORMAT_SEPARATOR=' '
 
 SYMBOL_OK='✅'
 SYMBOL_ERROR='❌'
@@ -157,6 +158,14 @@ _gtb_table_format() {
                 GTB_LINE_NUMBERS="false"
                 shift
                 ;;
+            -s)
+                if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                    GTB_TABLE_FORMAT_SEPARATOR="$2"
+                    shift 2
+                else
+                    fail "Error: separator specified by '$1' is missing"
+                fi
+                ;;
             *)
                 shift
                 ;;
@@ -171,11 +180,11 @@ _gtb_table_format() {
 
     if [[ "$GTB_LINE_NUMBERS" != "true" ]]
     then
-        cat | column -t
+        cat | column -s"$GTB_TABLE_FORMAT_SEPARATOR" -t
         return
     fi
 
-    cat | _gtb_nl | column -t
+    cat | _gtb_nl | column -s"$GTB_TABLE_FORMAT_SEPARATOR" -t
 }
 
 _gtb_auto_schedule() {
