@@ -765,7 +765,7 @@ gh_clone_repo() {
 _gtb_trello_find_board_id() {
     local BOARD_NAME=${1:?Board name is required!}
 
-    http GET "$GTB_TRELLO_API/members/${GTB_TRELLO_USERNAME}/boards?${GTB_TRELLO_AUTH}" \
+    run "http GET '$GTB_TRELLO_API/members/${GTB_TRELLO_USERNAME}/boards?${GTB_TRELLO_AUTH}'" \
         | jq -r ".[] | select(.name == \"$BOARD_NAME\") | .id"
 }
 
@@ -776,7 +776,7 @@ _gtb_trello_find_list_id() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    http GET "$GTB_TRELLO_API/boards/${BOARD_ID}/lists?$GTB_TRELLO_AUTH" \
+    run "http GET '$GTB_TRELLO_API/boards/${BOARD_ID}/lists?$GTB_TRELLO_AUTH'" \
         | jq -r ".[] | select(.name == \"$LIST_NAME\") | .id"
 }
 
@@ -812,7 +812,7 @@ _gtb_trello_invite_member_to_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local response=$(http PUT "$GTB_TRELLO_API/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}&$GTB_TRELLO_AUTH" 2>&1)
+    local response=$(run "http PUT '$GTB_TRELLO_API/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}&$GTB_TRELLO_AUTH'" 2>&1)
 
     if echo $response | grep --silent '^{"id":'; then
         echo "✅ $ORG $TRELLO_EMAIL"
@@ -2598,7 +2598,7 @@ _gtb_trello_card_create() {
         fail 'Card name is required!'
     fi
 
-    http POST "$GTB_TRELLO_API/cards?idList=${LIST_ID}&pos=top&name=$CARD_NAME&$GTB_TRELLO_AUTH" \
+    run "http POST '$GTB_TRELLO_API/cards?idList=${LIST_ID}&pos=top&name=$CARD_NAME&$GTB_TRELLO_AUTH'" \
         | jq -r '.shortUrl, .name'
 }
 
@@ -2609,7 +2609,7 @@ _gtb_trello_card_check() {
     local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
     assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
 
-    local cards_info=$(http GET "$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH" \
+    local cards_info=$(run "http GET '$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH'" \
         | jq -jr '.[] | .pos, " ", .name, " ", .badges.checkItemsChecked, " ", .badges.checkItems, " ", .id, " ", .shortUrl, "\n"')
 
     local student_lines=$(_gtb_filter_students "$@")
@@ -2630,7 +2630,7 @@ _gtb_trello_card_list() {
     local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
     assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
 
-    http GET "$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH" \
+    run "http GET '$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH'" \
         | jq -jr '.[] | .pos, " ", .name, " ", .badges.checkItemsChecked, " ", .badges.checkItems, " ", .id, " ", .shortUrl, "\n"' \
         | _gtb_sort '3,3n;4,4n;5,5' \
         | _gtb_table_format
@@ -2644,7 +2644,7 @@ _gtb_trello_list_list() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
 
-    http GET "$GTB_TRELLO_API/boards/${BOARD_ID}/lists?$GTB_TRELLO_AUTH" \
+    run "http GET '$GTB_TRELLO_API/boards/${BOARD_ID}/lists?$GTB_TRELLO_AUTH'" \
         | jq -r '.[].name' \
         | cat -n
 }
