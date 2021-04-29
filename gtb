@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=1.84.0
+VERSION=1.84.1
 
 GTB_DEBUG=${GTB_DEBUG:-false}
 
@@ -1385,7 +1385,7 @@ _gtb_student_org_join() {
 
     for ORG in $(echo "$orgs_to_join" | _gtb_cuts 2)
     do
-        run "open https://github.com/orgs/${ORG}/invitation"
+        run "open -g https://github.com/orgs/${ORG}/invitation"
         sleep .5
     done
 }
