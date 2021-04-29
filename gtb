@@ -37,6 +37,7 @@ GTB_ORG=tws-graduate-program
 GTB_TRELLO_API='https://api.trello.com/1'
 
 GTB_FIELDS="1-"
+GTB_YES="false"
 GTB_RAW="false"
 GTB_LINE_NUMBERS="true"
 GTB_SORT_ORDER=""
@@ -1371,11 +1372,15 @@ _gtb_student_org_join() {
     assert_not_empty "no pending admin invitations to join!" "$orgs_to_join"
 
     echo "$orgs_to_join" | _gtb_sort 1 | _gtb_table_format
-    read -p "about to JOIN above student orgs? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+
+    if [[ "true" == "$GTB_YES" ]]
     then
-        return 1
+        read -p "about to JOIN above student orgs? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     for ORG in $(echo "$orgs_to_join" | _gtb_cuts 2)
@@ -3673,6 +3678,10 @@ while (( "$#" )); do
             else
                 fail "Error: scheduled time specified by '$1' is missing, e.g. 20200601_0900"
             fi
+            ;;
+        --yes)
+            GTB_YES="true"
+            shift
             ;;
         --raw)
             GTB_RAW="true"
