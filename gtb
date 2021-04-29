@@ -1373,7 +1373,7 @@ _gtb_student_org_join() {
 
     echo "$orgs_to_join" | _gtb_sort 1 | _gtb_table_format
 
-    if [[ "true" == "$GTB_YES" ]]
+    if [[ "false" == "$GTB_YES" ]]
     then
         read -p "about to JOIN above student orgs? (y|n) " -n 1 -r
         echo
