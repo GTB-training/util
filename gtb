@@ -1669,6 +1669,7 @@ _gtb_student_secret() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+# TODO to be deprecated
 _gtb_student_repo_pick() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
