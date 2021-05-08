@@ -1395,7 +1395,7 @@ _gtb_check_student_org_for_presence() {
         shift
     fi
 
-    header "Checking student org for presence..."
+    header "Checking presence of student org..."
 
     _gtb_filter_students "$@" | cut -d' ' -f2 \
         | env_parallel --jobs $JOBS --bar --linebuffer gh_find_org {1} \
@@ -1408,7 +1408,7 @@ _gtb_check_student_org_for_presence() {
 _gtb_check_student_org_for_trainer_role() {
     assert_trainers_file_exists
 
-    header "Checking student org for trainer's role which should be admin..."
+    header "Checking trainer's role in student org..."
 
     local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. zhang.zhe, wang.ke)}
     shift
