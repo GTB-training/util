@@ -1173,6 +1173,14 @@ _gtb_trainer() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_git_list_all_branches_of_remote() {
+    local REMOTE_NAME=${1:?Remote name is required!}
+    local BRANCH_NAMES=$(run "git branch -r --no-color --list '${REMOTE_NAME}/*' $(_gtb_mute_stderr) | grep -wv 'HEAD' | tr -d '\t ' | cut -d'/' -f2")
+    # ensure master/main branch is the first branch in list
+    echo "$BRANCH_NAMES" | grep --color=never -wE 'master|main' | sort -r
+    echo "$BRANCH_NAMES" | grep --color=never -vwE 'master|main' | sort
+}
+
 _gtb_git_verify_refs() {
     local REPO_NAME=${1:?Repo name is required!}
     local GTB_REFS=${2:-}
@@ -2076,17 +2084,14 @@ _gtb_push_to_student_repo() {
 
     cd $(_gtb_default_repo_dir $REPO_NAME)
 
-    run "git push $ORG origin/master:refs/heads/master 1>&2"
-    run "git push --force $ORG origin/master:refs/heads/_master 1>&2"
-
-    if [[ "$GTB_ALL_BRANCHES" == "true" ]]
-    then
-        local OTHER_BRANCHES=$(run "git branch -r --no-color --list 'origin/*' | tr -d '\t ' | grep -v 'origin/master$' | cut -d'/' -f2")
-        for BRANCH in ${OTHER_BRANCHES}
-        do
-            run "git push $ORG origin/${BRANCH}:refs/heads/${BRANCH} 1>&2"
-        done
-    fi
+    local BRANCHES=$(_git_list_all_branches_of_remote 'origin')
+    for BRANCH in ${BRANCHES}
+    do
+        if [[ "$GTB_ALL_BRANCHES" == "true" ]] || [[ "${BRANCH}" == "master" ]]
+        then
+            run "git push $ORG origin/${BRANCH}:refs/heads/${BRANCH} $(_gtb_mute_stderr)"
+        fi
+    done
 
     echo $*
 }
