@@ -292,6 +292,10 @@ _gtb_auto_schedule() {
     echo
 }
 
+_current_datetime() {
+    date "+%Y%m%d-%H%M%S"
+}
+
 _gtb_time_format_for_display() {
     local TIMESTAMP=${1:?timestamp is required!}
     date -jf '%s' "$TIMESTAMP" '+%Y-%m-%d %A %H:%M:%S'
