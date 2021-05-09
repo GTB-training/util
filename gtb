@@ -40,6 +40,7 @@ GTB_FIELDS="1-"
 GTB_YES="false"
 GTB_RAW="false"
 GTB_ALL_BRANCHES="false"
+GTB_NOTIFY="false"
 GTB_LINE_NUMBERS="true"
 GTB_SORT_ORDER=""
 GTB_TABLE_FORMAT_SEPARATOR=' '
@@ -141,6 +142,10 @@ _gtb_open() {
     run "open ${*}"
 }
 
+_gtb_mute_stdout() {
+    [[ "$GTB_DEBUG" == "true" ]] && echo '' || echo '1>/dev/null'
+}
+
 _gtb_mute_stderr() {
     [[ "$GTB_DEBUG" == "true" ]] && echo '' || echo '2>/dev/null'
 }
@@ -223,6 +228,22 @@ _gtb_highlight() {
     done
 
     echo "$result"
+}
+
+_gtb_auto_notify() {
+    if [[ "$GTB_NOTIFY" == "true" ]]
+    then
+        local result="$(cat)"
+        if [[ "$GTB_DEBUG" == "true" ]]
+        then
+            slack chat send --channel '#gtb' --text "$result"
+        else
+            slack chat send --channel '#gtb' --text "$result" 1>/dev/null
+        fi
+        echo "$result"
+    else
+        cat
+    fi
 }
 
 _gtb_auto_schedule() {
@@ -2367,7 +2388,8 @@ _gtb_repo_pick() {
             <(echo "$result_push_to_remote") \
             <(echo "$result_run_workflow") \
             | _gtb_nl
-    } | _gtb_table_format -N
+    } | _gtb_table_format -N \
+        | _gtb_auto_notify
 }
 
 _gtb_repo_publish() {
@@ -2434,7 +2456,8 @@ _gtb_repo_publish() {
             <(echo "$result_of_secret_check") \
             <(echo "$result_of_workflow_check") \
             | _gtb_nl
-    } | _gtb_table_format -N
+    } | _gtb_table_format -N \
+        | _gtb_auto_notify
 }
 
 _gtb_repo_remove() {
@@ -3695,6 +3718,10 @@ while (( "$#" )); do
             ;;
         --all)
             GTB_ALL_BRANCHES="true"
+            shift
+            ;;
+        --notify)
+            GTB_NOTIFY="true"
             shift
             ;;
         --yes)
