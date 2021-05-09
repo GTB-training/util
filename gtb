@@ -583,7 +583,7 @@ gh_show_org_repo_commit() {
     local ENDPOINT="/repos/$ORG/$REPO_NAME/commits/$COMMIT_REF"
     local OUTPUT="$ORG $REPO_NAME"
 
-    run "gh api $ENDPOINT 1>/dev/null"
+    run "gh api $ENDPOINT 1>/dev/null $(_gtb_mute_stderr)"
 
     local result=$?
     if [[ $result -eq 0 ]]; then
