@@ -35,6 +35,9 @@ GTB_PER_PAGE=100
 GTB_ORG=tws-graduate-program
 
 GTB_TRELLO_API='https://api.trello.com/1'
+GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
+GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
+GTB_TRELLO_AUTH="key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN"
 
 GTB_FIELDS="1-"
 GTB_YES="false"
@@ -2784,10 +2787,6 @@ _gtb_trello_board() {
 }
 
 _gtb_trello() {
-    GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
-    GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
-    GTB_TRELLO_AUTH="key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN"
-
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
