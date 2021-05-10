@@ -1998,7 +1998,6 @@ _gtb_student_quit() {
 
     _gtb_org_remove "$@"
     _gtb_student_org_delete "$@"
-    _gtb_student_org_delete "$@"
     GTB_TRELLO_BOARD_NAME=$(echo $GTB_TERM | sed 's/gtb/GTB/')
     _gtb_trello_board_remove "$@"
     GTB_TRELLO_BOARD_NAME="GTB-Resource"
