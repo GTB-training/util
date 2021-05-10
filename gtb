@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=1.86.0
+VERSION=1.87.0
 
 GTB_DEBUG=${GTB_DEBUG:-false}
 
@@ -706,6 +706,24 @@ gh_init_repo_secrets() {
     local REPO_NAME=${2:?Repo name is required!}
     local TERM_NAME=${3:?Term name is required!}
     local FULLNAME=${4:?Fullname is required!}
+
+    declare -A secrets=(
+        ['DASHBOARD_ADDRESS']="$GTB_DASHBOARD_ADDRESS"
+        ['SONAR_ADDRESS']="$GTB_SONAR_ADDRESS"
+        ['SONAR_TOKEN']="$GTB_SONAR_TOKEN"
+        ['STUDENT_TERM']="$TERM_NAME"
+        ['STUDENT_NAME']="$FULLNAME"
+    )
+
+    env_parallel \
+        --linebuffer \
+        --jobs $JOBS \
+        --bar \
+        gh_set_repo_secret $ORG $REPO_NAME "{}" "${secrets[{}]}" \
+        ::: "${!secrets[@]}" \
+        | _gtb_sort '1,1r;2,2' \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 
     local secrets=$(gh_secret_list $ORG $REPO_NAME | cut -f1)
 
