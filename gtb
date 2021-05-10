@@ -718,32 +718,10 @@ gh_init_repo_secrets() {
     env_parallel \
         --linebuffer \
         --jobs $JOBS \
+        --colsep ' ' \
+        --link \
         --bar \
-        gh_set_repo_secret $ORG $REPO_NAME "{}" "${secrets[{}]}" \
-        ::: "${!secrets[@]}" \
-        | _gtb_sort '1,1r;2,2' \
-        | _gtb_table_format \
-        | _gtb_tr_symbols
-
-    local secrets=$(gh_secret_list $ORG $REPO_NAME | cut -f1)
-
-    if ! echo $secrets | grep --silent DASHBOARD_ADDRESS; then
-        gh_set_repo_secret $ORG $REPO_NAME DASHBOARD_ADDRESS $GTB_DASHBOARD_ADDRESS
-    fi
-    if ! echo $secrets | grep --silent SONAR_ADDRESS; then
-        gh_set_repo_secret $ORG $REPO_NAME SONAR_ADDRESS $GTB_SONAR_ADDRESS
-    fi
-    if ! echo $secrets | grep --silent SONAR_TOKEN; then
-        gh_set_repo_secret $ORG $REPO_NAME SONAR_TOKEN $GTB_SONAR_TOKEN
-    fi
-    if ! echo $secrets | grep --silent STUDENT_TERM; then
-        gh_set_repo_secret $ORG $REPO_NAME STUDENT_TERM $TERM_NAME
-    fi
-    if ! echo $secrets | grep --silent STUDENT_NAME; then
-        gh_set_repo_secret $ORG $REPO_NAME STUDENT_NAME $FULLNAME
-    fi
-
-    echo $*
+        gh_set_repo_secret $ORG $REPO_NAME "{1}" "{2}" ::: "${!secrets[@]}" ::: "${secrets[@]}"
 }
 
 gh_create_org_repo() {
