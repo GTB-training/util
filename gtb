@@ -1604,17 +1604,19 @@ _gtb_student_secret_init() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                logt 15 27 "Initialize default repository secrets for $ORG/$REPO_NAME..." 1>&2
-                gh_init_repo_secrets $ORG $REPO_NAME $TERM_NAME $FULLNAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" | cut -d' ' -f1-3 \
+        | env_parallel \
+        --jobs $JOBS \
+        --linebuffer \
+        --colsep ' ' \
+        --bar \
+        "gh_init_repo_secrets {2} $REPO_NAME {3} {1} $(_gtb_mute_stderr) 1>&2"
+
+    _gtb_student_secret_stat "$REPO_NAME" "$@"
 }
 
 _gtb_student_secret_remove() {
@@ -1622,18 +1624,17 @@ _gtb_student_secret_remove() {
     local NAME=${2:?Secret name is required!}
     shift 2
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if ! echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            continue
-        fi
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
-        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-        then
-            gh_remove_repo_secret $ORG $REPO_NAME $NAME
-        fi
-    done < $GTB_STUDENTS_FILE
+    echo "$student_lines" | cut -d' ' -f1-3 \
+        | env_parallel \
+        --jobs $JOBS \
+        --linebuffer \
+        --colsep ' ' \
+        --bar \
+        "gh_remove_repo_secret {2} $REPO_NAME $NAME $(_gtb_mute_stderr) 1>&2"
 }
 
 _gtb_student_secret_set() {
@@ -1642,17 +1643,17 @@ _gtb_student_secret_set() {
     local VALUE=${3:?Secret value is required!}
     shift 3
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                logt 15 27 "Set repository secret for $ORG/$REPO_NAME..." 1>&2
-                gh_set_repo_secret $ORG $REPO_NAME $NAME $VALUE
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" | cut -d' ' -f1-3 \
+        | env_parallel \
+        --jobs $JOBS \
+        --linebuffer \
+        --colsep ' ' \
+        --bar \
+        "gh_set_repo_secret {2} $REPO_NAME $NAME $VALUE $(_gtb_mute_stderr) 1>&2"
 }
 
 _gtb_student_secret_check() {
