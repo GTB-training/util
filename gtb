@@ -1280,6 +1280,33 @@ _gtb_is_valid_git_ref() {
     run "git cat-file -t $REF 1>/dev/null 2>&1"
 }
 
+_gtb_quiz_tag() {
+    local WEEK=${1:?Week is required!(e.g. '1', '2', '10', etc.)}
+    local DEFAULT_SESSION=${2:?Default session is required!(e.g. '509', '609')}
+    local APPOINTMENTS_FILE=${3:?Evaluation appointments file is required!}
+
+    if [[ ! -s $APPOINTMENTS_FILE ]]
+    then
+        echo "File $APPOINTMENTS_FILE not found or empty!"
+        return 1
+    fi
+
+    local WEEK_NUM=$(echo "$WEEK" | tr -d ' ' | grep -o -E --color=never '[0-9]{1,}')
+    local DEFAULT_TAG="w${WEEK_NUM}d${DEFAULT_SESSION}"
+
+    gtb tag add "$DEFAULT_TAG"
+
+    local TAG_INDEX=$(gtb tag index | tail -n1 | tr -d ' ' | cut -f1)
+
+    cat "$APPOINTMENTS_FILE" \
+        | grep "Week $WEEK_NUM" \
+        | cut -d, -f2,4 \
+        | grep -E "[1-7][0-9]{2}" \
+        | parallel --jobs 1 --linebuffer --colsep ',' --verbose "gtb tag replace "$DEFAULT_TAG" "w${WEEK_NUM}d{2}" {1} 1>/dev/null"
+
+    gtb tag stat "$TAG_INDEX"
+}
+
 _gtb_quiz_send() {
     local SCHEDULES_FILE=${1:?Schedules filename is required!}
     [[ -f "$SCHEDULES_FILE" ]] || fail "error: cannot find schedules file '$SCHEDULES_FILE'!"
