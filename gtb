@@ -3330,6 +3330,8 @@ _gtb_dashboard_submission_list() {
         submissions="$(echo "$submissions" | grep --color=never -w -E $fullnames)"
     fi
 
+    [[ -z "$submissions" ]] && return
+
     echo "$submissions" \
         | _format_submission_time_fields \
         | _gtb_table_format
