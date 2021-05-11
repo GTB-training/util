@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=1.88.0
+VERSION=1.89.0
 
 GTB_DEBUG=${GTB_DEBUG:-false}
 
@@ -275,11 +275,15 @@ _gtb_auto_schedule() {
     fi
 
     echo "this command is scheduled running at '$(red $time_to_start)'"
-    read -p "do you want to start countdown? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+
+    if [[ "false" == "$GTB_YES" ]]
     then
-        fail 'error: user canceled the schedule, abort running'
+        read -p "do you want to start countdown? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            fail 'error: user canceled the schedule, abort running'
+        fi
     fi
 
     secs=$(( $timestamp_to_start - $(date +%s) ))
@@ -1271,6 +1275,35 @@ _gtb_is_valid_git_ref() {
     run "git cat-file -t $REF 1>/dev/null 2>&1"
 }
 
+_gtb_quiz_send() {
+    local SCHEDULES_FILE=${1:?Schedules filename is required!}
+    [[ -f "$SCHEDULES_FILE" ]] || fail "error: cannot find schedules file '$SCHEDULES_FILE'!"
+
+    cat "$SCHEDULES_FILE" | while read -r tag repo start_time basic_duration refactor_duration publish_offset is_sub_created is_published is_picked
+    do
+        create_submission_time=$(./gtb date)
+        publish_time=$(./gtb date $start_time $(echo $publish_offset | tr ',' ' '))
+        start_time=$(./gtb date $start_time)
+        pick_time=$(./gtb date $start_time +$basic_duration)
+        end_time=$(./gtb date $start_time +$refactor_duration)
+        echo "$tag $repo $publish_time $start_time $pick_time $end_time"
+    done | ./gtb sort '3,3%2,2' | nl | gtb unformat
+}
+
+_gtb_quiz() {
+    assert_students_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_evaluation() {
+    _gtb_quiz "$@"
+}
+
+_gtb_eval() {
+    _gtb_quiz "$@"
+}
+
 _gtb_student_random_clear() {
     _gtb_student_random_reset
 }
@@ -1933,7 +1966,7 @@ _gtb_sort() {
     GTB_SORT_ORDER=${GTB_SORT_ORDER:-$DEFAULT_SORT_ORDER}
 
     local SORT_KEYS=""
-    for KEY in $(echo $GTB_SORT_ORDER | tr ';' ' ')
+    for KEY in $(echo $GTB_SORT_ORDER | tr ';%' ' ')
     do
         SORT_KEYS="$SORT_KEYS -k${KEY}"
     done
@@ -2378,11 +2411,15 @@ _gtb_repo_pick() {
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
     echo
     echo "$commits_to_pick" | tr ' ' '\n' | _gtb_nl
-    read -p "about to pick these refs to above $(red $students_count) students? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+
+    if [[ "false" == "$GTB_YES" ]]
     then
-        return 1
+        read -p "about to pick these refs to above $(red $students_count) students? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     _gtb_auto_schedule
@@ -2465,11 +2502,15 @@ _gtb_repo_publish() {
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
-    read -p "about to publish repo '$(red $REPO_NAME)' to above $(red $students_count) students? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+
+    if [[ "false" == "$GTB_YES" ]]
     then
-        return 1
+        read -p "about to publish repo '$(red $REPO_NAME)' to above $(red $students_count) students? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     _gtb_auto_schedule
@@ -3194,11 +3235,15 @@ _gtb_dashboard_submission_create() {
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     echo "$student_lines" | _gtb_cuts 3,2,1,7,8,9 | _gtb_table_format
-    read -p "about to create submission of repo '$(red $REPO_NAME)' for $(red $students_count) students above? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+
+    if [[ "false" == "$GTB_YES" ]]
     then
-        return 1
+        read -p "about to create submission of repo '$(red $REPO_NAME)' for $(red $students_count) students above? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     info "submission information:"
