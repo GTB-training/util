@@ -3288,9 +3288,8 @@ _gtb_dashboard_submission_create() {
 
     if [[ "$created_submissions_count" -ne "$students_count" ]]
     then
-        echo
         error "error: $(($students_count - $created_submissions_count)) submissions are missing!"
-        exit 1
+        return 1
     fi
 }
 
