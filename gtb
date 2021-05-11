@@ -1284,15 +1284,62 @@ _gtb_quiz_send() {
     local SCHEDULES_FILE=${1:?Schedules filename is required!}
     [[ -f "$SCHEDULES_FILE" ]] || fail "error: cannot find schedules file '$SCHEDULES_FILE'!"
 
-    cat "$SCHEDULES_FILE" | while read -r tag repo start_time basic_duration refactor_duration publish_offset is_sub_created is_published is_picked
+    local UNORDERED_PLANS=$(while read -r tag repo start_time basic_duration refactor_duration publish_offset marks
     do
-        create_submission_time=$(./gtb date)
-        publish_time=$(./gtb date $start_time $(echo $publish_offset | tr ',' ' '))
-        start_time=$(./gtb date $start_time)
-        pick_time=$(./gtb date $start_time +$basic_duration)
-        end_time=$(./gtb date $start_time +$refactor_duration)
-        echo "$tag $repo $publish_time $start_time $pick_time $end_time"
-    done | ./gtb sort '3,3%2,2' | nl | gtb unformat
+        create_submission_time=$(gtb date now)
+        publish_time=$(gtb date $start_time $(echo $publish_offset | tr ',' ' '))
+        start_time=$(gtb date $start_time)
+        pick_time=$(gtb date $start_time +$basic_duration)
+        end_time=$(gtb date $start_time +$refactor_duration)
+
+        if ! echo "$marks" | grep --silent 'sub_created'; then
+            echo "$create_submission_time $tag $repo gtb dash sub create --repo $repo --start $start_time --basic $basic_duration --refactor $refactor_duration --yes --notify $tag"
+        fi
+        if ! echo "$marks" | grep --silent 'repo_published'; then
+            echo "$publish_time $tag $repo gtb repo publish $repo --yes --notify $tag"
+        fi
+        if ! echo "$marks" | grep --silent 'repo_picked'; then
+            echo "$pick_time $tag $repo gtb repo pick --repo $repo --refs extended-tests --workflow gtb-test-extended.yml --yes --notify $tag"
+        fi
+    done < <(cat $SCHEDULES_FILE | tr -s ' ') | sort)
+
+    declare -a PLANS
+
+    while IFS= read -r -d$'\n' LINE
+    do
+        PLANS+=( "$LINE" )
+    done < <(echo "$UNORDERED_PLANS")
+
+    printf "%s\n" "${PLANS[@]}" | nl
+    echo
+
+    GTB_YES='true'
+
+    for PLAN in "${PLANS[@]}"; do
+        local run_at=$(echo "$PLAN" | _gtb_cuts 1)
+        local tag=$(echo "$PLAN" | _gtb_cuts 2)
+        local repo=$(echo "$PLAN" | _gtb_cuts 3)
+        local command=$(echo "$PLAN" | _gtb_cuts 4-)
+
+        header "$command"
+
+        GTB_SCHEDULE="$run_at"
+        _gtb_auto_schedule
+
+        $command
+
+        if [[ $? -eq 0 ]]; then
+            if echo "$command" | grep --silent 'gtb dash sub create'; then
+                MARK='sub_created'
+            elif echo "$command" | grep --silent 'gtb repo publish'; then
+                MARK='repo_published'
+            elif echo "$command" | grep --silent 'gtb repo pick'; then
+                MARK='repo_picked'
+            fi
+
+            sed -i '' -E "/$tag $repo/s/$/ $MARK/" "$SCHEDULES_FILE"
+        fi
+    done
 }
 
 _gtb_quiz() {
