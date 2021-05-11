@@ -3282,9 +3282,9 @@ _gtb_dashboard_submission_create() {
     GTB_RAW="true"
     local created_submissions="$(_gtb_dashboard_submission_list "$@")"
     local created_submissions_count=$(_gtb_count_lines "$created_submissions")
-
     GTB_RAW="$RAW"
-    echo "$created_submissions" | _gtb_table_format
+
+    echo "$created_submissions" | _gtb_table_format | _gtb_auto_notify
 
     if [[ "$created_submissions_count" -ne "$students_count" ]]
     then
