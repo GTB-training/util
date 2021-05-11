@@ -234,19 +234,26 @@ _gtb_highlight() {
 }
 
 _gtb_auto_notify() {
-    if [[ "$GTB_NOTIFY" == "true" ]]
+    if ! which slack >/dev/null
     then
-        local result="$(cat)"
-        if [[ "$GTB_DEBUG" == "true" ]]
-        then
-            slack chat send --channel '#gtb' --text "$result"
-        else
-            slack chat send --channel '#gtb' --text "$result" 1>/dev/null
-        fi
-        echo "$result"
-    else
         cat
+        return
     fi
+
+    if [[ "$GTB_NOTIFY" != "true" ]]
+    then
+        cat
+        return
+    fi
+
+    local result="$(cat)"
+    if [[ "$GTB_DEBUG" == "true" ]]
+    then
+        slack chat send --channel '#gtb' --text "$result"
+    else
+        slack chat send --channel '#gtb' --text "$result" 1>/dev/null
+    fi
+    echo "$result"
 }
 
 _gtb_auto_schedule() {
