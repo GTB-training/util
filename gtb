@@ -278,7 +278,7 @@ _gtb_auto_schedule() {
     local secs=$(( $timestamp_to_start - $(date +%s) ))
     if [[ "$secs" -le 0 ]]
     then
-        fail 'error: scheduled time should be after the current time.'
+        warn 'warn: scheduled time is before the current time.'
     fi
 
     echo "this command is scheduled running at '$(red $time_to_start)'"
