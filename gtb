@@ -3256,11 +3256,15 @@ _gtb_dashboard_submission_create() {
     echo "$(_gtb_time_format_for_display $ts_start)"
     echo "$(_gtb_time_format_for_display $ts_basic_end)"
     echo "$(_gtb_time_format_for_display $ts_refactoring_end)"
-    read -p "please confirm submission information above? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+
+    if [[ "false" == "$GTB_YES" ]]
     then
-        return 1
+        read -p "please confirm submission information above? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     local fullnames="$(echo "$student_lines" | _gtb_cuts 1 | _gtb_quotes_line | _gtb_join_lines)"
