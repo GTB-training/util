@@ -1998,19 +1998,18 @@ _gtb_student_repo_delete() {
 }
 
 _gtb_student_repo_create() {
-    local REPO_NAME=${1:?Repo name is required!}
-    shift
+    local REPO_NAMES=${GTB_REPO:?repo names should be provided using --repo option. (e.g. --repo 'bronze-java-level-1', --repo 'bronze-java-level-1,bronze-java-level-2'}
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                gh_create_org_repo $ORG $REPO_NAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    env_parallel \
+        --bar \
+        --linebuffer \
+        --jobs $JOBS \
+        gh_create_org_repo \
+        :::: <(echo "$student_lines" | _gtb_cuts 2) \
+        :::: <(echo "$REPO_NAMES" | tr ',; ' '\n')
 }
 
 _format_repo_time_fields() {
