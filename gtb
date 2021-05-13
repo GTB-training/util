@@ -2035,6 +2035,7 @@ _gtb_student_repo_stat() {
 
 _gtb_sort() {
     local DEFAULT_SORT_ORDER="${1:?default sort keys are required! (e.g. '9,9nr;2,2')}"
+    local FIELD_SEPARATOR="${2}"
 
     GTB_SORT_ORDER=${GTB_SORT_ORDER:-$DEFAULT_SORT_ORDER}
 
@@ -2044,7 +2045,12 @@ _gtb_sort() {
         SORT_KEYS="$SORT_KEYS -k${KEY}"
     done
 
-    cat | sort $SORT_KEYS
+    if [[ -z "$FIELD_SEPARATOR" ]]
+    then
+        cat | sort $SORT_KEYS
+    else
+        cat | sort -t"$FIELD_SEPARATOR" $SORT_KEYS
+    fi
 }
 
 _gtb_student_repo_list() {
