@@ -3429,7 +3429,7 @@ _gtb_dashboard_student_deactivate() {
         | column -t \
         | cat -n
 
-    read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
+    read -p "about to deactivate ${students_count} students from Dashboard? (y|n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]
     then
