@@ -247,11 +247,12 @@ _gtb_auto_notify() {
     fi
 
     local result="$(cat)"
+    local result_to_notify=$(echo "$result" | tail -n10)
     if [[ "$GTB_DEBUG" == "true" ]]
     then
-        slack chat send --channel '#gtb' --text "$result"
+        slack chat send --channel '#gtb' --text "$result_to_notify"
     else
-        slack chat send --channel '#gtb' --text "$result" 1>/dev/null
+        slack chat send --channel '#gtb' --text "$result_to_notify" 1>/dev/null
     fi
     echo "$result"
 }
