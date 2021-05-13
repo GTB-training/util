@@ -670,14 +670,8 @@ gh_list_repo_workflow_runs() {
     local REPO_NAME=${2:?Repo name is required!}
     local WORKFLOW_FILENAME=${3:?Workflow filename is required!}
 
-    run "gh api /repos/$ORG/$REPO_NAME/actions/workflows/$WORKFLOW_FILENAME/runs?per_page=10" | \
-        jsonpp | \
-        sed -e 's/: "//' -e 's/",//' | \
-        sed -e 's/": /"/' -e 's/,$//' | \
-        grep '^      "\(run_number\|name\|status\|conclusion\|created_at\|updated_at\)"' | \
-        cut -d'"' -f3 | \
-        paste -d'|' - - - - - - | \
-        column -s'|' -t
+    run "gh api /repos/$ORG/$REPO_NAME/actions/workflows/$WORKFLOW_FILENAME/runs?per_page=10" \
+        | jq -jr --arg ORG $ORG '.workflow_runs[] | $ORG, "|", .run_number, "|", .name, "|", .status, "|", .conclusion, "|", .created_at, "|", .updated_at, "\n"'
 }
 
 gh_run_repo_workflow() {
@@ -1678,23 +1672,21 @@ _gtb_student_user() {
 }
 
 _gtb_student_workflow_runs() {
-    local REPO_NAME=${1:?Repo name is required!}
-    local WORKFLOW_FILENAME=${2:?Workflow filename is required!}
-    shift 2
+    local REPO_NAME=${GTB_REPO:?repo name should be provided using --repo option.}
+    local WORKFLOW_FILENAME=${WORKFLOW_FILENAME:?Workflow filename should be provided using --workflow option.}
 
-    while read -r FULLNAME ORG TERM_NAME TAGS
-    do
-        if ! echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            continue
-        fi
+    local student_lines=$(_gtb_filter_students "$@")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
-        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${ORG}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-        then
-            header "Runs of workflow $WORKFLOW_FILENAME from repository $ORG/$REPO_NAME..."
-            gh_list_repo_workflow_runs $ORG $REPO_NAME $WORKFLOW_FILENAME
-        fi
-    done < $GTB_STUDENTS_FILE
+    echo "$student_lines" \
+        | _gtb_cuts 2 \
+        | env_parallel \
+            --linebuffer \
+            --jobs $JOBS \
+            --bar \
+            gh_list_repo_workflow_runs "{}" "$REPO_NAME" "$WORKFLOW_FILENAME" \
+        | _gtb_sort '1,1;2,2rn' '|' \
+        | _gtb_table_format -s '|'
 }
 
 _gtb_student_workflow_run() {
