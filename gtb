@@ -1835,21 +1835,24 @@ _gtb_student_secret_stat() {
     local student_lines=$(_gtb_filter_students "$@")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
-    header 'Count by student name...'
-    echo "$student_lines" \
+    header 'Query secret list...'
+    local all_secrets=$(echo "$student_lines" \
         | cut -d' ' -f2 \
         | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer --tagstring '{1}' gh_secret_list {1} $REPO_NAME \
-        | cut -f1 \
+        | tr '\t' ' ' \
+        | tr -s ' ')
+
+    header 'Count by student name...'
+    echo "$all_secrets" \
+        | _gtb_cuts 1 \
         | sort \
         | uniq -c \
         | sort -k1,1rn -k2,2 \
         | _gtb_table_format
 
     header 'Count by secret name...'
-    echo "$student_lines" \
-        | cut -d' ' -f2 \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_secret_list {1} $REPO_NAME \
-        | cut -f1 \
+    echo "$all_secrets" \
+        | _gtb_cuts 2 \
         | sort \
         | uniq -c \
         | sort -k1,1rn -k2,2 \
