@@ -2315,6 +2315,12 @@ _gtb_push_master() {
     run "cd $REPO_DIR"
     run "git push $ORG $ORG:master" >&2
 
+    if [[ -n $TAG_NAME ]]
+    then
+        run "git tag --force my-extended-tests $ORG" >&2
+        run "git push $ORG my-extended-tests" >&2
+    fi
+
     if [[ $? -eq 0 ]]
     then
         echo "$SYMBOL_OK $ORG"
@@ -3699,6 +3705,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: Argument for $1 is missing"
+            fi
+            ;;
+        --tag)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                TAG_NAME=$2
+                shift 2
+            else
+                fail "Error: tag name specified by '$1' is missing"
             fi
             ;;
         --username)
