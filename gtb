@@ -43,6 +43,7 @@ GTB_FIELDS="1-"
 GTB_YES="false"
 GTB_RAW="false"
 GTB_ALL_BRANCHES="false"
+GTB_LOCAL="false"
 GTB_NOTIFY="false"
 GTB_LINE_NUMBERS="true"
 GTB_SORT_ORDER=""
@@ -1906,6 +1907,12 @@ _gtb_student_repo_create() {
 }
 
 _format_repo_time_fields() {
+    if [[ "$GTB_LOCAL" != "true" ]]
+    then
+        cat
+        return
+    fi
+
     while read -r f1 f2 f3 created_at rest
     do
         echo "$f1 $f2 $f3 $(_gtb_time_format_convert_time_zone $created_at)"
@@ -3275,6 +3282,12 @@ _gtb_dashboard_submission_add() {
 }
 
 _format_submission_time_fields() {
+    if [[ "$GTB_LOCAL" != "true" ]]
+    then
+        cat
+        return
+    fi
+
     # .assignmentType, .repository, .gtbUsername, .displayName,
     #.firstMeasurementTestStatus, firstMeasurementScore, .finalMeasurementTestStatus, .finalMeasurementScore,
     # .startTime, .firstMeasurementTime, .finalMeasurementTime'
@@ -3820,6 +3833,10 @@ while (( "$#" )); do
             ;;
         --all)
             GTB_ALL_BRANCHES="true"
+            shift
+            ;;
+        --local)
+            GTB_LOCAL="true"
             shift
             ;;
         --notify)
