@@ -39,7 +39,6 @@ GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https:/
 GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
 GTB_TRELLO_AUTH="key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN"
 
-GTB_FIELDS="1-"
 GTB_YES="false"
 GTB_RAW="false"
 GTB_ALL_BRANCHES="false"
@@ -2129,7 +2128,7 @@ _gtb_student_list() {
     _gtb_filter_students "$@" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS; do
         printf "%s\n" "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
     done \
-        | _gtb_cuts "$GTB_FIELDS" \
+        | _gtb_cuts "${GTB_FIELDS:-1-10}" \
         | ${FUNCNAME[0]}_format
 }
 
