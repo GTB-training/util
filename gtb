@@ -3200,27 +3200,33 @@ _gtb_dashboard_submission_create() {
     # gtb dashboard submission add --repo bronze-java-level-1 --start 2021041609 --basic 8H --refactor 14d w02fri1
     local REPO_NAME=${GTB_REPO:?repo name should be provided using --repo option.}
     local START_AT=${GTB_START_AT:?start time should be provided using --start optoin, e.g. 2022-06-01 09:30:00, 2021041609}
-    local DURATION_BASIC=${GTB_DURATION_BASIC:-$GTB_DURATION_REFACTOR}
-    local DURATION_REFACTOR=${GTB_DURATION_REFACTOR:?refactoring duration should be specified using --refactor option, e.g. 14d, 21d, 8h, 10h, etc}
+    local BASIC_ARG=${GTB_DURATION_BASIC:-$GTB_DURATION_REFACTOR}
+    local REFACTOR_ARG=${GTB_DURATION_REFACTOR:?refactoring duration should be specified using --refactor option, e.g. 14d, 21d, 8H, 10H, etc}
 
-    START_AT=$(echo $START_AT | sed -E 's/[^0-9]//g' | cut -c1-12)
-    START_AT=$(echo $(($START_AT * 1000000)) | cut -c1-12)
+    local BASIC_BASE="$START_AT"
+    local REFACTOR_BASE="$START_AT"
+    local BASIC_DURATION="+0S"
+    local REFACTOR_DURATION="+0S"
 
-    DURATION_BASIC=$(echo $DURATION_BASIC | tr 'h' 'H')
-    DURATION_REFACTOR=$(echo $DURATION_REFACTOR | tr 'h' 'H')
+    if echo "$BASIC_ARG" | grep --silent -E '^\d+[dHMS]'
+    then
+        BASIC_DURATION="+$BASIC_ARG"
+    else
+        BASIC_BASE="$BASIC_ARG"
+    fi
+
+    if echo "$REFACTOR_ARG" | grep --silent -E '^\d+[dHMS]'
+    then
+        REFACTOR_DURATION="+$REFACTOR_ARG"
+    else
+        REFACTOR_BASE="$REFACTOR_ARG"
+    fi
 
     # date -v4m -v16d -v9H -v0M -v0S '+%Y-%m-%dT%H:%M:%S%z' | sed -E 's/(..)$/:\1/'
     # 2021-04-16T09:00:00+08:00
-    local ts_start=$(date \
-        -v$(echo $START_AT | cut -c1-4)y \
-        -v$(echo $START_AT | cut -c5-6)m \
-        -v$(echo $START_AT | cut -c7-8)d \
-        -v$(echo $START_AT | cut -c9-10)H \
-        -v$(echo $START_AT | cut -c11-12)M \
-        -v0S \
-        '+%s')
-    local ts_basic_end=$(date -v+${DURATION_BASIC} -jf '%s' "$ts_start" '+%s')
-    local ts_refactoring_end=$(date -v+${DURATION_REFACTOR} -jf '%s' "$ts_start" '+%s')
+    local ts_start=$(_gtb_timestamp "$START_AT")
+    local ts_basic_end=$(_gtb_timestamp "$BASIC_BASE" "$BASIC_DURATION")
+    local ts_refactoring_end=$(_gtb_timestamp "$REFACTOR_BASE" "$REFACTOR_DURATION")
 
     local student_lines=$(_gtb_filter_students "$@")
     local students_count=$(_gtb_count_lines "$student_lines")
