@@ -1748,9 +1748,17 @@ _gtb_student_secret_init() {
     local student_lines=$(_gtb_filter_students "$@")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
+    local MAX_JOBS=10
+    local JOBS_INIT_SECRETS=$JOBS
+    if [[ "$JOBS_INIT_SECRETS" -gt "$MAX_JOBS" ]]
+    then
+        JOBS_INIT_SECRETS=$MAX_JOBS
+    fi
+
+
     echo "$student_lines" | cut -d' ' -f1-3 \
         | env_parallel \
-        --jobs $JOBS \
+        --jobs $JOBS_INIT_SECRETS \
         --linebuffer \
         --colsep ' ' \
         --bar \
