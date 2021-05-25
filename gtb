@@ -1326,7 +1326,7 @@ _gtb_quiz_send() {
             echo "$publish_time $tag $repo gtb repo publish $repo --yes --notify $tag"
         fi
         if ! echo "$marks" | grep --silent 'repo_picked'; then
-            echo "$pick_time $tag $repo gtb repo pick --repo $repo --refs extended-tests --branch extended-tests-added --workflow gtb-test-extended.yml --yes --notify $tag"
+            echo "$pick_time $tag $repo gtb repo pick --repo $repo --refs origin/extended-tests --branch extended-tests-added --workflow gtb-test-extended.yml --yes --notify $tag"
         fi
     done < <(cat $SCHEDULES_FILE | tr -s ' ') | sort)
 
