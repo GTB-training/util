@@ -1022,16 +1022,19 @@ build_repos() {
 }
 
 clone_or_update_repos() {
-    while read -r FULLNAME USERNAME TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                clone_or_update_repo $REPO_NAME $USERNAME $FULLNAME $TERM_NAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    echo "$student_lines" \
+        | _gtb_cuts 1-4 \
+        | env_parallel \
+            --tagstring "$REPO_NAME {1}" \
+            --linebuffer \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --bar \
+            clone_or_update_repo $REPO_NAME "{4}" "{1}" "{3}"
 }
 
 assert_not_empty() {
