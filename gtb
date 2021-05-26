@@ -1034,7 +1034,7 @@ clone_or_update_repos() {
             --jobs $JOBS \
             --colsep ' ' \
             --bar \
-            clone_or_update_repo $REPO_NAME "{4}" "{1}" "{3}"
+            clone_or_update_repo $REPO_NAME "{2}" "{1}" "{3}"
 }
 
 assert_not_empty() {
