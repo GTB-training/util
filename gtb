@@ -3859,6 +3859,14 @@ while (( "$#" )); do
                 fail "Error: scheduled time specified by '$1' is missing, e.g. 20200601_0900"
             fi
             ;;
+        -s)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TABLE_FORMAT_SEPARATOR="$2"
+                shift 2
+            else
+                fail "Error: separator specified by '$1' is missing"
+            fi
+            ;;
         --all)
             GTB_ALL_BRANCHES="true"
             shift
@@ -3877,6 +3885,10 @@ while (( "$#" )); do
             ;;
         --raw)
             GTB_RAW="true"
+            shift
+            ;;
+        -N|--no-line-numbers)
+            GTB_LINE_NUMBERS="false"
             shift
             ;;
         -D|--debug)
