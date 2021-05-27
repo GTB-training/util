@@ -637,9 +637,9 @@ gh_show_org_repo_commit() {
 
     local result=$?
     if [[ $result -eq 0 ]]; then
-        echo "✅" $ORG
+        echo "OK" $ORG
     else
-        echo "❌" $ORG
+        echo "ERROR" $ORG
     fi
 
     return $result
@@ -2144,7 +2144,7 @@ _gtb_student_list() {
         printf "%s\n" "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
     done \
         | _gtb_sort "${GTB_SORT_ORDER:-2,2}" \
-        | _gtb_cuts "${GTB_FIELDS:-1-10}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-10,12}" \
         | _gtb_table_format
 }
 
@@ -2564,8 +2564,12 @@ _gtb_repo_publish() {
             <(echo "$result_of_repo_check") \
             <(echo "$result_of_secret_check") \
             <(echo "$result_of_workflow_check") \
+            | _gtb_sort "${GTB_SORT_ORDER:-2,2r;3,3nr;4,4nr;1,1}" \
             | _gtb_nl
     } | _gtb_table_format -N \
+        | _gtb_highlight \
+            'OK' green \
+            'ERROR' red \
         | _gtb_auto_notify
 }
 
