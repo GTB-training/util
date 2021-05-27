@@ -207,7 +207,7 @@ _gtb_table_format() {
         return
     fi
 
-    cat | _gtb_nl | column -s"$GTB_TABLE_FORMAT_SEPARATOR" -t
+    cat | _gtb_nl -s "$GTB_TABLE_FORMAT_SEPARATOR" | column -s"$GTB_TABLE_FORMAT_SEPARATOR" -t
 }
 
 _gtb_tr_symbols() {
@@ -403,7 +403,23 @@ _gtb_join_lines() {
 }
 
 _gtb_nl() {
-    cat | nl | _gtb_unformat
+    while (( "$#" )); do
+        case "$1" in
+            -s)
+                if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                    GTB_TABLE_FORMAT_SEPARATOR="$2"
+                    shift 2
+                else
+                    fail "Error: separator specified by '$1' is missing"
+                fi
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
+    cat | nl -s "${GTB_TABLE_FORMAT_SEPARATOR:- }" | _gtb_unformat
 }
 
 _gtb_default_repo_dir() {
