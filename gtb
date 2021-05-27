@@ -1758,7 +1758,6 @@ _gtb_student_secret_init() {
         JOBS_INIT_SECRETS=$MAX_JOBS
     fi
 
-
     echo "$student_lines" | cut -d' ' -f1-3 \
         | env_parallel \
         --jobs $JOBS_INIT_SECRETS \
