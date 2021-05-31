@@ -1625,6 +1625,36 @@ _gtb_check_student_org_for_trainer_role() {
             '404' red
 }
 
+_gtb_student_org_remove() {
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+
+    echo "$student_lines" \
+        | _gtb_cuts 2,4,7 \
+        | sort \
+        | column -t \
+        | cat -n
+
+    if [[ "false" == "$GTB_YES" ]]
+    then
+        read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
+    fi
+
+    echo "$student_lines" \
+        | _gtb_cuts 2,4 \
+        | env_parallel \
+            --bar \
+            --colsep ' ' \
+            --linebuffer \
+            --jobs $JOBS \
+            gh_remove_user_from_org {1} {2}
+}
+
 _gtb_student_org_delete() {
     local student_lines=$(_gtb_filter_students "$@")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
@@ -2102,7 +2132,7 @@ _gtb_student_quit() {
     fi
 
     _gtb_org_remove "$@"
-    _gtb_student_org_delete "$@"
+    _gtb_student_org_remove "$@"
     GTB_TRELLO_BOARD_NAME=$(echo $GTB_TERM | sed 's/gtb/GTB/')
     _gtb_trello_board_remove "$@"
     GTB_TRELLO_BOARD_NAME="GTB-Resource"
