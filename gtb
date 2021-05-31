@@ -2718,11 +2718,14 @@ _gtb_org_remove() {
         | column -t \
         | cat -n
 
-    read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    if [[ "false" == "$GTB_YES" ]]
     then
-        return 1
+        read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     echo "$student_lines" \
