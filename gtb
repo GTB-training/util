@@ -2385,7 +2385,7 @@ _gtb_push_master() {
 
     if [[ -n $BRANCH_NAME ]]
     then
-        run "git push $ORG ${ORG}:refs/heads/${BRANCH_NAME}" >&2
+        run "git push --force $ORG ${ORG}:refs/heads/${BRANCH_NAME}" >&2
     fi
 
     if [[ $? -eq 0 ]]
