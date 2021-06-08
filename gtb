@@ -3109,8 +3109,7 @@ _gtb_config() {
 
 _gtb_dashboard_list_students() {
     run "http --print b GET $GTB_DASHBOARD_ADDRESS/terms/${GTB_TERM}/students/list" \
-        | jq -r '.[] | .gtbTerm.name, .gtbUsername, .displayName, .githubUsername, .id' \
-        | paste -d' ' - - - - - \
+        | jq -jr '.[] | .gtbTerm.name, " ", .gtbUsername, " ", .displayName, " ", .githubUsername, " ", .id, "\n"' \
         | sort -k1,2
 }
 
@@ -3452,8 +3451,8 @@ _gtb_dashboard_student_search() {
 
 _gtb_dashboard_student_list() {
     _gtb_dashboard_list_students \
-        | column -t \
-        | cat -n
+        | _gtb_cuts "${GTB_FIELDS:-1-}" \
+        | _gtb_table_format
 }
 
 _gtb_dashboard_student() {
