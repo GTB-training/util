@@ -1743,7 +1743,7 @@ _gtb_student_workflow_runs() {
         | _gtb_sort '1,1;2,2rn' '|' \
         | _gtb_table_format -s '|' \
         | _gtb_highlight \
-            'in_progress' yellow \
+            'in_progress' blue \
             'null' yellow \
             'queued' yellow \
             'completed' green \
