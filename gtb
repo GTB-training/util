@@ -1741,7 +1741,14 @@ _gtb_student_workflow_runs() {
             --bar \
             gh_list_repo_workflow_runs "{}" "$REPO_NAME" "$WORKFLOW_FILENAME" \
         | _gtb_sort '1,1;2,2rn' '|' \
-        | _gtb_table_format -s '|'
+        | _gtb_table_format -s '|' \
+        | _gtb_highlight \
+            'in_progress' yellow \
+            'null' yellow \
+            'queued' yellow \
+            'completed' green \
+            'success' green \
+            'failure' red
 }
 
 _gtb_student_workflow_run() {
