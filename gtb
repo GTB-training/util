@@ -2878,8 +2878,8 @@ _gtb_trello_list_list() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
 
     run "http GET '$GTB_TRELLO_API/boards/${BOARD_ID}/lists?$GTB_TRELLO_AUTH'" \
-        | jq -r '.[].name' \
-        | cat -n
+        | jq -jr '.[] | .id, "^", .name, "\n"' \
+        | _gtb_table_format -s '^'
 }
 
 _gtb_trello_list() {
