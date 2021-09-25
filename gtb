@@ -2286,7 +2286,12 @@ _gtb_remove_remote_student_repo() {
     local REPO_NAME=${1:?Repo name is required!}
     local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
 
-    [[ -d $REPO_DIR ]] || return 0
+    if [[ ! -d $REPO_DIR ]]
+    then
+        warn 'skip repo that not found in default repo dir.'
+        cat | sed "s/$/ $REPO_NAME/"
+        return 0
+    fi
 
     run "cd $REPO_DIR"
 
