@@ -77,7 +77,7 @@ info() {
 }
 
 warn() {
-    echo "$(tput setaf 3)$(tput bold)$*$(tput sgr 0)"
+    echo "$(tput setaf 3)$(tput bold)$*$(tput sgr 0)" >&2
 }
 
 error() {
