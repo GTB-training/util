@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=1.112.0
+VERSION=1.113.0
 
 GTB_DEBUG=${GTB_DEBUG:-false}
 
