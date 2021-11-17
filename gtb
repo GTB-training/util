@@ -2593,10 +2593,6 @@ _gtb_repo_publish() {
     echo "$student_lines" | cut -d' ' -f1-3 \
         | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_add_student_repo_as_remote {2} $REPO_NAME $(_gtb_mute_stderr) 1>&2"
 
-    header "Initialize secrets in student's repo..."
-    echo "$student_lines" | cut -d' ' -f1-3 \
-        | env_parallel --jobs $MAX_JOBS --colsep ' ' --bar --linebuffer "gh_init_repo_secrets {2} $REPO_NAME {3} {1} $(_gtb_mute_stderr) 1>&2"
-
     header "Push commits to student's repo..."
     local result_push=$(echo "$student_lines" | cut -d' ' -f1-3 \
         | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "_gtb_push_to_student_repo {2} $REPO_NAME $(_gtb_mute_stderr)")
@@ -2605,23 +2601,14 @@ _gtb_repo_publish() {
     GTB_RAW="true"
     header "Check commits of student's repo..."
     local result_of_repo_check=$(_gtb_student_repo_check $REPO_NAME "$@" | sort -k2 | _gtb_cuts 1)
-    header "Check secrets of student's repo..."
-    local result_of_secret_check=$(_gtb_student_secret_check $REPO_NAME "$@" | sort -k2 | _gtb_cuts 1)
-    header "Check workflows of student's repo..."
-    local result_of_workflow_check=$(join -1 1 -2 1 -a 1 -o '1.1,2.2' -e '0' \
-        <(echo "$student_lines" | _gtb_cuts 2 | sort) \
-        <(_gtb_student_workflow_list $REPO_NAME "$@" | _gtb_cuts 2,3 | sort -k1) \
-        | _gtb_cuts 2)
     GTB_RAW="$RAW"
 
     {
-        echo 'No. Student LastCommit SecretsCount WorkflowsCount'
+        echo 'No. Student LastCommit'
         pr -m -t -s' ' \
             <(echo "$student_lines" | _gtb_cuts 2 | sort) \
             <(echo "$result_of_repo_check") \
-            <(echo "$result_of_secret_check") \
-            <(echo "$result_of_workflow_check") \
-            | _gtb_sort "${GTB_SORT_ORDER:-2,2r;3,3nr;4,4nr;1,1}" \
+            | _gtb_sort "${GTB_SORT_ORDER:-2,2r;1,1}" \
             | _gtb_nl
     } | _gtb_table_format -N \
         | _gtb_highlight \
