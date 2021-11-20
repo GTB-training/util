@@ -9,6 +9,7 @@ GTB_TERM="${GTB_TERM:?GTB_TERM should be set! (gtb-101, gtb-201, etc.)}"
 GTB_CONFIG_REPO=config
 GTB_CONFIG_DIR="$GTB_ROOT/$GTB_CONFIG_REPO"
 GTB_TRAINERS_FILE="${GTB_TRAINERS_FILE:-$GTB_CONFIG_DIR/trainers.txt}"
+GTB_BUDDIES_FILE="${GTB_BUDDIES_FILE:-$GTB_CONFIG_DIR/buddies-${GTB_TERM}.txt}"
 GTB_STUDENTS_FILE_DEFAULT="${GTB_CONFIG_DIR}/students.txt"
 GTB_STUDENTS_FILE_TERM="${GTB_CONFIG_DIR}/students-${GTB_TERM}.txt"
 
@@ -470,6 +471,42 @@ _gtb_filter_students() {
             if [[ "$CHINESE_NAME" == "${FILTER}" ]]
             then
                 printf "%s\n" "$FULLNAME $OWNER $TERM_NAME $USERNAME $TRELLO_EMAIL $NICKNAME $CHINESE_NAME $TAGS"
+                continue
+            fi
+        done
+    done
+}
+
+_gtb_filter_buddies() {
+    tail -n +2 $GTB_BUDDIES_FILE | while read -r FULLNAME CHINESE_NAME TW_EMAIL UNIT GITHUB_USERNAME MOBILE WECHAT TAGS
+    do
+        if [[ -z "$*" ]] \
+            || echo "$*" | grep --silent "\<${FULLNAME}\>" \
+            || echo "$*" | grep --silent "\<${CHINESE_NAME}\>" \
+            || echo "$*" | grep --silent "\<${TW_EMAIL}\>" \
+            || echo "$*" | grep --silent "\<${UNIT}\>" \
+            || echo "$*" | grep --silent "\<${GITHUB_USERNAME}\>" \
+            || echo "$*" | grep --silent "\<${MOBILE}\>" \
+            || echo "$*" | grep --silent "\<${WECHAT}\>"
+        then
+            printf "%s\n" "$FULLNAME $CHINESE_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT $TAGS"
+            continue
+        fi
+
+        for FILTER in "$@"
+        do
+            if echo "$TAGS" | grep --silent "\<${FILTER}\>"
+            then
+                printf "%s\n" "$FULLNAME $CHINESE_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT $TAGS"
+                continue
+            fi
+        done
+
+        for FILTER in "$@"
+        do
+            if [[ "$CHINESE_NAME" == "${FILTER}" ]]
+            then
+                printf "%s\n" "$FULLNAME $CHINESE_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT $TAGS"
                 continue
             fi
         done
@@ -1255,6 +1292,76 @@ _gtb_trainer() {
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_buddy() {
+    assert_trainers_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_bu() {
+    _gtb_buddy "$@"
+}
+
+_gtb_b() {
+    _gtb_buddy "$@"
+}
+
+_gtb_buddy_fields() {
+    head -n1 $GTB_BUDDIES_FILE \
+        | tr ' ' '\n' \
+        | _gtb_table_format "$@"
+}
+
+_gtb_buddy_show() {
+    local BUDDY_FULLNAME=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
+
+    paste -d ' ' \
+        <(_gtb_buddy_fields -N) \
+        <(_gtb_filter_buddies $BUDDY_FULLNAME | tr ' ' '\n') \
+        | _gtb_table_format
+}
+
+_gtb_buddy_list() {
+    _gtb_filter_buddies "$@" \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" \
+        | _gtb_table_format
+}
+
+_gtb_buddy_add() {
+    readonly fixed_fields_count=$(( $(_gtb_buddy_fields | wc -l) - 1 )) # excludes TAGS
+    [[ $# -le $fixed_fields_count ]] \
+        && fail "error: fields count is invalid! Run \`gtb buddy fields\` to learn more."
+
+    readonly fullname="$1"
+    cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep "\<$fullname\>" \
+        && fail "error: Fullname already exists, run \`gtb buddy show $tw_email\` to learn more."
+
+    readonly tw_email="$3"
+    cat $GTB_BUDDIES_FILE | _gtb_cuts 3 | grep "\<$tw_email\>" \
+        && fail "error: Thoughtworks email already exists, run \`gtb buddy show $tw_email\` to learn more."
+
+    readonly TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_FILE}).tmp"
+    cp $GTB_BUDDIES_FILE $TMP_FILE
+    echo "$*" >> $TMP_FILE
+    cat $TMP_FILE \
+        | awk 'NR<2 {print; next} {print | "sort"}' \
+        > $GTB_BUDDIES_FILE
+}
+
+_gtb_buddy_remove() {
+    readonly keyword=${1:?Fullname or TW email is required!}
+
+    cat $GTB_BUDDIES_FILE | _gtb_cuts 1,3 | grep --silent "\<$keyword\>" \
+        || fail "error: cannot find buddy, run \`gtb buddy show $keyword\` to learn more."
+
+    readonly TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_FILE}).tmp"
+    cp $GTB_BUDDIES_FILE $TMP_FILE
+    cat $TMP_FILE \
+        | awk -v keyword="$keyword" '$1==keyword || $3==keyword {next} {print}' \
+        > $GTB_BUDDIES_FILE
 }
 
 _git_list_all_branches_of_remote() {
