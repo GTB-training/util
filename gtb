@@ -3065,7 +3065,7 @@ _gtb_config_push() {
 
 _gtb_config_commit() {
     run "cd '$GTB_CONFIG_DIR'"
-    run "git add students*.txt"
+    run "git add students-*.txt trainers.txt buddies-*.txt"
     run "git commit -m '$*'"
 }
 
