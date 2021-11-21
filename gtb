@@ -1306,9 +1306,16 @@ _gtb_buddy_fields() {
 _gtb_buddy_show() {
     local BUDDY_FULLNAME=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
 
+    local buddy_lines=$(_gtb_filter_buddies "$@")
+    local buddies_count=$(_gtb_count_lines "$buddy_lines")
+    assert_not_empty "error: cannot find any buddies with filters: '$@'!" "$buddy_lines"
+    [[ 1 -ne $buddies_count ]] && fail "error: matched more than one buddies with filters: '$@'!"
+
+    readonly buddy_info=$(_gtb_filter_buddies $BUDDY_FULLNAME)
+
     paste -d ' ' \
         <(_gtb_buddy_fields -N) \
-        <(_gtb_filter_buddies $BUDDY_FULLNAME | tr ' ' '\n') \
+        <(echo "$buddy_info" | tr ' ' '\n') \
         | _gtb_table_format
 }
 
