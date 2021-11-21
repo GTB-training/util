@@ -2931,8 +2931,8 @@ _gtb_org_invite() {
             --jobs $JOBS \
             --colsep ' ' \
             --bar \
-            gh_invite_user_to_org "$GTB_ORG" "{5}" 'direct_member' "{2}" "{7}" \
-            | _gtb_sort '1,1r;2,2' \
+            gh_invite_user_to_org "$GTB_ORG" "{5}" 'direct_member' "{1}" "{2}" \
+            | _gtb_sort '1,1r;5,5' \
             | _gtb_table_format \
             | _gtb_tr_symbols
     else
@@ -2946,8 +2946,8 @@ _gtb_org_invite() {
             --jobs $JOBS \
             --colsep ' ' \
             --bar \
-            gh_invite_user_to_org "$GTB_ORG" "{4}" 'direct_member' "{2}" "{7}" \
-            | _gtb_sort '1,1r;2,2' \
+            gh_invite_user_to_org "$GTB_ORG" "{4}" 'direct_member' "{1}" "{7}" \
+            | _gtb_sort '1,1r;5,5' \
             | _gtb_table_format \
             | _gtb_tr_symbols
     fi
