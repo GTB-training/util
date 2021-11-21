@@ -29,6 +29,10 @@ GTB_TERMS_DIR="terms"
 SUBCMD_PREFIX='_gtb'
 GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default}"
 GTB_PER_PAGE=100
+GTB_TRAINER_FILTER='_unknown_'
+GTB_BUDDY_FILTER='_unknown_'
+GTB_FROM_STUDENTS='true'
+GTB_FROM_BUDDIES='false'
 
 GTB_ORG=tws-graduate-program
 
@@ -2826,22 +2830,39 @@ _gtb_org_team_open() {
 }
 
 _gtb_org_team_invite() {
-    local student_lines=$(_gtb_filter_students "$@")
-    local students_count=$(_gtb_count_lines "$student_lines")
-    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
-
     GTB_ORG_TEAM=${GTB_ORG_TEAM:-$GTB_TERM}
 
-    echo "$student_lines" \
-        | env_parallel \
+    if [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
+        local buddy_lines=$(_gtb_filter_buddies "$@")
+        local buddies_count=$(_gtb_count_lines "$buddy_lines")
+        assert_not_empty "error: cannot find any buddies with filters: '$@'!" "$buddy_lines"
+
+        echo "$buddy_lines" \
+            | env_parallel \
+            --linebuffer \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --bar \
+            gh_invite_user_to_team "$GTB_ORG" "$GTB_ORG_TEAM" "{5}" "{2}" \
+            | _gtb_sort '1,1r;4,4' \
+            | _gtb_table_format \
+            | _gtb_tr_symbols
+    else
+        local student_lines=$(_gtb_filter_students "$@")
+        local students_count=$(_gtb_count_lines "$student_lines")
+        assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+        echo "$student_lines" \
+            | env_parallel \
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
             --bar \
             gh_invite_user_to_team "$GTB_ORG" "$GTB_ORG_TEAM" "{4}" "{2}" "{7}" \
-        | _gtb_sort '1,1r;4,4' \
-        | _gtb_table_format \
-        | _gtb_tr_symbols
+            | _gtb_sort '1,1r;4,4' \
+            | _gtb_table_format \
+            | _gtb_tr_symbols
+    fi
 }
 
 _gtb_org_team_members() {
@@ -4079,6 +4100,14 @@ while (( "$#" )); do
             else
                 fail "Error: separator specified by '$1' is missing"
             fi
+            ;;
+        --from-students)
+            GTB_FROM_STUDENTS="true"
+            shift
+            ;;
+        --from-buddies)
+            GTB_FROM_BUDDIES="true"
+            shift
             ;;
         --all)
             GTB_ALL_BRANCHES="true"
