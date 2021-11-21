@@ -1,8 +1,0 @@
-java bronze-java-sim-level-2
-js bronze-js-sim-level-3
-java java-language-basic-part-1
-java java-language-basic-part-2
-java java-language-basic-self-test
-java java-language-extend
-js js-language-basic
-java sql-query-practice

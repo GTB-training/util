@@ -1,3 +1,0 @@
-w8d509 gold-java-level-2 20210528_0900 12H 15d -15M sub_created repo_published repo_picked
-w8d609 gold-java-level-2 20210529_0900 12H 14d -15M sub_created repo_published repo_picked
-w8d709 gold-java-level-2 20210530_0900 12H 13d -15M sub_created repo_published repo_picked
