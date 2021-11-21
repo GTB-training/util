@@ -1,0 +1,15 @@
+70,stone-java-env-verify
+97,stone-js-env-verify
+73,bronze-java-level-1
+76,bronze-java-level-2
+81,bronze-java-level-3
+80,bronze-js-level-3
+82,silver-java-level-1
+85,silver-java-level-2
+87,silver-java-level-3
+83,silver-js-level-1
+84,silver-js-level-2
+86,silver-js-level-3
+89,gold-java-level-1
+79,gold-java-level-2
+91,gold-js-level-1

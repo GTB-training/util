@@ -1,0 +1,16 @@
+java bronze-java-level-1
+java bronze-java-level-2
+java bronze-java-level-3
+java gold-java-level-1
+java gold-java-level-2
+java master-java-level-1
+java silver-java-level-1
+java silver-java-level-2
+java silver-java-level-3
+java stone-java-env-verify
+js bronze-js-level-3
+js gold-js-level-1
+js silver-js-level-1
+js silver-js-level-2
+js silver-js-level-3
+js stone-js-env-verify

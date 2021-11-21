@@ -1,0 +1,35 @@
+41  41    gtb-105-song-lingling     song.lingling     SVM2.0       宋玲玲   cs      A      A3    35     20    15   0
+42  42    gtb-105-zhan-sikai        zhan.sikai        zsk          詹思楷   cs      B      B7    25     17    8    0
+43  43    gtb-105-he-yan            he.yan            cathy456     何燕     cs      B      B2    23     23    0    0
+44  44    gtb-105-wang-mingxin      wang.mingxin      Mason        王铭鑫   superx  A      A5    21     8     13   0
+45  45    gtb-105-liang-hanbing     liang.hanbing     viviana11    梁寒冰   cs      A      A7    20     20    0    0
+46  46    gtb-105-chen-jinyang      chen.jinyang      xiaoyang     陈金旸   cs      A      A4    19     10    9    0
+47  47    gtb-105-long-xingyu       long.xingyu       alan1664     龙兴宇   cs      A      A4    17     17    0    0
+48  48    gtb-105-shen-zhixin       shen.zhixin       S11          沈智馨   superx  A      A2    16     16    0    0
+49  49    gtb-105-tang-yiheng       tang.yiheng       lita         唐以恒   cs      B      B4    14     14    0    0
+50  50    gtb-105-zhang-zeping      zhang.zeping      wanderzhang  张泽平   cs      B      B4    14     14    0    0
+51  51    gtb-105-xu-jieqing        xu.jieqing        Elibug       许洁清   superx  A      A4    14     11    3    0
+52  52    gtb-105-qi-qiannan        qi.qiannan        qiqi0103     齐倩楠   superx  A      A5    13     10    3    0
+53  53    gtb-105-wang-zhengyang    wang.zhengyang    Hachi        王正扬   cs      B      B1    10     10    0    0
+54  54    gtb-105-wang-yueqi        wang.yueqi        yueqi112     王悦琪   superx  A      A6    9      6     3    0
+55  55    gtb-105-hu-chenghui       hu.chenghui       hch123       胡程辉   superx  A      A4    7      7     0    0
+56  56    gtb-105-zhang-ronghao     zhang.ronghao     ronghao      张荣浩   cs      B      B1    6      6     0    0
+57  57    gtb-105-cao-deyu          cao.deyu          Arthur       曹德禹   superx  A      A1    5      5     0    0
+58  58    gtb-105-li-chen           li.chen           chenleestu   李臣     cs      B      B6    1      1     0    0
+
+  29 直宇恒
+  26 唐以恒
+  25 沈智馨
+  23 雷浩
+  21 龙兴宇
+  21 王正扬
+  20 王铭鑫
+  19 张荣浩
+  16 齐倩楠
+  15 詹思楷
+  13 陈金旸
+  13 许洁清
+  10 胡程辉
+   4 张泽平
+   2 李臣
+   1 曹德禹
