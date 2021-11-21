@@ -3827,11 +3827,13 @@ _gtb_colors() {
 }
 
 _gtb_upgrade() {
-    read -p "Are you SURE to upgrade to lastest version? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
-    then
-        return 1
+    if [[ "false" == "$GTB_YES" ]]; then
+        read -p "Are you SURE to upgrade to lastest version? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     run "brew upgrade GTB-training/gtb/util"
