@@ -1095,6 +1095,15 @@ assert_trainers_file_exists() {
     fi
 }
 
+assert_buddies_file_exists() {
+    if [[ ! -f $GTB_BUDDIES_FILE ]]
+    then
+        error "Cannot find buddies file: '$GTB_BUDDIES_FILE'."
+        error "If you upgrade from the old versions, please run \`gtb init\` to clone config repo."
+        exit 1
+    fi
+}
+
 assert_students_file_exists() {
     if [[ ! -f $GTB_STUDENTS_FILE ]]
     then
@@ -1360,6 +1369,18 @@ _gtb_buddy_remove() {
         > $GTB_BUDDIES_FILE
 }
 
+_gtb_buddy_username() {
+    readonly BUDDY_FULLNAME=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
+    readonly FLAG_RAW="$GTB_RAW"
+    readonly FLAG_LINE_NUMBERS="$GTB_LINE_NUMBERS"
+
+    GTB_RAW="true"
+    GTB_LINE_NUMBERS="false"
+    _gtb_buddy_list $BUDDY_FULLNAME | _gtb_cuts 5
+    GTB_RAW="$FLAG_RAW"
+    GTB_LINE_NUMBERS="$FLAG_LINE_NUMBERS"
+}
+
 _git_list_all_branches_of_remote() {
     local REMOTE_NAME=${1:?Remote name is required!}
     local BRANCH_NAMES=$(run "git branch -r --no-color --list '${REMOTE_NAME}/*' $(_gtb_mute_stderr) | grep -wv 'HEAD' | tr -d '\t ' | cut -d'/' -f2")
@@ -1564,17 +1585,23 @@ _gtb_student_org_invite_cancel() {
 }
 
 _gtb_student_org_invite_create() {
-    assert_trainers_file_exists
-
-    local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. qu.hang wang.xiaofeng)}
-    shift 1
-
-    local TRAINER_USERNAME=$(_gtb_trainer_username $TRAINER_FULLNAME)
-    assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$TRAINER_USERNAME"
-
     local student_lines=$(_gtb_filter_students "$@")
     local students_count=$(_gtb_count_lines "$student_lines")
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    local invitee_username
+
+    if [[ -n "$GTB_TRAINER_FILTER" ]]; then
+        assert_trainers_file_exists
+        invitee_username=$(_gtb_trainer_username $GTB_TRAINER_FILTER | head -n1)
+        assert_not_empty "Cannot find '$GTB_TRAINER_FILTER' in ${GTB_TRAINERS_FILE}!" "$invitee_username"
+    elif [[ -n "$GTB_BUDDY_FILTER" ]]; then
+        assert_buddies_file_exists
+        invitee_username=$(_gtb_buddy_username $GTB_BUDDY_FILTER | head -n1)
+        assert_not_empty "Cannot find '$GTB_BUDDY_FILTER' in ${GTB_BUDDIES_FILE}!" "$invitee_username"
+    elif [[ -n "$GTB_USERNAME" ]]; then
+        invitee_username="$GTB_USERNAME"
+    fi
 
     echo "$student_lines" \
         | env_parallel \
@@ -1582,7 +1609,7 @@ _gtb_student_org_invite_create() {
             --jobs $JOBS \
             --colsep ' ' \
             --bar \
-            gh_invite_user_to_org "{2}" "$TRAINER_USERNAME" 'admin' "{7}" \
+            gh_invite_user_to_org "{2}" "$invitee_username" 'admin' "{7}" \
         | _gtb_sort '1,1r;2,2' \
         | _gtb_table_format \
         | _gtb_tr_symbols
@@ -3917,9 +3944,10 @@ while (( "$#" )); do
         --username)
             if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
                 GTB_TRELLO_USERNAME=$2
+                GTB_USERNAME=$2
                 shift 2
             else
-                fail "Error: Trello username specified by '$1' is missing"
+                fail "Error: Username specified by '$1' is missing"
             fi
             ;;
         --board)
@@ -4016,6 +4044,22 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: scheduled time specified by '$1' is missing, e.g. 20200601_0900"
+            fi
+            ;;
+        --trainer)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRAINER_FILTER="$2"
+                shift 2
+            else
+                fail "Error: trainer filter specified by '$1' is missing"
+            fi
+            ;;
+        --buddy)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_BUDDY_FILTER="$2"
+                shift 2
+            else
+                fail "Error: buddy filter specified by '$1' is missing"
             fi
             ;;
         -s)
