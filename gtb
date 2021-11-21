@@ -794,9 +794,6 @@ gh_init_repo_secrets() {
     local FULLNAME=${4:?Fullname is required!}
 
     declare -A secrets=(
-        ['DASHBOARD_ADDRESS']="$GTB_DASHBOARD_ADDRESS"
-        ['SONAR_ADDRESS']="$GTB_SONAR_ADDRESS"
-        ['SONAR_TOKEN']="$GTB_SONAR_TOKEN"
         ['STUDENT_TERM']="$TERM_NAME"
         ['STUDENT_NAME']="$FULLNAME"
     )
