@@ -34,6 +34,12 @@ GTB_BUDDY_FILTER='_unknown_'
 GTB_FROM_STUDENTS='true'
 GTB_FROM_BUDDIES='false'
 
+if [[ "$(tty)" == 'not a tty' ]]; then
+    GTB_PARALLEL_OPT_PROGRESS_BAR=''
+else
+    GTB_PARALLEL_OPT_PROGRESS_BAR='--bar'
+fi
+
 GTB_ORG=tws-graduate-program
 
 GTB_YES="false"
@@ -807,7 +813,7 @@ gh_init_repo_secrets() {
         --jobs $JOBS \
         --colsep ' ' \
         --link \
-        --bar \
+        $GTB_PARALLEL_OPT_PROGRESS_BAR \
         gh_set_repo_secret $ORG $REPO_NAME "{1}" "{2}" ::: "${!secrets[@]}" ::: "${secrets[@]}"
 }
 
@@ -1079,7 +1085,7 @@ clone_or_update_repos() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             clone_or_update_repo $REPO_NAME "{2}" "{1}" "{3}"
 }
 
@@ -1612,7 +1618,7 @@ _gtb_student_org_invite_create() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_invite_user_to_org "{2}" "$invitee_username" 'admin' "{7}" \
         | _gtb_sort '1,1r;2,2' \
         | _gtb_table_format \
@@ -1630,7 +1636,7 @@ _gtb_student_org_invite_list() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_list_org_invitations "{}")
     local trainers=$(echo "$result" | _gtb_cuts 1 | sort -ur)
 
@@ -1668,7 +1674,7 @@ _gtb_student_org_membership_role() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_set_org_membership {} $TRAINER_USERNAME $ROLE \
         | _gtb_sort '3,3;4,4;2,2' \
         | _gtb_table_format
@@ -1695,7 +1701,7 @@ _gtb_student_org_join() {
 
     local orgs_to_join=$(echo "$student_lines" \
         | _gtb_cuts 2 \
-        | env_parallel --jobs $JOBS --bar --linebuffer gh_membership "{}" "$trainer_username" \
+        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_membership "{}" "$trainer_username" \
         | grep --color=never 'admin pending')
     assert_not_empty "no pending admin invitations to join!" "$orgs_to_join"
 
@@ -1726,7 +1732,7 @@ _gtb_check_student_org_for_presence() {
     header "Checking presence of student org..."
 
     _gtb_filter_students "$@" | cut -d' ' -f2 \
-        | env_parallel --jobs $JOBS --bar --linebuffer gh_find_org {1} \
+        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_find_org {1} \
         | sort -k1,2 \
         | tr ' ' '|' \
         | _gtb_tabularize \
@@ -1746,7 +1752,7 @@ _gtb_check_student_org_for_trainer_role() {
 
     _gtb_filter_students "$@" \
         | _gtb_cuts 2 \
-        | env_parallel --jobs $JOBS --bar --linebuffer gh_membership "{}" "$trainer_username" \
+        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_membership "{}" "$trainer_username" \
         | sed "s/^/$TRAINER_FULLNAME /" \
         | _gtb_sort '4,4;5,5;3,3' \
         | _gtb_table_format \
@@ -1782,7 +1788,7 @@ _gtb_student_org_remove() {
     echo "$student_lines" \
         | _gtb_cuts 2,4 \
         | env_parallel \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             --colsep ' ' \
             --linebuffer \
             --jobs $JOBS \
@@ -1798,7 +1804,7 @@ _gtb_student_org_delete() {
         | env_parallel \
             --linebuffer \
             --jobs 1 \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             _gtb_open "https://github.com/organizations/{}/settings/profile#rename-org-dialog"
 }
 
@@ -1824,7 +1830,7 @@ _gtb_student_org_open() {
         | env_parallel \
             --linebuffer \
             --jobs 1 \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             _gtb_open "https://github.com/{}"
 }
 
@@ -1845,7 +1851,7 @@ _gtb_student_user_check() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_check_user "{4}" "{2}" "{7}" \
         | _gtb_sort '1,1r;3;3' \
         | _gtb_table_format \
@@ -1872,7 +1878,7 @@ _gtb_student_workflow_runs() {
         | env_parallel \
             --linebuffer \
             --jobs $JOBS \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_list_repo_workflow_runs "{}" "$REPO_NAME" "$WORKFLOW_FILENAME" \
         | _gtb_sort '1,1;2,2rn' '|' \
         | _gtb_table_format -s '|' \
@@ -1898,7 +1904,7 @@ _gtb_student_workflow_run() {
         | env_parallel \
             --linebuffer \
             --jobs $JOBS \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_run_repo_workflow "{}" $REPO_NAME $WORKFLOW_FILENAME \
         | sort \
         | column -t \
@@ -1917,7 +1923,7 @@ _gtb_student_workflow_list() {
         | env_parallel \
             --linebuffer \
             --jobs $JOBS \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_workflow_list "{}" "$REPO_NAME" \
         | sort -k2 \
         | _gtb_table_format
@@ -1950,7 +1956,7 @@ _gtb_student_secret_init() {
         --jobs $JOBS_INIT_SECRETS \
         --linebuffer \
         --colsep ' ' \
-        --bar \
+        $GTB_PARALLEL_OPT_PROGRESS_BAR \
         "gh_init_repo_secrets {2} $REPO_NAME {3} {1} $(_gtb_mute_stderr) 1>&2"
 
     _gtb_student_secret_stat "$REPO_NAME" "$@"
@@ -1969,7 +1975,7 @@ _gtb_student_secret_remove() {
         --jobs $JOBS \
         --linebuffer \
         --colsep ' ' \
-        --bar \
+        $GTB_PARALLEL_OPT_PROGRESS_BAR \
         "gh_remove_repo_secret {2} $REPO_NAME $NAME $(_gtb_mute_stderr) 1>&2"
 }
 
@@ -1987,7 +1993,7 @@ _gtb_student_secret_set() {
         --jobs $JOBS \
         --linebuffer \
         --colsep ' ' \
-        --bar \
+        $GTB_PARALLEL_OPT_PROGRESS_BAR \
         "gh_set_repo_secret {2} $REPO_NAME $NAME $VALUE $(_gtb_mute_stderr) 1>&2"
 }
 
@@ -2006,7 +2012,7 @@ _gtb_student_secret_check() {
     join -1 1 -2 2 -a 1 -o '2.1,1.1' -e '0' \
         <(echo "$student_lines" | cut -d' ' -f2 | sort) \
         <(echo "$student_lines" | cut -d' ' -f2 \
-            | env_parallel --jobs $MAX_JOBS --colsep ' ' --tagstring {1} --bar --linebuffer gh_secret_list {1} $REPO_NAME \
+            | env_parallel --jobs $MAX_JOBS --colsep ' ' --tagstring {1} $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_secret_list {1} $REPO_NAME \
             | cut -f1 \
             | sort | uniq -c | tr -s ' ' \
             | sort -k2) \
@@ -2027,7 +2033,7 @@ _gtb_student_secret_list() {
     local student_lines=$(_gtb_filter_students "$@")
 
     echo "$student_lines" | cut -d' ' -f2 \
-        | env_parallel --jobs $MAX_JOBS --colsep ' ' --bar --linebuffer gh_secret_list {1} $REPO_NAME
+        | env_parallel --jobs $MAX_JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_secret_list {1} $REPO_NAME
 }
 
 _gtb_student_secret_stat() {
@@ -2040,7 +2046,7 @@ _gtb_student_secret_stat() {
     header 'Query secret list...'
     local all_secrets=$(echo "$student_lines" \
         | cut -d' ' -f2 \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer --tagstring '{1}' gh_secret_list {1} $REPO_NAME \
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer --tagstring '{1}' gh_secret_list {1} $REPO_NAME \
         | tr '\t' ' ' \
         | tr -s ' ')
 
@@ -2088,7 +2094,7 @@ _gtb_student_repo_delete() {
 
     echo "$student_lines" | cut -d' ' -f2 \
         | _gtb_remove_remote_student_repo $REPO_NAME \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer gh_delete_repo {1} {2} \
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_delete_repo {1} {2} \
         | _gtb_table_format
 }
 
@@ -2099,7 +2105,7 @@ _gtb_student_repo_create() {
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     env_parallel \
-        --bar \
+        $GTB_PARALLEL_OPT_PROGRESS_BAR \
         --linebuffer \
         --jobs $JOBS \
         gh_create_org_repo \
@@ -2130,7 +2136,7 @@ _gtb_student_repo_stat() {
         | env_parallel \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar --linebuffer \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
             gh_list_org_repos {1})
 
     pr -m -t \
@@ -2168,7 +2174,7 @@ _gtb_student_repo_list() {
         | env_parallel \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar --linebuffer \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
             gh_list_org_repos {1} \
         | _format_repo_time_fields \
         | _gtb_sort "4,4;2,2" \
@@ -2185,7 +2191,7 @@ _gtb_student_repo_check() {
     join -1 1 -2 2 -a 1 -o '2.1,1.1' -e 'NotFound' \
         <(echo "$student_lines" | cut -d' ' -f2 | sort) \
         <(echo "$student_lines" | cut -d' ' -f2 \
-            | env_parallel --jobs $JOBS --bar --linebuffer gh_show_org_repo_commit {1} $REPO_NAME $COMMIT_REF \
+            | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_show_org_repo_commit {1} $REPO_NAME $COMMIT_REF \
             | sort -k2) \
         | _gtb_sort "1,1r;2,2" \
         | _gtb_table_format
@@ -2200,7 +2206,7 @@ _gtb_student_repo_show() {
     join -1 1 -2 2 -a 1 -a 2 -o '2.1,1.1' -e 'NotFound' \
         <(echo "$student_lines" | cut -d' ' -f2 | sort) \
         <(echo "$student_lines" | cut -d' ' -f2 \
-            | env_parallel --jobs $JOBS --bar --linebuffer gh_show_org_repo {1} $REPO_NAME \
+            | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_show_org_repo {1} $REPO_NAME \
             | sort -k2) \
         | sort -k1,2 \
         | tr ' ' '|' \
@@ -2221,7 +2227,7 @@ _gtb_student_repo_open() {
         | env_parallel \
             --linebuffer \
             --jobs 1 \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             _gtb_open "https://github.com/{}/$REPO_NAME"
 }
 
@@ -2303,7 +2309,7 @@ _gtb_student_delete() {
     echo "$student_lines" \
         | _gtb_cuts 1 \
         | env_parallel \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             --linebuffer \
             --jobs 1 \
             "sed -i '' -E '/^{}/d' '$GTB_STUDENTS_FILE'"
@@ -2631,35 +2637,35 @@ _gtb_repo_pick() {
     header "Add students' repo as remote..."
     local result_add_remote=$(echo "$student_lines" \
         | _gtb_cuts 1-2 \
-        | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_add_student_repo_as_remote {2} $REPO_NAME $(_gtb_mute_stderr)" \
+        | env_parallel --jobs 1 --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_add_student_repo_as_remote {2} $REPO_NAME $(_gtb_mute_stderr)" \
         | sort \
         | _gtb_cuts 3)
 
     header "Fetch all remotes..."
     local result_fetch_remote=$(echo "$student_lines" \
         | _gtb_cuts 1-2 \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "_gtb_fetch_remote $REPO_NAME {2} $(_gtb_mute_stderr)" \
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_fetch_remote $REPO_NAME {2} $(_gtb_mute_stderr)" \
         | sort -k2 \
         | _gtb_cuts 1)
 
     header "Create local branches..."
     local result_create_branch=$(echo "$student_lines" \
         | _gtb_cuts 1-2 \
-        | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_create_local_branch $REPO_NAME {2} $(_gtb_mute_stderr)" \
+        | env_parallel --jobs 1 --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_create_local_branch $REPO_NAME {2} $(_gtb_mute_stderr)" \
         | sort -k2 \
         | _gtb_cuts 1)
 
     header "Pick refs..."
     local result_pick_ref=$(echo "$student_lines" \
         | _gtb_cuts 1-2 \
-        | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_pick_refs $REPO_NAME {2} $commits_to_pick $(_gtb_mute_stderr)" \
+        | env_parallel --jobs 1 --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_pick_refs $REPO_NAME {2} $commits_to_pick $(_gtb_mute_stderr)" \
         | sort -k2 \
         | _gtb_cuts 1)
 
     header "Push to remotes..."
     local result_push_to_remote=$(echo "$student_lines" \
         | _gtb_cuts 1-2 \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "_gtb_push_master $REPO_NAME {2} $(_gtb_mute_stderr)" \
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_push_master $REPO_NAME {2} $(_gtb_mute_stderr)" \
         | sort -k2 \
         | _gtb_cuts 1)
 
@@ -2668,7 +2674,7 @@ _gtb_repo_pick() {
         header "Run workflows..."
         local result_run_workflow=$(echo "$student_lines" \
             | _gtb_cuts 1-2 \
-            | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "gh_run_repo_workflow {2} $REPO_NAME $WORKFLOW_FILENAME" \
+            | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "gh_run_repo_workflow {2} $REPO_NAME $WORKFLOW_FILENAME" \
             | sort -k2 \
             | _gtb_cuts 1,3)
     fi
@@ -2721,15 +2727,15 @@ _gtb_repo_publish() {
 
     header "Create repo $REPO_NAME in student's org..."
     echo "$student_lines" | cut -d' ' -f1-3 \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "_gtb_create_repo_in_student_org {2} $REPO_NAME $(_gtb_mute_stderr) 1>&2"
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_create_repo_in_student_org {2} $REPO_NAME $(_gtb_mute_stderr) 1>&2"
 
     header "Add student's repo as remote..."
     echo "$student_lines" | cut -d' ' -f1-3 \
-        | env_parallel --jobs 1 --colsep ' ' --bar --linebuffer "_gtb_add_student_repo_as_remote {2} $REPO_NAME $(_gtb_mute_stderr) 1>&2"
+        | env_parallel --jobs 1 --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_add_student_repo_as_remote {2} $REPO_NAME $(_gtb_mute_stderr) 1>&2"
 
     header "Push commits to student's repo..."
     local result_push=$(echo "$student_lines" | cut -d' ' -f1-3 \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer "_gtb_push_to_student_repo {2} $REPO_NAME $(_gtb_mute_stderr)")
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer "_gtb_push_to_student_repo {2} $REPO_NAME $(_gtb_mute_stderr)")
 
     local RAW="$GTB_RAW"
     GTB_RAW="true"
@@ -2842,7 +2848,7 @@ _gtb_org_team_invite() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_invite_user_to_team "$GTB_ORG" "$GTB_ORG_TEAM" "{5}" "{2}" \
             | _gtb_sort '1,1r;4,4' \
             | _gtb_table_format \
@@ -2857,7 +2863,7 @@ _gtb_org_team_invite() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_invite_user_to_team "$GTB_ORG" "$GTB_ORG_TEAM" "{4}" "{2}" "{7}" \
             | _gtb_sort '1,1r;4,4' \
             | _gtb_table_format \
@@ -2912,7 +2918,7 @@ _gtb_org_remove() {
     echo "$student_lines" \
         | _gtb_cuts 2,4 \
         | env_parallel \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             --colsep ' ' \
             --linebuffer \
             --jobs $JOBS \
@@ -2930,7 +2936,7 @@ _gtb_org_invite() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_invite_user_to_org "$GTB_ORG" "{5}" 'direct_member' "{1}" "{2}" \
             | _gtb_sort '1,1r;5,5' \
             | _gtb_table_format \
@@ -2945,7 +2951,7 @@ _gtb_org_invite() {
             --linebuffer \
             --jobs $JOBS \
             --colsep ' ' \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             gh_invite_user_to_org "$GTB_ORG" "{4}" 'direct_member' "{1}" "{7}" \
             | _gtb_sort '1,1r;5,5' \
             | _gtb_table_format \
@@ -3075,7 +3081,7 @@ _gtb_trello_board_remove() {
     echo "$student_lines" \
         | _gtb_unformat \
         | _gtb_cuts '2,5' \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer \
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
             _gtb_trello_remove_member_from_board {1} {2} \
         | sort \
         | column -t \
@@ -3086,7 +3092,7 @@ _gtb_trello_board_invite() {
     _gtb_filter_students "$@" \
         | _gtb_unformat \
         | _gtb_cuts '2,5' \
-        | env_parallel --jobs $JOBS --colsep ' ' --bar --linebuffer \
+        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
             _gtb_trello_invite_member_to_board {1} {2} \
         | _gtb_sort 1r \
         | _gtb_table_format \
@@ -3175,7 +3181,7 @@ _gtb_tag_replace() {
 
     echo "$student_lines" \
         | _gtb_cuts 1 \
-        | env_parallel --linebuffer --jobs 1 --bar "sed -i '' -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
+        | env_parallel --linebuffer --jobs 1 $GTB_PARALLEL_OPT_PROGRESS_BAR "sed -i '' -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
 
     _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
@@ -3406,7 +3412,7 @@ _gtb_dashboard_submission_remove() {
             --colsep ' ' \
             --linebuffer \
             --jobs $JOBS \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             _gtb_dashboard_delete_submission "{1}" "{2}" \
         | sort \
         | cat -n
@@ -3611,7 +3617,7 @@ _gtb_dashboard_student_deactivate() {
         | env_parallel \
             --linebuffer \
             --jobs $JOBS \
-            --bar \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
             _gtb_dashboard_deactivate_student {} \
         | sort \
         | cat -n
