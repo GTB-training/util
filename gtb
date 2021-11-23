@@ -1587,7 +1587,7 @@ _gtb_quiz_send() {
                 MARK='repo_picked'
             fi
 
-            sed -i '' -E "/$tag $repo/s/$/ $MARK/" "$SCHEDULES_FILE"
+            sed $GTB_SED_NO_BACKUP -E "/$tag $repo/s/$/ $MARK/" "$SCHEDULES_FILE"
         fi
     done
 }
@@ -2382,7 +2382,7 @@ _gtb_student_delete() {
             $GTB_PARALLEL_OPT_PROGRESS_BAR \
             --linebuffer \
             --jobs 1 \
-            "sed -i '' -E '/^{}/d' '$GTB_STUDENTS_FILE'"
+            "sed $GTB_SED_NO_BACKUP -E '/^{}/d' '$GTB_STUDENTS_FILE'"
 
     _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
@@ -3260,7 +3260,7 @@ _gtb_tag_replace() {
 
     echo "$student_lines" \
         | _gtb_cuts 1 \
-        | env_parallel --linebuffer --jobs 1 $GTB_PARALLEL_OPT_PROGRESS_BAR "sed -i '' -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
+        | env_parallel --linebuffer --jobs 1 $GTB_PARALLEL_OPT_PROGRESS_BAR "sed $GTB_SED_NO_BACKUP -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
 
     _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
@@ -3278,10 +3278,10 @@ _gtb_tag_add() {
 
     if [[ "$POSITION" -le 1 ]]
     then
-        run "sed -i '' 's/^/$TAG /g' $GTB_STUDENTS_FILE"
+        run "sed $GTB_SED_NO_BACKUP 's/^/$TAG /g' $GTB_STUDENTS_FILE"
     elif [[ "$POSITION" -gt $total_fields ]]
     then
-        run "sed -i '' 's/$/ $TAG/g' $GTB_STUDENTS_FILE"
+        run "sed $GTB_SED_NO_BACKUP 's/$/ $TAG/g' $GTB_STUDENTS_FILE"
     else
         local BACKUP_FILE="/tmp/${GTB_STUDENTS_FILE##*/}"
         run "cp $GTB_STUDENTS_FILE $BACKUP_FILE"
