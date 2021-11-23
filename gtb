@@ -653,7 +653,7 @@ gh_list_org_members() {
 
 gh_list_org_repos() {
     local ORG=${1:-$GTB_ORG}
-    local TEAM=${2}
+    local TEAM=${GTB_ORG_TEAM}
 
     local ENDPOINT="/orgs/$ORG/repos?per_page=100&page="
     if [[ -n "$TEAM" ]]
