@@ -56,15 +56,6 @@ GTB_EPOCH_DATETIME='19700101000000'
 SYMBOL_OK='✅'
 SYMBOL_ERROR='❌'
 
-# https://stackoverflow.com/a/8597411
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # Mac OSX
-    GTB_SED_NO_BACKUP="-i ''"
-else
-    # Unknown.
-    GTB_SED_NO_BACKUP="-i"
-fi
-
 cuts() {
     cat | cut -d' ' "$@"
 }
@@ -1457,7 +1448,7 @@ _gtb_buddy_mapping_remove() {
     gtb student list --raw --fields 2 "$@" \
         | sed "s/^/$BUDDY_FULLNAME /" \
         | while read -r line; do
-        sed $GTB_SED_NO_BACKUP "/^${line}$/d" $GTB_BUDDIES_MAPPING_FILE
+        sed -i.bak "/^${line}$/d" $GTB_BUDDIES_MAPPING_FILE
     done
 }
 
@@ -1587,7 +1578,7 @@ _gtb_quiz_send() {
                 MARK='repo_picked'
             fi
 
-            sed $GTB_SED_NO_BACKUP -E "/$tag $repo/s/$/ $MARK/" "$SCHEDULES_FILE"
+            sed -i.bak -E "/$tag $repo/s/$/ $MARK/" "$SCHEDULES_FILE"
         fi
     done
 }
@@ -2382,7 +2373,7 @@ _gtb_student_delete() {
             $GTB_PARALLEL_OPT_PROGRESS_BAR \
             --linebuffer \
             --jobs 1 \
-            "sed $GTB_SED_NO_BACKUP -E '/^{}/d' '$GTB_STUDENTS_FILE'"
+            "sed -i.bak -E '/^{}/d' '$GTB_STUDENTS_FILE'"
 
     _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
@@ -3260,7 +3251,7 @@ _gtb_tag_replace() {
 
     echo "$student_lines" \
         | _gtb_cuts 1 \
-        | env_parallel --linebuffer --jobs 1 $GTB_PARALLEL_OPT_PROGRESS_BAR "sed $GTB_SED_NO_BACKUP -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
+        | env_parallel --linebuffer --jobs 1 $GTB_PARALLEL_OPT_PROGRESS_BAR "sed -i.bak -E '/{}/s/[[:<:]]$FROM_TAG[[:>:]]/$TO_TAG/g' $GTB_STUDENTS_FILE"
 
     _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
@@ -3278,10 +3269,10 @@ _gtb_tag_add() {
 
     if [[ "$POSITION" -le 1 ]]
     then
-        run "sed $GTB_SED_NO_BACKUP 's/^/$TAG /g' $GTB_STUDENTS_FILE"
+        run "sed -i.bak 's/^/$TAG /g' $GTB_STUDENTS_FILE"
     elif [[ "$POSITION" -gt $total_fields ]]
     then
-        run "sed $GTB_SED_NO_BACKUP 's/$/ $TAG/g' $GTB_STUDENTS_FILE"
+        run "sed -i.bak 's/$/ $TAG/g' $GTB_STUDENTS_FILE"
     else
         local BACKUP_FILE="/tmp/${GTB_STUDENTS_FILE##*/}"
         run "cp $GTB_STUDENTS_FILE $BACKUP_FILE"
