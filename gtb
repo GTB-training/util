@@ -1439,7 +1439,7 @@ _gtb_buddy_mapping_add() {
     local -r TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_MAPPING_FILE}).tmp"
     cp $GTB_BUDDIES_MAPPING_FILE $TMP_FILE
 
-    gtb student list --raw --fields 2 "$@" \
+    gtb student list --raw --fields 2 $(echo $@ | tr ',' ' ' | tr -s ' ') \
         | sed "s/^/$BUDDY_FULLNAME /" \
         >> $TMP_FILE
 
