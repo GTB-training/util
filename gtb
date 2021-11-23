@@ -10,6 +10,7 @@ GTB_CONFIG_REPO=config
 GTB_CONFIG_DIR="$GTB_ROOT/$GTB_CONFIG_REPO"
 GTB_TRAINERS_FILE="${GTB_TRAINERS_FILE:-$GTB_CONFIG_DIR/trainers.txt}"
 GTB_BUDDIES_FILE="${GTB_BUDDIES_FILE:-$GTB_CONFIG_DIR/buddies-${GTB_TERM}.txt}"
+GTB_BUDDIES_MAPPING_FILE="${GTB_BUDDIES_MAPPING_FILE:-$GTB_CONFIG_DIR/buddies-mapping-${GTB_TERM}.txt}"
 GTB_STUDENTS_FILE_DEFAULT="${GTB_CONFIG_DIR}/students.txt"
 GTB_STUDENTS_FILE_TERM="${GTB_CONFIG_DIR}/students-${GTB_TERM}.txt"
 
@@ -54,6 +55,15 @@ GTB_EPOCH_DATETIME='19700101000000'
 
 SYMBOL_OK='✅'
 SYMBOL_ERROR='❌'
+
+# https://stackoverflow.com/a/8597411
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac OSX
+    GTB_SED_NO_BACKUP="-i ''"
+else
+    # Unknown.
+    GTB_SED_NO_BACKUP="-i"
+fi
 
 cuts() {
     cat | cut -d' ' "$@"
@@ -512,6 +522,19 @@ _gtb_filter_buddies() {
                 continue
             fi
         done
+    done
+}
+
+_gtb_filter_buddies_mapping() {
+    tail -n +2 $GTB_BUDDIES_MAPPING_FILE | while read -r BUDDY_FULLNAME BUDDEE_FULLNAME
+    do
+        if [[ -z "$*" ]] \
+            || echo "$*" | grep --silent "\<${BUDDY_FULLNAME}\>" \
+            || echo "$*" | grep --silent "\<${BUDDEE_FULLNAME}\>"
+        then
+            printf "%s\n" "$BUDDY_FULLNAME $BUDDEE_FULLNAME"
+            continue
+        fi
     done
 }
 
@@ -1389,6 +1412,53 @@ _gtb_buddy_username() {
     _gtb_buddy_list $BUDDY_FULLNAME | _gtb_cuts 5
     GTB_RAW="$FLAG_RAW"
     GTB_LINE_NUMBERS="$FLAG_LINE_NUMBERS"
+}
+
+_gtb_buddy_mapping() {
+    assert_trainers_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_buddy_map() {
+    _gtb_buddy_mapping "$@"
+}
+
+_gtb_buddy_mapping_list() {
+    _gtb_filter_buddies_mapping "$@" \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1;2,2}" \
+        | _gtb_table_format
+}
+
+_gtb_buddy_mapping_add() {
+    local -r BUDDY_FULLNAME="$GTB_BUDDY_FILTER"
+
+    cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep --silent "^\<$BUDDY_FULLNAME\>" \
+        || fail "error: cannot find buddy with fullname '$BUDDY_FULLNAME' specified via --buddy."
+
+    local -r TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_MAPPING_FILE}).tmp"
+    cp $GTB_BUDDIES_MAPPING_FILE $TMP_FILE
+
+    gtb student list --raw --fields 2 "$@" \
+        | sed "s/^/$BUDDY_FULLNAME /" \
+        >> $TMP_FILE
+
+    cat $TMP_FILE \
+        | awk 'NR<2 {print; next} {print | "sort -u"}' \
+        > $GTB_BUDDIES_MAPPING_FILE
+}
+
+_gtb_buddy_mapping_remove() {
+    local -r BUDDY_FULLNAME="$GTB_BUDDY_FILTER"
+
+    cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep --silent "^\<$BUDDY_FULLNAME\>" \
+        || fail "error: cannot find buddy with fullname '$BUDDY_FULLNAME' specified via --buddy."
+
+    gtb student list --raw --fields 2 "$@" \
+        | sed "s/^/$BUDDY_FULLNAME /" \
+        | while read -r line; do
+        sed $GTB_SED_NO_BACKUP "/^${line}$/d" $GTB_BUDDIES_MAPPING_FILE
+    done
 }
 
 _git_list_all_branches_of_remote() {
