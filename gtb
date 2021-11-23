@@ -1347,8 +1347,8 @@ _gtb_buddy_list() {
 
 _gtb_buddy_add() {
     readonly fixed_fields_count=$(( $(_gtb_buddy_fields | wc -l) - 1 )) # excludes TAGS
-    [[ $# -le $fixed_fields_count ]] \
-        && fail "error: fields count is invalid! Run \`gtb buddy fields\` to learn more."
+    [[ $# -lt $fixed_fields_count ]] \
+        && fail "error: fields count $# is invalid! Run \`gtb buddy fields\` to learn more."
 
     readonly fullname="$1"
     cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep "\<$fullname\>" \
