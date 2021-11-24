@@ -3051,7 +3051,7 @@ _gtb_org() {
 _gtb_trello_card_field_set() {
     GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --board <NAME>.}"
     local -r FIELD_ID="${1:?field ID is required!}"
-    local -r FIELD_VALUE="$*"
+    local -r FIELD_VALUE="${@:2}"
 
     echo "{\"value\": { \"text\": \"$FIELD_VALUE\" }}" \
         | run "http --print b PUT '$GTB_TRELLO_API/cards/${GTB_TRELLO_CARD_ID}/customField/${FIELD_ID}/item?$GTB_TRELLO_AUTH'" \
