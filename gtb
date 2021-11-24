@@ -3075,7 +3075,7 @@ _gtb_trello_card_create() {
 
     local MEMBER_IDS=''
     if [[ -n "$GTB_TRELLO_CARD_MEMBERS" ]]; then
-        MEMBER_IDS=$(_gtb_trello_member_id $GTB_TRELLO_CARD_MEMBERS 2>/dev/null | _gtb_cuts 1 | paste -sd',' -)
+        MEMBER_IDS=$(_gtb_trello_member_id $GTB_TRELLO_CARD_MEMBERS | _gtb_cuts 1 | paste -sd',' -)
     fi
 
     local PARAMS="idList=${LIST_ID}&pos=top"
@@ -3223,20 +3223,15 @@ _gtb_trello_member_id() {
     [[ -z "$input" ]] && return 0
 
     # TODO support input from pipe
-    echo "$input" \
-        | env_parallel \
-        --colsep ' ' \
-        --linebuffer \
-        --jobs $JOBS \
-        $GTB_PARALLEL_OPT_PROGRESS_BAR \
-        _gtb_trello_api_search_member_by_email "{2}" "{1}" \
-        | _gtb_sort '2,2'
+    echo "$input" | while read -r fullname email; do
+        _gtb_trello_api_search_member_by_email "$email" "$fullname"
+    done | _gtb_sort '2,2'
 }
 
 _gtb_trello_api_search_member_by_email() {
     local -r EMAIL=${1:?trello email is required!}
     shift
-    run "http --print b GET '$GTB_TRELLO_API/search/members?${GTB_TRELLO_AUTH}&query=${EMAIL}'" \
+    run "http --print b GET '$GTB_TRELLO_API/search/members?${GTB_TRELLO_AUTH}&query=${EMAIL}' </dev/null" \
         | jq -r '.[0].id' \
         | sed "s/$/ $*/g"
 }
