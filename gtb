@@ -1419,6 +1419,7 @@ _gtb_buddy_map() {
 _gtb_buddy_mapping_list() {
     _gtb_filter_buddies_mapping "$@" \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1;2,2}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" \
         | _gtb_table_format
 }
 
