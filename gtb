@@ -34,6 +34,7 @@ GTB_TRAINER_FILTER=''
 GTB_BUDDY_FILTER=''
 GTB_FROM_STUDENTS='true'
 GTB_FROM_BUDDIES='false'
+GTB_TRELLO_CARD_DUE_IN_DAYS=3
 
 if [[ "$(tty)" == 'not a tty' ]]; then
     GTB_PARALLEL_OPT_PROGRESS_BAR=''
@@ -919,7 +920,7 @@ _gtb_trello_remove_member_from_board() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
 
     local ORG=${1:?Student org is required!}
-    local TRELLO_EMAIL=${2:?Trell member email is required!}
+    local TRELLO_EMAIL=${2:?Trello member email is required!}
 
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
@@ -3050,15 +3051,25 @@ _gtb_trello_card_create() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     GTB_TRELLO_LIST_NAME="${GTB_TRELLO_LIST_NAME:?Trello list name is required! Specify by --list <NAME>.}"
 
-    local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
-    local CARD_NAME=$(_gtb_urlencode "$*")
-
-    if [[ $# -lt 1 ]]
-    then
-        fail 'Card name is required!'
+    # must read all input from stdin before running any httpie commands
+    if [[ -p /dev/stdin ]]; then
+        GTB_TRELLO_CARD_DESC=$(echo $GTB_TRELLO_CARD_DESC; cat)
     fi
 
-    run "http POST '$GTB_TRELLO_API/cards?idList=${LIST_ID}&pos=top&name=$CARD_NAME&$GTB_TRELLO_AUTH'" \
+    local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
+
+    local MEMBER_IDS=''
+    if [[ -n "GTB_TRELLO_CARD_MEMBERS" ]]; then
+        MEMBER_IDS=$(_gtb_trello_member_id $GTB_TRELLO_CARD_MEMBERS 2>/dev/null | _gtb_cuts 1 | paste -sd',' -)
+    fi
+
+    local PARAMS="idList=${LIST_ID}&pos=top"
+
+    [[ -n "$GTB_TRELLO_CARD_NAME" ]] && PARAMS="$PARAMS&name=$(_gtb_urlencode "$GTB_TRELLO_CARD_NAME")"
+    [[ -n "$GTB_TRELLO_CARD_DESC" ]] && PARAMS="$PARAMS&desc=$(_gtb_urlencode "$GTB_TRELLO_CARD_DESC")"
+    [[ -n "$MEMBER_IDS" ]] && PARAMS="$PARAMS&idMembers=${MEMBER_IDS}"
+
+    run "http --print b POST '$GTB_TRELLO_API/cards?$GTB_TRELLO_AUTH&${PARAMS}&due=$(gdate --date="$GTB_TRELLO_CARD_DUE_IN_DAYS days" --iso-8601=seconds)'" \
         | jq -r '.shortUrl, .name'
 }
 
@@ -3182,6 +3193,39 @@ _gtb_trello_board() {
         set -- list "$@"
     fi
 
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_trello_member_id() {
+    local input
+    if [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
+        input=$(_gtb_filter_buddies "$@" | _gtb_cuts '1,3')
+    else
+        input=$(_gtb_filter_students "$@" | _gtb_unformat | _gtb_cuts '1,5')
+    fi
+
+    [[ -z "$input" ]] && return 0
+
+    # TODO support input from pipe
+    echo "$input" \
+        | env_parallel \
+        --colsep ' ' \
+        --linebuffer \
+        --jobs $JOBS \
+        $GTB_PARALLEL_OPT_PROGRESS_BAR \
+        _gtb_trello_api_search_member_by_email "{2}" "{1}" \
+        | _gtb_sort '2,2'
+}
+
+_gtb_trello_api_search_member_by_email() {
+    local -r EMAIL=${1:?trello email is required!}
+    shift
+    run "http --print b GET '$GTB_TRELLO_API/search/members?${GTB_TRELLO_AUTH}&query=${EMAIL}'" \
+        | jq -r '.[0].id' \
+        | sed "s/$/ $*/g"
+}
+
+_gtb_trello_member() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
@@ -4080,6 +4124,38 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: Trello list name specified by '$1' is missing"
+            fi
+            ;;
+        --name)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_CARD_NAME=$2
+                shift 2
+            else
+                fail "Error: Trello card name specified by '$1' is missing"
+            fi
+            ;;
+        --desc)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_CARD_DESC=$2
+                shift 2
+            else
+                fail "Error: Trello card description specified by '$1' is missing"
+            fi
+            ;;
+        --members)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_CARD_MEMBERS=$2
+                shift 2
+            else
+                fail "Error: Trello card members specified by '$1' is missing"
+            fi
+            ;;
+        --due-in-days)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_CARD_DUE_IN_DAYS=$2
+                shift 2
+            else
+                fail "Error: Trello card due in days specified by '$1' is missing"
             fi
             ;;
         --type)
