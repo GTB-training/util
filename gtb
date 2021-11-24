@@ -3069,9 +3069,10 @@ _gtb_trello_card_create() {
     [[ -n "$GTB_TRELLO_CARD_NAME" ]] && PARAMS="$PARAMS&name=$(_gtb_urlencode "$GTB_TRELLO_CARD_NAME")"
     [[ -n "$GTB_TRELLO_CARD_DESC" ]] && PARAMS="$PARAMS&desc=$(_gtb_urlencode "$GTB_TRELLO_CARD_DESC")"
     [[ -n "$MEMBER_IDS" ]] && PARAMS="$PARAMS&idMembers=${MEMBER_IDS}"
+    PARAMS="$PARAMS&due=$(gdate --date="$GTB_TRELLO_CARD_DUE_IN_DAYS days" --iso-8601=seconds)"
 
-    run "http --print b POST '$GTB_TRELLO_API/cards?$GTB_TRELLO_AUTH&${PARAMS}&due=$(gdate --date="$GTB_TRELLO_CARD_DUE_IN_DAYS days" --iso-8601=seconds)'" \
-        | jq -r '.shortUrl, .name'
+    run "http --print b POST '$GTB_TRELLO_API/cards?$GTB_TRELLO_AUTH&${PARAMS}'" \
+        | jq -jr '.id, " ", .shortUrl, " ", .name, "\n"'
 }
 
 _gtb_trello_card_check() {
