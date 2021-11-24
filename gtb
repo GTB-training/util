@@ -3060,7 +3060,7 @@ _gtb_trello_card_create() {
     local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
 
     local MEMBER_IDS=''
-    if [[ -n "GTB_TRELLO_CARD_MEMBERS" ]]; then
+    if [[ -n "$GTB_TRELLO_CARD_MEMBERS" ]]; then
         MEMBER_IDS=$(_gtb_trello_member_id $GTB_TRELLO_CARD_MEMBERS 2>/dev/null | _gtb_cuts 1 | paste -sd',' -)
     fi
 
