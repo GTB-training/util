@@ -3226,14 +3226,14 @@ _gtb_trello_member_id() {
 
     # TODO support input from pipe
     echo "$input" | while read -r fullname email; do
-        _gtb_trello_api_search_member_by_email "$email" "$fullname"
+        _gtb_trello_api_search_member "$email" "$fullname"
     done | _gtb_sort '2,2'
 }
 
-_gtb_trello_api_search_member_by_email() {
-    local -r EMAIL=${1:?trello email is required!}
+_gtb_trello_api_search_member() {
+    local -r QUERY=${1:?search query is required!}
     shift
-    _gtb_trello_api "/search/members?query=${EMAIL}" </dev/null \
+    _gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null \
         | jq -r '.[0].id' \
         | sed "s/$/ $*/g"
 }
