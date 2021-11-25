@@ -27,6 +27,7 @@ GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 GTB_REPOS_DIR="repos"
 GTB_TERMS_DIR="terms"
+GTB_USER_CACHE_DIR="$HOME/.cache/gtb"
 SUBCMD_PREFIX='_gtb'
 GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default}"
 GTB_PER_PAGE=100
@@ -3266,6 +3267,34 @@ _gtb_trello() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_cache() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_cache_get() {
+    local -r FILENAME=${1:?cache filename is required!}
+    local -r KEY=${2:?cache KEY is required!}
+
+    local -r CACHE_FILE="$GTB_USER_CACHE_DIR/$FILENAME"
+    local -r CACHE_KEY="${KEY// /-}"
+
+    [[ ! -f $CACHE_FILE ]] && return
+
+    ggrep "^${CACHE_KEY} " "$CACHE_FILE" | cut -d' ' -f2-
+}
+
+_gtb_cache_set() {
+    # local RESULT="$(_gtb_cache_get trello "member-id-${QUERY}")"
+    local -r FILENAME=${1:?cache filename is required!}
+    local -r KEY=${2:?cache KEY is required!}
+    local -r VALUE=${3:?cache VALUE is required!}
+
+    local -r CACHE_FILE="$GTB_USER_CACHE_DIR/$FILENAME"
+    local -r CACHE_KEY="${KEY// /-}"
+
+    echo "${CACHE_KEY} ${VALUE}" >> "$CACHE_FILE"
+}
+
 _gtb_tag_stat() {
     local POSITION=${1:?Tag position, starts from 1, is required!}
     shift
@@ -4066,6 +4095,7 @@ _gtb_update() {
 _gtb_init() {
     mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
     mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
+    mkdir -p $GTB_USER_CACHE_DIR
 
     if [[ -d $GTB_CONFIG_DIR ]]
     then
