@@ -3234,9 +3234,21 @@ _gtb_trello_member_id() {
 _gtb_trello_api_get_member_id() {
     local -r QUERY=${1:?search query is required!}
     shift
-    _gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null \
-        | jq -r '.[0].id' \
-        | sed "s/$/ $*/g"
+    local RESULT="$(_gtb_cache_get trello "member-id-${QUERY}")"
+
+    if [[ -n "$RESULT" ]]; then
+        echo "$RESULT $*"
+        return 0
+    fi
+
+    RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null | jq -r '.[0].id')
+    if [[ -n "$RESULT" ]]; then
+        _gtb_cache_set trello "member-id-${QUERY}" "$RESULT"
+        echo "$RESULT $*"
+        return 0
+    fi
+
+    return 1
 }
 
 _gtb_trello_member() {
