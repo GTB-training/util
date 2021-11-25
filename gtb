@@ -35,6 +35,8 @@ GTB_BUDDY_FILTER=''
 GTB_FROM_STUDENTS='true'
 GTB_FROM_BUDDIES='false'
 GTB_TRELLO_CARD_DUE_IN_DAYS=3
+GTB_HTTP_METHOD='GET'
+GTB_HTTP_PRINT=''
 
 if [[ "$(tty)" == 'not a tty' ]]; then
     GTB_PARALLEL_OPT_PROGRESS_BAR=''
@@ -3231,7 +3233,7 @@ _gtb_trello_member_id() {
 _gtb_trello_api_search_member_by_email() {
     local -r EMAIL=${1:?trello email is required!}
     shift
-    run "http --print b GET '$GTB_TRELLO_API/search/members?${GTB_TRELLO_AUTH}&query=${EMAIL}' </dev/null" \
+    _gtb_trello_api "/search/members?query=${EMAIL}" </dev/null \
         | jq -r '.[0].id' \
         | sed "s/$/ $*/g"
 }
@@ -3240,11 +3242,26 @@ _gtb_trello_member() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_trello_api() {
+    local -r API_PATH="${1:?path is required! (e.g. /cards/\{id\})}"
+    local PRINT_OPTION=''
+    [[ -n "$GTB_HTTP_PRINT" ]] && PRINT_OPTION="--print $GTB_HTTP_PRINT"
+
+    local URL="${GTB_TRELLO_API}${API_PATH}"
+    if [[ "$API_PATH" =~ '?' ]]; then
+        URL="${URL}${GTB_TRELLO_AUTH}"
+    else
+        URL="${URL}${GTB_TRELLO_AUTH/&/?}"
+    fi
+
+    run "http $PRINT_OPTION $GTB_HTTP_METHOD '${URL}'"
+}
+
 _gtb_trello() {
     GTB_TRELLO_API='https://api.trello.com/1'
     GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
     GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
-    GTB_TRELLO_AUTH="key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN"
+    GTB_TRELLO_AUTH="&key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN"
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
@@ -4287,6 +4304,22 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: separator specified by '$1' is missing"
+            fi
+            ;;
+        --print)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_HTTP_PRINT="$2"
+                shift 2
+            else
+                fail "Error: httpie --print WHAT specified by '$1' is missing, e.g. HBhb"
+            fi
+            ;;
+        --method)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_HTTP_METHOD="$2"
+                shift 2
+            else
+                fail "Error: HTTP method specified by '$1' is missing"
             fi
             ;;
         --from-students)
