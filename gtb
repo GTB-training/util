@@ -56,7 +56,6 @@ else
     GTB_GREP="grep"
 fi
 
-
 GTB_ORG=tws-graduate-program
 
 GTB_YES="false"
@@ -468,8 +467,19 @@ _gtb_filter_students() {
         exit 0
     fi
 
-    local -r PATTERN="$(echo $* | tr ' ' '|')"
-    $GTB_GREP -E --color=never "\<${PATTERN}\>" $GTB_STUDENTS_FILE
+    (
+        local -r PATTERN="$(echo $* | tr ' ' '|')"
+        $GTB_GREP -E --color=never "\<${PATTERN}\>" $GTB_STUDENTS_FILE
+
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            for FILTER in "$@"; do
+                if echo "$FILTER" | $GTB_GREP --silent -P '[\p{Han}]'; then
+                    # https://stackoverflow.com/a/8597411
+                    awk -v CN_NAME="$FILTER" '$7 == CN_NAME {print}' $GTB_STUDENTS_FILE
+                fi
+            done
+        fi
+    ) | sort -u
 }
 
 _gtb_filter_buddies() {
