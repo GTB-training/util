@@ -2433,9 +2433,8 @@ _gtb_student_list_format() {
 }
 
 _gtb_student_list() {
-    _gtb_filter_students "$@" | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS; do
-        printf "%s\n" "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
-    done \
+    _gtb_filter_students "$@" \
+        | _gtb_student_reorder_columns \
         | _gtb_sort "${GTB_SORT_ORDER:-2,2}" \
         | _gtb_cuts "${GTB_FIELDS:-1-10,12}" \
         | _gtb_table_format
@@ -2448,12 +2447,13 @@ _gtb_student_show_format() {
 _gtb_student_show() {
     local STUDENT_FULLNAME=${1:?Trainee fullname is required! (e.g. zhang.san, li.si, etc.)}
 
-    _gtb_filter_students \
-        | grep "\<$STUDENT_FULLNAME\>" \
-        | while read -r FULLNAME ORG TERM_NAME USERNAME TAGS; do
-            printf "%s\n" "$TERM_NAME $FULLNAME $ORG $USERNAME $TAGS"
-        done \
+    _gtb_filter_students "$STUDENT_FULLNAME" \
+        | _gtb_student_reorder_columns \
         | ${FUNCNAME[0]}_format
+}
+
+_gtb_student_reorder_columns() {
+    cat | awk '{fullname=$1;owner=$2;term_name=$3;username=$4;$1=$2=$3=$4="";$0=$0;$1=$1;print term_name, fullname, owner, username, $0}'
 }
 
 _gtb_student() {
