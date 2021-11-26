@@ -919,7 +919,7 @@ _gtb_trello_find_board_id() {
     local RESULT="$(_gtb_cache_get trello "board-id-${BOARD_NAME}")"
 
     if [[ -n "$RESULT" ]]; then
-        echo "$RESULT $*"
+        echo "$RESULT"
         return 0
     fi
 
@@ -928,7 +928,7 @@ _gtb_trello_find_board_id() {
 
     if [[ -n "$RESULT" ]]; then
         _gtb_cache_set trello "board-id-${BOARD_NAME}" "$RESULT"
-        echo "$RESULT $*"
+        echo "$RESULT"
         return 0
     fi
 
