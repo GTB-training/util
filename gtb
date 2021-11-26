@@ -904,10 +904,25 @@ gh_clone_repo() {
 }
 
 _gtb_trello_find_board_id() {
-    local BOARD_NAME=${1:?Board name is required!}
+    local -r BOARD_NAME=${1:?Board name is required!}
+    shift
+    local RESULT="$(_gtb_cache_get trello "board-id-${BOARD_NAME}")"
 
-    run "http GET '$GTB_TRELLO_API/members/${GTB_TRELLO_USERNAME}/boards?${GTB_TRELLO_AUTH}'" \
-        | jq -r ".[] | select(.name == \"$BOARD_NAME\") | .id"
+    if [[ -n "$RESULT" ]]; then
+        echo "$RESULT $*"
+        return 0
+    fi
+
+    RESULT=$(_gtb_trello_api "/members/${GTB_TRELLO_USERNAME}/boards" </dev/null \
+        | jq -r ".[] | select(.name == \"$BOARD_NAME\") | .id")
+
+    if [[ -n "$RESULT" ]]; then
+        _gtb_cache_set trello "board-id-${BOARD_NAME}" "$RESULT"
+        echo "$RESULT $*"
+        return 0
+    fi
+
+    return 1
 }
 
 _gtb_trello_find_list_id() {
