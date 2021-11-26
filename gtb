@@ -35,6 +35,8 @@ GTB_TRAINER_FILTER=''
 GTB_BUDDY_FILTER=''
 GTB_FROM_STUDENTS='true'
 GTB_FROM_BUDDIES='false'
+GTB_LIST_BY_BUDDY='true'
+GTB_LIST_BY_BUDDEE='false'
 GTB_TRELLO_CARD_DUE_IN_DAYS=3
 GTB_HTTP_METHOD='GET'
 GTB_HTTP_PRINT=''
@@ -1420,8 +1422,16 @@ _gtb_buddy_map() {
 }
 
 _gtb_buddy_mapping_list() {
+    local A=1
+    local B=2
+    if [[ "true" == "$GTB_LIST_BY_BUDDEE" ]]; then
+        A=2
+        B=1
+    fi
     _gtb_filter_buddies_mapping "$@" \
-        | _gtb_sort "${GTB_SORT_ORDER:-1,1;2,2}" \
+        | awk -v A=$A -v B=$B '{map[$A]=map[$A]" "$B;count[$A]+=1} END{for (name in map) print name, count[name], map[name]}' \
+        | tr -s ' ' \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
         | _gtb_cuts "${GTB_FIELDS:-1-}" \
         | _gtb_table_format
 }
@@ -4370,6 +4380,14 @@ while (( "$#" )); do
             ;;
         --from-buddies)
             GTB_FROM_BUDDIES="true"
+            shift
+            ;;
+        --by-buddy)
+            GTB_LIST_BY_BUDDY="true"
+            shift
+            ;;
+        --by-buddee)
+            GTB_LIST_BY_BUDDEE="true"
             shift
             ;;
         --all)
