@@ -461,61 +461,41 @@ _gtb_run_subcommand() {
     $subcommand_function "$@"
 }
 
-_gtb_filter_students() {
+_gtb_filter_file() {
+    local -r FILENAME=${1:?filename is required!}
+    local -r CN_COL_INDEX=${2:?CN column index is required!}
+    shift 2
+
     if [[ -z "$*" ]]; then
-        run "cat $GTB_STUDENTS_FILE"
+        run "cat $FILENAME"
         exit 0
     fi
 
     (
         local -r PATTERN="$(echo $* | tr ' ' '|')"
-        $GTB_GREP -E --color=never "\<${PATTERN}\>" $GTB_STUDENTS_FILE
+        $GTB_GREP -E --color=never "\<${PATTERN}\>" $FILENAME
 
+        # https://stackoverflow.com/a/8597411
         if [[ "$OSTYPE" == "darwin"* ]]; then
             for FILTER in "$@"; do
                 if echo "$FILTER" | $GTB_GREP --silent -P '[\p{Han}]'; then
-                    # https://stackoverflow.com/a/8597411
-                    awk -v CN_NAME="$FILTER" '$7 == CN_NAME {print}' $GTB_STUDENTS_FILE
+                    awk -v CN_COL_INDEX="$CN_COL_INDEX" -v CN_NAME="$FILTER" '$CN_COL_INDEX == CN_NAME {print}' $FILENAME
                 fi
             done
         fi
     ) | sort -u
 }
 
+_gtb_filter-file() {
+    _gtb_filter_file "$@"
+}
+
+_gtb_filter_students() {
+    _gtb_filter_file "$GTB_STUDENTS_FILE" 7 "$@"
+}
+
 _gtb_filter_buddies() {
-    tail -n +2 $GTB_BUDDIES_FILE | while read -r FULLNAME CHINESE_NAME TW_EMAIL UNIT GITHUB_USERNAME MOBILE WECHAT TAGS
-    do
-        if [[ -z "$*" ]] \
-            || echo "$*" | grep --silent "\<${FULLNAME}\>" \
-            || echo "$*" | grep --silent "\<${CHINESE_NAME}\>" \
-            || echo "$*" | grep --silent "\<${TW_EMAIL}\>" \
-            || echo "$*" | grep --silent "\<${UNIT}\>" \
-            || echo "$*" | grep --silent "\<${GITHUB_USERNAME}\>" \
-            || echo "$*" | grep --silent "\<${MOBILE}\>" \
-            || echo "$*" | grep --silent "\<${WECHAT}\>"
-        then
-            printf "%s\n" "$FULLNAME $CHINESE_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT $TAGS"
-            continue
-        fi
-
-        for FILTER in "$@"
-        do
-            if echo "$TAGS" | grep --silent "\<${FILTER}\>"
-            then
-                printf "%s\n" "$FULLNAME $CHINESE_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT $TAGS"
-                continue
-            fi
-        done
-
-        for FILTER in "$@"
-        do
-            if [[ "$CHINESE_NAME" == "${FILTER}" ]]
-            then
-                printf "%s\n" "$FULLNAME $CHINESE_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT $TAGS"
-                continue
-            fi
-        done
-    done
+    _gtb_filter_file "$GTB_BUDDIES_FILE" 2 "$@" | grep -v '^FULLNAME'
 }
 
 _gtb_filter_buddies_mapping() {
