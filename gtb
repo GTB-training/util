@@ -463,37 +463,13 @@ _gtb_run_subcommand() {
 }
 
 _gtb_filter_students() {
-    grep "\<$GTB_TERM\>" $GTB_STUDENTS_FILE | while read -r FULLNAME OWNER TERM_NAME USERNAME TRELLO_EMAIL NICKNAME CHINESE_NAME TAGS
-    do
-        if [[ -z "$*" ]] \
-            || echo "$*" | grep --silent "\<${FULLNAME}\>" \
-            || echo "$*" | grep --silent "\<${USERNAME}\>"  \
-            || echo "$*" | grep --silent "\<${TRELLO_EMAIL}\>" \
-            || echo "$*" | grep --silent "\<${NICKNAME}\>" \
-            || echo "$*" | grep --silent "\<${OWNER}\>"
-        then
-            printf "%s\n" "$FULLNAME $OWNER $TERM_NAME $USERNAME $TRELLO_EMAIL $NICKNAME $CHINESE_NAME $TAGS"
-            continue
-        fi
+    if [[ -z "$*" ]]; then
+        run "cat $GTB_STUDENTS_FILE"
+        exit 0
+    fi
 
-        for FILTER in "$@"
-        do
-            if echo "$TAGS" | grep --silent "\<${FILTER}\>"
-            then
-                printf "%s\n" "$FULLNAME $OWNER $TERM_NAME $USERNAME $TRELLO_EMAIL $NICKNAME $CHINESE_NAME $TAGS"
-                continue
-            fi
-        done
-
-        for FILTER in "$@"
-        do
-            if [[ "$CHINESE_NAME" == "${FILTER}" ]]
-            then
-                printf "%s\n" "$FULLNAME $OWNER $TERM_NAME $USERNAME $TRELLO_EMAIL $NICKNAME $CHINESE_NAME $TAGS"
-                continue
-            fi
-        done
-    done
+    local -r PATTERN="$(echo $* | tr ' ' '|')"
+    $GTB_GREP -E --color=never "\<${PATTERN}\>" $GTB_STUDENTS_FILE
 }
 
 _gtb_filter_buddies() {
