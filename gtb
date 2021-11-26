@@ -47,6 +47,16 @@ else
     GTB_PARALLEL_OPT_PROGRESS_BAR='--bar'
 fi
 
+# https://stackoverflow.com/a/8597411
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac OSX
+    GTB_GREP="ggrep"
+else
+    # Unknown.
+    GTB_GREP="grep"
+fi
+
+
 GTB_ORG=tws-graduate-program
 
 GTB_YES="false"
@@ -3317,7 +3327,7 @@ _gtb_cache_get() {
 
     [[ ! -f $CACHE_FILE ]] && return
 
-    ggrep "^${CACHE_KEY} " "$CACHE_FILE" | cut -d' ' -f2-
+    $GTB_GREP "^${CACHE_KEY} " "$CACHE_FILE" | cut -d' ' -f2-
 }
 
 _gtb_cache_set() {
