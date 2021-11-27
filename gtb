@@ -463,7 +463,8 @@ _gtb_run_subcommand() {
 
 _gtb_filter_file() {
     local -r FILENAME=${1:?filename is required!}
-    local -r CN_COL_INDICES=${2:?CN column indices is required! (e.g. 2,7)}
+    # CN column indices is required, you can pass an empty string or comma separated index string! (e.g. 2,7)
+    local -r CN_COL_INDICES=${2}
     shift 2
 
     if [[ -z "$*" ]]; then
