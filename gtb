@@ -3214,7 +3214,7 @@ _gtb_trello_board_list() {
     GTB_TRELLO_USERNAME="${GTB_TRELLO_USERNAME:?Trello username is required! Specify by GTB_TRELLO_USERNAME or --username.}"
 
     run "http '$GTB_TRELLO_API/members/${GTB_TRELLO_USERNAME}/boards?$GTB_TRELLO_AUTH'" \
-        | jq -jr '.[] | .id, "^", .name, "\n"' \
+        | jq -jr '.[] | .id, "^", .shortUrl, "^", .name, "\n"' \
         | _gtb_table_format -s '^'
 }
 
