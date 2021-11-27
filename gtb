@@ -1175,6 +1175,16 @@ extract_comment_context() {
     done
 }
 
+assert_value_is_uniq_in_file() {
+    local -r FILENAME="${1:? filename is required!}"
+    local -r FIELD="${2:?1-based field number is required!}"
+    local -r VALUE="${3:?value is required!}"
+
+    if [[ -n "$(awk -v FIELD="$FIELD" -v VALUE="$VALUE" '$FIELD == VALUE' $FILENAME)" ]]; then
+        fail "error: value '$VALUE' already exists on field '$FIELD' in file '$(basename $FILENAME)'!"
+    fi
+}
+
 extract_summary_comments_for_dimension() {
     local DIMENSION=${1:?dimension code is required!}
     grep "TODO GTB-\(${DIMENSION}\): \*" -R ${GTB_EXCLUDE_DIRS[@]} * | \
@@ -2415,6 +2425,26 @@ _gtb_student_delete() {
 
 _gtb_student_remove() {
     _gtb_student_delete "$@"
+}
+
+_gtb_student_add() {
+    local -r PY_NAME="${1:?PinYin name is PinYin is required!}"
+    local -r CN_NAME="${2:?chinese name is required!}"
+    local -r GITHUB_USERNAME="${3:?GitHub username is required!}"
+    local -r TRELLO_EMAIL="${4:?Trello email is required!}"
+    local -r WEEK_NUM="$(gdate +%V)"
+    local -r CREATED_AT="$(gdate --iso-8601=seconds)"
+    local -r CREATED_ON="${CREATED_AT:0:10}"
+
+    assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 1 $PY_NAME
+    assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 7 $CN_NAME
+    assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 4 $GITHUB_USERNAME
+    assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 5 $TRELLO_EMAIL
+
+    readonly TMP_FILE="/tmp/$(basename ${GTB_STUDENTS_FILE}).tmp"
+    cp $GTB_STUDENTS_FILE $TMP_FILE
+    echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME BACKGROUP CITY UNIT $WEEK_NUM $CREATED_ON $CREATED_AT" >> $TMP_FILE
+    cat $TMP_FILE > $GTB_STUDENTS_FILE
 }
 
 _gtb_student_list_format() {
