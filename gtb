@@ -364,7 +364,7 @@ _gtb_unformat() {
 }
 
 _gtb_cuts() {
-    cat | cut -d ' ' -f "${*}"
+    cut -d ' ' -f "${*:-$GTB_FIELDS}" <(cat)
 }
 
 _gtb_count() {
