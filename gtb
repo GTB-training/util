@@ -3292,6 +3292,10 @@ _gtb_trello() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_tr() {
+    _gtb_trello "$@"
+}
+
 _gtb_cache() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
