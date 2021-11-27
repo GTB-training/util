@@ -1396,17 +1396,22 @@ _gtb_buddy_list() {
 }
 
 _gtb_buddy_add() {
-    readonly fixed_fields_count=$(( $(_gtb_buddy_fields | wc -l) - 1 )) # excludes TAGS
-    [[ $# -lt $fixed_fields_count ]] \
-        && fail "error: fields count $# is invalid! Run \`gtb buddy fields\` to learn more."
+    local -r FULLNAME="${1:?FULLNAME is required!}"
+    local -r CN_NAME="${2:?CN_NAME is required!}"
+    local -r TW_EMAIL="${3:?TW_EMAIL is required!}"
+    local -r UNIT="${4:?UNIT is required!}"
+    local -r GITHUB_USERNAME="${5:?GITHUB_USERNAME is required!}"
+    local -r MOBILE="${6:?MOBILE is required!}"
+    local -r WECHAT="${7:?WECHAT is required!}"
+    shift 7
+    local -r TAGS="$*"
 
-    readonly fullname="$1"
-    cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep "\<$fullname\>" \
-        && fail "error: Fullname already exists, run \`gtb buddy show $tw_email\` to learn more."
-
-    readonly tw_email="$3"
-    cat $GTB_BUDDIES_FILE | _gtb_cuts 3 | grep "\<$tw_email\>" \
-        && fail "error: Thoughtworks email already exists, run \`gtb buddy show $tw_email\` to learn more."
+    assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 1 "$FULLNAME"
+    assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 2 "$CN_NAME"
+    assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 3 "$TW_EMAIL"
+    assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 5 "$GITHUB_USERNAME"
+    assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 6 "$MOBILE"
+    assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 7 "$WECHAT"
 
     readonly TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_FILE}).tmp"
     cp $GTB_BUDDIES_FILE $TMP_FILE
