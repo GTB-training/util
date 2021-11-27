@@ -916,12 +916,28 @@ _gtb_trello_find_board_id() {
 _gtb_trello_find_list_id() {
     local BOARD_NAME=${1:?Board name is required!}
     local LIST_NAME=${2:?List name is required!}
+    shift 2
+
+    local CACHE_KEY="list-id-${BOARD_NAME}-${LIST_NAME}"
+    local RESULT="$(_gtb_cache_get trello "$CACHE_KEY")"
+    if [[ -n "$RESULT" ]]; then
+        echo "$RESULT"
+        return 0
+    fi
 
     local BOARD_ID=$(_gtb_trello_find_board_id "$BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    run "http GET '$GTB_TRELLO_API/boards/${BOARD_ID}/lists?$GTB_TRELLO_AUTH'" \
-        | jq -r ".[] | select(.name == \"$LIST_NAME\") | .id"
+    RESULT=$(_gtb_trello_api "/boards/${BOARD_ID}/lists" </dev/null \
+        | jq -r ".[] | select(.name == \"$LIST_NAME\") | .id")
+
+    if [[ -n "$RESULT" ]]; then
+        _gtb_cache_set trello "$CACHE_KEY" "$RESULT"
+        echo "$RESULT"
+        return 0
+    fi
+
+    return 1
 }
 
 _gtb_trello_remove_member_from_board() {
@@ -933,9 +949,10 @@ _gtb_trello_remove_member_from_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local trello_username=$(run "http --print b GET '$GTB_TRELLO_API/search/members?${GTB_TRELLO_AUTH}&idBoard=${BOARD_ID}&query=${TRELLO_EMAIL}' | jq -r '.[0].username'")
-    local trello_id_member=$(run "http --print b GET '$GTB_TRELLO_API/boards/${BOARD_ID}/members?${GTB_TRELLO_AUTH}' | jq -r '.[] | select(.username == \"$trello_username\") | .id'")
-    local board_json=$(run "http --print b DELETE '$GTB_TRELLO_API/boards/${BOARD_ID}/members/${trello_id_member}?$GTB_TRELLO_AUTH'")
+    local trello_username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+    local trello_member_id=$(_gtb_trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+
+    local board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${trello_member_id}" </dev/null)
 
     if echo $board_json | grep --silent "$trello_username"; then
         echo "❌ $ORG $trello_username $TRELLO_EMAIL"
@@ -956,7 +973,7 @@ _gtb_trello_invite_member_to_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local response=$(run "http PUT '$GTB_TRELLO_API/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}&$GTB_TRELLO_AUTH'" 2>&1)
+    local response=$(_gtb_trello_api --method 'PUT' "/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}" </dev/null 2>&1)
 
     if echo $response | grep --silent '^{"id":'; then
         echo "OK $ORG $TRELLO_EMAIL"
@@ -3070,7 +3087,7 @@ _gtb_trello_card_field_set() {
     local -r FIELD_VALUE="${@:2}"
 
     echo "{\"value\": { \"text\": \"$FIELD_VALUE\" }}" \
-        | run "http --print b PUT '$GTB_TRELLO_API/cards/${GTB_TRELLO_CARD_ID}/customField/${FIELD_ID}/item?$GTB_TRELLO_AUTH'" \
+        | _gtb_trello_api --method 'PUT' "/cards/${GTB_TRELLO_CARD_ID}/customField/${FIELD_ID}/item" \
         | jq -jr '"card:", .idModel, " idCustomField:", .idCustomField, " value:", .value.text, "\n"'
 }
 
@@ -3101,7 +3118,7 @@ _gtb_trello_card_create() {
     [[ -n "$MEMBER_IDS" ]] && PARAMS="$PARAMS&idMembers=${MEMBER_IDS}"
     PARAMS="$PARAMS&due=$(gdate --date="$GTB_TRELLO_CARD_DUE_IN_DAYS days" --iso-8601=seconds)"
 
-    run "http --print b POST '$GTB_TRELLO_API/cards?$GTB_TRELLO_AUTH&${PARAMS}'" \
+    _gtb_trello_api --method 'POST' "/cards?${PARAMS}" </dev/null \
         | jq -jr '.id, " ", .shortUrl, " ", .name, "\n"'
 }
 
@@ -3112,7 +3129,7 @@ _gtb_trello_card_check() {
     local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
     assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
 
-    local cards_info=$(run "http GET '$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH'" \
+    local cards_info=$(_gtb_trello_api "/lists/${LIST_ID}/cards" \
         | jq -jr '.[] | .pos, " ", .name, " ", .badges.checkItemsChecked, " ", .badges.checkItems, " ", .id, " ", .shortUrl, "\n"')
 
     local student_lines=$(_gtb_filter_students "$@")
@@ -3134,10 +3151,10 @@ _gtb_trello_card_list() {
     local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
     assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
 
-    run "http GET '$GTB_TRELLO_API/lists/${LIST_ID}/cards?$GTB_TRELLO_AUTH'" \
-        | jq -jr '.[] | .pos, " ", .name, " ", .badges.checkItemsChecked, " ", .badges.checkItems, " ", .id, " ", .shortUrl, "\n"' \
-        | _gtb_sort '3,3n;4,4n;5,5' \
-        | _gtb_table_format
+    _gtb_trello_api "/lists/${LIST_ID}/cards" </dev/null \
+        | jq -jr '.[] | .pos, "^", .id, "^", .shortUrl, "^", .name, "\n"' \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1n}" \
+        | _gtb_table_format -s '^'
 }
 
 _gtb_trello_card() {
@@ -3148,7 +3165,7 @@ _gtb_trello_list_list() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
 
-    run "http GET '$GTB_TRELLO_API/boards/${BOARD_ID}/lists?$GTB_TRELLO_AUTH'" \
+    _gtb_trello_api "/boards/${BOARD_ID}/lists" </dev/null \
         | jq -jr '.[] | .id, "^", .name, "\n"' \
         | _gtb_table_format -s '^'
 }
@@ -3215,7 +3232,7 @@ _gtb_trello_board_invite() {
 _gtb_trello_board_list() {
     GTB_TRELLO_USERNAME="${GTB_TRELLO_USERNAME:?Trello username is required! Specify by GTB_TRELLO_USERNAME or --username.}"
 
-    run "http '$GTB_TRELLO_API/members/${GTB_TRELLO_USERNAME}/boards?$GTB_TRELLO_AUTH'" \
+    _gtb_trello_api "/members/${GTB_TRELLO_USERNAME}/boards" </dev/null \
         | jq -jr '.[] | .id, "^", .shortUrl, "^", .name, "\n"' \
         | _gtb_table_format -s '^'
 }
@@ -3226,6 +3243,24 @@ _gtb_trello_board() {
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_trello_member_username() {
+    local input
+    if [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
+        input=$(_gtb_filter_buddies "$@" | _gtb_cuts '1,3')
+    elif [[ "true" == "$GTB_FROM_TRAINERS" ]]; then
+        input=$(_gtb_filter_trainers "$@" | _gtb_cuts '1,3')
+    else
+        input=$(_gtb_filter_students "$@" | _gtb_unformat | _gtb_cuts '1,5')
+    fi
+
+    [[ -z "$input" ]] && return 0
+
+    # TODO support input from pipe
+    echo "$input" | while read -r fullname email; do
+        _gtb_trello_api_get_member_username "$email" "$fullname"
+    done | _gtb_sort '2,2'
 }
 
 _gtb_trello_member_id() {
@@ -3244,6 +3279,26 @@ _gtb_trello_member_id() {
     echo "$input" | while read -r fullname email; do
         _gtb_trello_api_get_member_id "$email" "$fullname"
     done | _gtb_sort '2,2'
+}
+
+_gtb_trello_api_get_member_username() {
+    local -r QUERY=${1:?search query is required!}
+    shift
+    local RESULT="$(_gtb_cache_get trello "member-username-${QUERY}")"
+
+    if [[ -n "$RESULT" ]]; then
+        echo "$RESULT $*"
+        return 0
+    fi
+
+    RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null | jq -r '.[0].username')
+    if [[ -n "$RESULT" ]]; then
+        _gtb_cache_set trello "member-username-${QUERY}" "$RESULT"
+        echo "$RESULT $*"
+        return 0
+    fi
+
+    return 1
 }
 
 _gtb_trello_api_get_member_id() {
@@ -3271,9 +3326,39 @@ _gtb_trello_member() {
 }
 
 _gtb_trello_api() {
+    local HTTP_METHOD
+    local HTTP_PRINT
+
+    while (( "$#" )); do
+        case "$1" in
+            --method)
+                if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                    HTTP_METHOD="$2"
+                    shift 2
+                else
+                    fail "Error: HTTP method specified by '$1' is missing"
+                fi
+                ;;
+            --print)
+                if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                    HTTP_PRINT="$2"
+                    shift 2
+                else
+                    fail "Error: httpie --print WHAT specified by '$1' is missing, e.g. HBhb"
+                fi
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    HTTP_METHOD=${HTTP_METHOD:-$GTB_HTTP_METHOD}
+    HTTP_PRINT=${HTTP_PRINT:-$GTB_HTTP_PRINT}
+
     local -r API_PATH="${1:?path is required! (e.g. /cards/\{id\})}"
     local PRINT_OPTION=''
-    [[ -n "$GTB_HTTP_PRINT" ]] && PRINT_OPTION="--print $GTB_HTTP_PRINT"
+    [[ -n "$HTTP_PRINT" ]] && PRINT_OPTION="--print $HTTP_PRINT"
 
     local URL="${GTB_TRELLO_API}${API_PATH}"
     if [[ "$API_PATH" =~ '?' ]]; then
@@ -3282,7 +3367,7 @@ _gtb_trello_api() {
         URL="${URL}${GTB_TRELLO_AUTH/&/?}"
     fi
 
-    run "http $PRINT_OPTION $GTB_HTTP_METHOD '${URL}'"
+    run "http $PRINT_OPTION $HTTP_METHOD '${URL}'"
 }
 
 _gtb_trello() {
