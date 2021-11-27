@@ -503,6 +503,10 @@ _gtb_filter_buddies() {
     _gtb_filter_file "$GTB_BUDDIES_FILE" "2,4,8" "$@" | grep -v '^FULLNAME'
 }
 
+_gtb_filter_trainers() {
+    _gtb_filter_file "$GTB_TRAINERS_FILE" "4" "$@" | grep -v '^FULLNAME'
+}
+
 _gtb_filter_buddies_mapping() {
     tail -n +2 $GTB_BUDDIES_MAPPING_FILE | while read -r BUDDY_FULLNAME BUDDEE_FULLNAME
     do
