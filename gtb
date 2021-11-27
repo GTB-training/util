@@ -463,7 +463,7 @@ _gtb_run_subcommand() {
 
 _gtb_filter_file() {
     local -r FILENAME=${1:?filename is required!}
-    local -r CN_COL_INDEX=${2:?CN column index is required!}
+    local -r CN_COL_INDICES=${2:?CN column index is required!}
     shift 2
 
     if [[ -z "$*" ]]; then
@@ -479,7 +479,7 @@ _gtb_filter_file() {
         if [[ "$OSTYPE" == "darwin"* ]]; then
             for FILTER in "$@"; do
                 if echo "$FILTER" | $GTB_GREP --silent -P '[\p{Han}]'; then
-                    awk -v CN_COL_INDEX="$CN_COL_INDEX" -v CN_NAME="$FILTER" '$CN_COL_INDEX == CN_NAME {print}' $FILENAME
+                    awk -v CN_COL_INDICES="$CN_COL_INDICES" -v CN_NAME="$FILTER" '$CN_COL_INDICES == CN_NAME {print}' $FILENAME
                 fi
             done
         fi
