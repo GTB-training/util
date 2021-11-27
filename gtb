@@ -463,7 +463,7 @@ _gtb_run_subcommand() {
 
 _gtb_filter_file() {
     local -r FILENAME=${1:?filename is required!}
-    local -r CN_COL_INDICES=${2:?CN column index is required!}
+    local -r CN_COL_INDICES=${2:?CN column indices is required! (e.g. 2,7)}
     shift 2
 
     if [[ -z "$*" ]]; then
@@ -475,11 +475,15 @@ _gtb_filter_file() {
         local -r PATTERN="$(echo $* | tr ' ' '|')"
         $GTB_GREP -E --color=never "\<${PATTERN}\>" $FILENAME
 
-        # https://stackoverflow.com/a/8597411
         if [[ "$OSTYPE" == "darwin"* ]]; then
             for FILTER in "$@"; do
                 if echo "$FILTER" | $GTB_GREP --silent -P '[\p{Han}]'; then
-                    awk -v CN_COL_INDICES="$CN_COL_INDICES" -v CN_NAME="$FILTER" '$CN_COL_INDICES == CN_NAME {print}' $FILENAME
+                    awk -v CN_COL_INDICES="$CN_COL_INDICES" -v CN_NAME="$FILTER" '{
+                        n = split(CN_COL_INDICES, indices, ",");
+                        for (i in indices) {
+                            if ($indices[i] == CN_NAME) { print }
+                        }
+                    }' $FILENAME
                 fi
             done
         fi
@@ -491,11 +495,11 @@ _gtb_filter-file() {
 }
 
 _gtb_filter_students() {
-    _gtb_filter_file "$GTB_STUDENTS_FILE" 7 "$@"
+    _gtb_filter_file "$GTB_STUDENTS_FILE" "7" "$@"
 }
 
 _gtb_filter_buddies() {
-    _gtb_filter_file "$GTB_BUDDIES_FILE" 2 "$@" | grep -v '^FULLNAME'
+    _gtb_filter_file "$GTB_BUDDIES_FILE" "2,4,8" "$@" | grep -v '^FULLNAME'
 }
 
 _gtb_filter_buddies_mapping() {
