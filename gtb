@@ -1432,7 +1432,7 @@ _gtb_buddy_add() {
     cp $GTB_BUDDIES_FILE $TMP_FILE
     echo "$*" >> $TMP_FILE
     cat $TMP_FILE \
-        | awk 'NR<2 {print; next} {print | "sort"}' \
+        | awk 'NR<2 {print; next} {print | "sort -u"}' \
         > $GTB_BUDDIES_FILE
 }
 
@@ -2464,7 +2464,7 @@ _gtb_student_add() {
     readonly TMP_FILE="/tmp/$(basename ${GTB_STUDENTS_FILE}).tmp"
     cp $GTB_STUDENTS_FILE $TMP_FILE
     echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME BACKGROUND CITY UNIT $WEEK_NUM $CREATED_ON $CREATED_AT" >> $TMP_FILE
-    cat $TMP_FILE | sort > $GTB_STUDENTS_FILE
+    cat $TMP_FILE | sort -u > $GTB_STUDENTS_FILE
 }
 
 _gtb_student_list_format() {
