@@ -3255,7 +3255,7 @@ _gtb_trello_board_invite() {
     elif [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
         input=$(_gtb_filter_buddies "$@" | _gtb_cuts '1,3')
     else
-        input=$(_gtb_filter_students "$@" | _gtb_unformat | _gtb_cuts '2,5')
+        input=$(_gtb_filter_students "$@" | _gtb_unformat | _gtb_cuts '1,5')
     fi
 
     echo "$input" \
