@@ -2236,6 +2236,10 @@ _gtb_student_repo_delete() {
         | _gtb_table_format
 }
 
+_gtb_student_repo_remove() {
+    _gtb_student_repo_delete "$@"
+}
+
 _gtb_student_repo_create() {
     local REPO_NAMES=${GTB_REPO:?repo names should be provided using --repo option. (e.g. --repo 'bronze-java-level-1', --repo 'bronze-java-level-1,bronze-java-level-2'}
 
