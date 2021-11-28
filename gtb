@@ -1457,6 +1457,8 @@ _gtb_buddy_remove() {
     cat $TMP_FILE \
         | awk -v keyword="$keyword" '$1==keyword || $3==keyword {next} {print}' \
         > $GTB_BUDDIES_FILE
+
+    _gtb_config_diff "$GTB_BUDDIES_FILE"
 }
 
 _gtb_buddy_username() {
