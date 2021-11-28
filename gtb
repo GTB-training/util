@@ -2320,6 +2320,7 @@ _gtb_student_repo_list() {
             gh_list_org_repos {1} \
         | _format_repo_time_fields \
         | _gtb_sort "4,4;2,2" \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" \
         | _gtb_table_format \
         | sed "s/ public / $(red public) /"
 }
