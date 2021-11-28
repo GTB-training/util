@@ -1393,16 +1393,13 @@ _gtb_buddy_fields() {
 _gtb_buddy_show() {
     local BUDDY_FULLNAME=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
 
-    local buddy_lines=$(_gtb_filter_buddies "$@")
+    local buddy_lines=$(_gtb_filter_buddies "${BUDDY_FULLNAME}")
     local buddies_count=$(_gtb_count_lines "$buddy_lines")
-    assert_not_empty "error: cannot find any buddies with filters: '$@'!" "$buddy_lines"
-    [[ 1 -ne $buddies_count ]] && fail "error: matched more than one buddies with filters: '$@'!"
-
-    readonly buddy_info=$(_gtb_filter_buddies $BUDDY_FULLNAME)
+    [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FULLNAME}', should match excactly one line!"
 
     paste -d ' ' \
         <(_gtb_buddy_fields -N) \
-        <(echo "$buddy_info" | tr ' ' '\n') \
+        <(echo "$buddy_lines" | tr ' ' '\n') \
         | _gtb_table_format
 }
 
@@ -2493,11 +2490,16 @@ _gtb_student_show_format() {
 }
 
 _gtb_student_show() {
-    local STUDENT_FULLNAME=${1:?Trainee fullname is required! (e.g. zhang.san, li.si, etc.)}
+    local -r FULLNAME=${1:?fullname is required! (e.g. zhang.san, li.si, etc.)}
 
-    _gtb_filter_students "$STUDENT_FULLNAME" \
+    local -r FILTERED_LINES=$(_gtb_filter_students "${FULLNAME}")
+    local -r COUNT=$(_gtb_count_lines "$FILTERED_LINES")
+    [[ 1 -ne $COUNT ]] && fail "error: $COUNT lines filtered with filter: '${FULLNAME}', should match excactly one line!"
+
+    echo "$FILTERED_LINES" \
         | _gtb_student_reorder_columns \
-        | ${FUNCNAME[0]}_format
+        | tr ' ' '\n' \
+        | _gtb_table_format
 }
 
 _gtb_student_reorder_columns() {
