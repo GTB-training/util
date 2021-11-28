@@ -3241,9 +3241,9 @@ _gtb_trello_board_remove() {
         | _gtb_cuts '2,5' \
         | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
             _gtb_trello_remove_member_from_board {1} {2} \
-        | sort \
-        | column -t \
-        | cat -n
+        | _gtb_sort 1r \
+        | _gtb_table_format \
+        | _gtb_tr_symbols
 }
 
 _gtb_trello_board_invite() {
