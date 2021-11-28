@@ -3402,6 +3402,10 @@ _gtb_trello_member() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_trello_limits() {
+    _gtb_trello_api "/resource/limits" </dev/null
+}
+
 _gtb_trello_api() {
     local HTTP_METHOD
     local HTTP_PRINT
