@@ -3327,7 +3327,7 @@ _gtb_trello_api_get_member_username() {
     fi
 
     RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null | jq -r '.[0].username')
-    if [[ -n "$RESULT" ]]; then
+    if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
         _gtb_cache_set trello "member-username-${QUERY}" "$RESULT"
         echo "$RESULT $*"
         return 0
@@ -3347,7 +3347,7 @@ _gtb_trello_api_get_member_id() {
     fi
 
     RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null | jq -r '.[0].id')
-    if [[ -n "$RESULT" ]]; then
+    if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
         _gtb_cache_set trello "member-id-${QUERY}" "$RESULT"
         echo "$RESULT $*"
         return 0
