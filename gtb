@@ -3851,7 +3851,7 @@ while (( "$#" )); do
                 BRANCH_NAME=$2
                 shift 2
             else
-                fail "Error: tag name specified by '$1' is missing"
+                fail "Error: branch name specified by '$1' is missing"
             fi
             ;;
         --username)
