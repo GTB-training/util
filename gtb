@@ -3636,8 +3636,8 @@ _gtb_config_edit() {
 _gtb_config_diff() {
     local FILES="${1:-.}"
     run "cd '$GTB_CONFIG_DIR'"
-    run "git diff --stat $FILES"
-    run "git diff --color-words $FILES"
+    run "git --no-pager diff --stat $FILES"
+    run "git --no-pager diff --color-words $FILES"
 }
 
 _gtb_config_list() {
