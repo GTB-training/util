@@ -1183,6 +1183,16 @@ extract_comment_context() {
     done
 }
 
+assert_value_exists_in_file() {
+    local -r FILENAME="${1:? filename is required!}"
+    local -r FIELD="${2:?1-based field number is required!}"
+    local -r VALUE="${3:?value is required!}"
+
+    if [[ -z "$(awk -v FIELD="$FIELD" -v VALUE="$VALUE" '$FIELD == VALUE' $FILENAME)" ]]; then
+        fail "error: value '$VALUE' not found on field '$FIELD' in file '$(basename $FILENAME)'!"
+    fi
+}
+
 assert_value_is_uniq_in_file() {
     local -r FILENAME="${1:? filename is required!}"
     local -r FIELD="${2:?1-based field number is required!}"
