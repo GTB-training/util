@@ -949,13 +949,16 @@ _gtb_trello_remove_member_from_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local trello_username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
-    local trello_member_id=$(_gtb_trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+    local -r trello_username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+    local -r trello_member_id=$(_gtb_trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
 
-    local board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${trello_member_id}" </dev/null)
+    local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${trello_member_id}" </dev/null)
 
-    if echo $board_json | grep --silent "$trello_username"; then
-        echo "❌ $ORG $trello_username $TRELLO_EMAIL"
+    local -r RESULT="$(jq -jr ".members[] | select(.username==\"$trello_username\") | .username, \" \", .memberType, \" \", .fullName, \"\n\"" <(echo "$JSON"))"
+    echo $RESULT
+
+    if [[ -n "$RESULT" ]]; then
+        echo "❌ $ORG $trello_username $TRELLO_EMAIL $RESULT"
         return 1
     fi
 
@@ -973,10 +976,15 @@ _gtb_trello_invite_member_to_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local response=$(_gtb_trello_api --method 'PUT' "/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}" </dev/null 2>&1)
+    local -r MEMBER_ID=$(_gtb_trello_member_id "$TRELLO_EMAIL" | _gtb_cuts 1 | head -n1)
+    assert_not_empty "Cannot find member with email '$TRELLO_EMAIL'!" "$MEMBER_ID"
 
-    if echo $response | grep --silent '^{"id":'; then
-        echo "OK $ORG $TRELLO_EMAIL"
+    local -r JSON="$(_gtb_trello_api --method 'PUT' "/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}")"
+
+    local -r RESULT="$(jq -jr ".memberships[] | select(.idMember==\"$MEMBER_ID\") | .idMember, \" \", .memberType, \" \", .deactivated, \"\n\"" <(echo "$JSON"))"
+
+    if [[ -n "$RESULT" ]]; then
+        echo "OK $ORG $TRELLO_EMAIL $RESULT"
         return 0
     fi
 
