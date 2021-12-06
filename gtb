@@ -1430,7 +1430,11 @@ _gtb_buddy_add() {
 
     readonly TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_FILE}).tmp"
     cp $GTB_BUDDIES_FILE $TMP_FILE
-    echo "$*" >> $TMP_FILE
+
+    local LINE="$FULLNAME $CN_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT"
+    [[ -n "$TAGS" ]] && LINE="$LINE $TAGS"
+
+    echo "$LINE" >> $TMP_FILE
     cat $TMP_FILE \
         | awk 'NR<2 {print; next} {print | "sort -u"}' \
         > $GTB_BUDDIES_FILE
