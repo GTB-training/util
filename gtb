@@ -2967,8 +2967,6 @@ add_repo_to_team() {
 }
 
 _gtb_repo_add() {
-    local ORG=${1:?Organization is required!}
-    shift
     local TEAM=${1:?Team is required!}
     shift
 
@@ -2978,7 +2976,7 @@ _gtb_repo_add() {
         do
             for repo in $line
             do
-                add_repo_to_team $ORG $TEAM $repo
+                add_repo_to_team $GTB_ORG $TEAM $repo
             done
         done
     fi
@@ -2986,7 +2984,7 @@ _gtb_repo_add() {
 
     for repo in $@
     do
-        add_repo_to_team $ORG $TEAM $repo
+        add_repo_to_team $GTB_ORG $TEAM $repo
     done
 }
 
