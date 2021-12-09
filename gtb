@@ -2457,12 +2457,12 @@ _gtb_student_delete() {
     fi
 
     echo "$student_lines" \
-        | _gtb_cuts 1 \
+        | _gtb_cuts 7 \
         | env_parallel \
             $GTB_PARALLEL_OPT_PROGRESS_BAR \
             --linebuffer \
             --jobs 1 \
-            "sed -i.bak -E '/^{}/d' '$GTB_STUDENTS_FILE'"
+            "sed -i.bak -E '/ {} /d' '$GTB_STUDENTS_FILE'"
 
     _gtb_config_diff "$GTB_STUDENTS_FILE"
 }
