@@ -2471,24 +2471,42 @@ _gtb_student_remove() {
     _gtb_student_delete "$@"
 }
 
-_gtb_student_add() {
+_gtb_student_register() {
     local -r PY_NAME="${1:?PinYin name is PinYin is required!}"
     local -r CN_NAME="${2:?chinese name is required!}"
     local -r GITHUB_USERNAME="${3:?GitHub username is required!}"
     local -r TRELLO_EMAIL="${4:?Trello email is required!}"
-    local -r WEEK_NUM="$(gdate +%V)"
-    local -r CREATED_AT="$(gdate --iso-8601=seconds)"
-    local -r CREATED_ON="${CREATED_AT:0:10}"
+    local -r UPDATED_AT="$(gdate --iso-8601=seconds)"
 
-    assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 1 $PY_NAME
+    assert_value_exists_in_file $GTB_STUDENTS_FILE 7 "$CN_NAME"
+
+    assert_value_is_uniq_in_file <(grep -v " $CN_NAME " $GTB_STUDENTS_FILE) 1 $PY_NAME
+    assert_value_is_uniq_in_file <(grep -v " $CN_NAME " $GTB_STUDENTS_FILE) 4 $GITHUB_USERNAME
+    assert_value_is_uniq_in_file <(grep -v " $CN_NAME " $GTB_STUDENTS_FILE) 5 $TRELLO_EMAIL
+
+    sed -i.bak \
+        -e "s/^.* \(${CN_NAME} .*$\)/$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME \1/" \
+        -e "s/.* ${CN_NAME} .*$/& $UPDATED_AT/" \
+        $GTB_STUDENTS_FILE
+    sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
+}
+
+_gtb_student_add() {
+    local -r CN_NAME="${1:?chinese name is required!}"
+    local -r BACKGROUND="${2:?background is required!}"
+    local -r OFFICE="${3:?office is required!}"
+    local -r UNIT="${4:?unit is required!}"
+    local -r ADDED_ON="$(gdate --iso-8601=date)"
+    local -r WEEK_NUM="$(gdate --date=${ADDED_ON} +%V)"
+
+    local -r PY_NAME="~PINYIN_NAME~"
+    local -r GITHUB_USERNAME="_GITHUB_USERNAME_"
+    local -r TRELLO_EMAIL="_TRELLP_EMAIL_"
+
     assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 7 $CN_NAME
-    assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 4 $GITHUB_USERNAME
-    assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 5 $TRELLO_EMAIL
 
-    readonly TMP_FILE="/tmp/$(basename ${GTB_STUDENTS_FILE}).tmp"
-    cp $GTB_STUDENTS_FILE $TMP_FILE
-    echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME BACKGROUND CITY UNIT $WEEK_NUM $CREATED_ON $CREATED_AT" >> $TMP_FILE
-    cat $TMP_FILE | sort -u > $GTB_STUDENTS_FILE
+    echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME $BACKGROUND $OFFICE $UNIT $WEEK_NUM $ADDED_ON" >> $GTB_STUDENTS_FILE
+    sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
 }
 
 _gtb_student_list_format() {
