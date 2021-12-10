@@ -151,7 +151,9 @@ logtn() {
 }
 
 fail() {
-    error $*
+    if [[ $# -ne 0 ]]; then
+        error $*
+    fi
     exit 1
 }
 
