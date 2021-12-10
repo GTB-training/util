@@ -525,6 +525,19 @@ _gtb_filter_buddies_mapping() {
     done
 }
 
+_gtb_field_index() {
+    local -r FILENAME="${1:?filename is required!}"
+    local -r FIELD="${2:?field name is required!}"
+
+    local -r FIELDS="$(head -n1 "$FILENAME")"
+
+    if ! $GTB_GREP --silent "\<$FIELD\>" <(echo "$FIELDS"); then
+        fail "error: cannot find '$FIELD' in '$FIELDS' from file '$FILENAME'!"
+    fi
+
+    echo "$FIELDS" | tr ' ' '\n' | nl -n ln | $GTB_GREP "$FIELD" | _gtb_cuts 1
+}
+
 gh_check_user() {
     local USERNAME=${1:?username is required!}
     local result=$(run "gh api '/users/$USERNAME' $(_gtb_mute_stderr)" \
