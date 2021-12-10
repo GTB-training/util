@@ -13,6 +13,7 @@ GTB_BUDDIES_FILE="${GTB_BUDDIES_FILE:-$GTB_CONFIG_DIR/buddies-${GTB_TERM}.txt}"
 GTB_BUDDIES_MAPPING_FILE="${GTB_BUDDIES_MAPPING_FILE:-$GTB_CONFIG_DIR/buddies-mapping-${GTB_TERM}.txt}"
 GTB_STUDENTS_FILE_DEFAULT="${GTB_CONFIG_DIR}/students.txt"
 GTB_STUDENTS_FILE_TERM="${GTB_CONFIG_DIR}/students-${GTB_TERM}.txt"
+GTB_ASGMT_SUB_FILE="${GTB_ASGMT_SUB_FILE:-${GTB_CONFIG_DIR}/assignment-submissions-${GTB_TERM}.txt}"
 
 if [[ -f $GTB_STUDENTS_FILE ]]; then
     GTB_STUDENTS_FILE=$GTB_STUDENTS_FILE
@@ -510,6 +511,10 @@ _gtb_filter_buddies() {
 
 _gtb_filter_trainers() {
     _gtb_filter_file "$GTB_TRAINERS_FILE" "4" "$@" | grep -v '^FULLNAME'
+}
+
+_gtb_filter_asgmt_submissions() {
+    _gtb_filter_file "$GTB_ASGMT_SUB_FILE" '' "$@" | grep -v '^ORG_NAME'
 }
 
 _gtb_filter_buddies_mapping() {
@@ -1159,6 +1164,13 @@ assert_not_empty() {
     fi
 }
 
+assert_assignment_submissions_file_exists() {
+    if [[ ! -f $GTB_ASGMT_SUB_FILE ]]; then
+        error "Cannot find file: '$GTB_ASGMT_SUB_FILE'."
+        exit 1
+    fi
+}
+
 assert_trainers_file_exists() {
     if [[ ! -f $GTB_TRAINERS_FILE ]]
     then
@@ -1383,6 +1395,127 @@ _gtb_trainer() {
     fi
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_assignment() {
+    assert_students_file_exists
+    assert_assignment_submissions_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_assign() {
+    _gtb_assignment "$@"
+}
+
+_gtb_asgmt() {
+    _gtb_assignment "$@"
+}
+
+_gtb_as() {
+    _gtb_assignment "$@"
+}
+
+_gtb_assignment_submission() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_assignment_sub() {
+    _gtb_assignment_submission "$@"
+}
+
+_gtb_assignment_submission_field() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_assignment_submission_f() {
+    _gtb_assignment_submission_field "$@"
+}
+
+_gtb_assignment_submission_field_list() {
+    head -n1 $GTB_ASGMT_SUB_FILE \
+        | tr ' ' '\n' \
+        | _gtb_table_format "$@"
+}
+
+_gtb_assignment_submission_list() {
+    local -r ORG_NAMES="$(_gtb_filter_students $@ | _gtb_cuts 2 | paste -sd' ' -)"
+    _gtb_filter_asgmt_submissions $ORG_NAMES \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-4}" \
+        | _gtb_table_format
+}
+
+_gtb_assignment_submission_add() {
+    local -r STEP_NAME="${1:?step name is required!}"
+    local -r REPO_NAME="${2:?repo name is required!}"
+    local -r ORG_NAME="${3:?org name is required!}"
+    local -r PRIMARY_KEY="$REPO_NAME $ORG_NAME"
+    local CREATED_AT="$(gdate --iso-8601=seconds)"
+    CREATED_AT="${4:-$CREATED_AT}"
+    local -r CREATED_AT
+
+    assert_value_exists_in_file $GTB_STUDENTS_FILE 2 "$ORG_NAME"
+
+    if ! $GTB_GREP --silent "^$STEP_NAME $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
+        echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT __CARD_ID__ __CARD_URL__ __REVIEWERS__ __REVIEWED_AT__" >>"$GTB_ASGMT_SUB_FILE"
+        sort -u --output $GTB_ASGMT_SUB_FILE $GTB_ASGMT_SUB_FILE
+    fi
+}
+
+_gtb_assignment_submission_has() {
+    local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
+
+    local -r FIELD="${1:?FIELD is required!}"
+    local LINE
+
+    # to assert FIELD is a valid name
+    _gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD" 1>/dev/null
+
+    LINE="$($GTB_GREP " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE")"
+    if [[ -z "$LINE" ]]; then
+        fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
+    fi
+
+    if $GTB_GREP --silent "__${FIELD}__" <(echo "$LINE"); then
+        fail 'no'
+    fi
+
+    echo 'yes'
+}
+
+_gtb_assignment_submission_set() {
+    local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
+
+    local -r FIELD="${1:?FIELD is required!}"
+    local -r VALUE="${2:?VALUE is required!}"
+
+    if ! $GTB_GREP --silent " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
+        fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
+    fi
+
+    sed -i.bak \
+        -e "/ $PRIMARY_KEY /s/__${FIELD}__/${VALUE}/" \
+        "$GTB_ASGMT_SUB_FILE"
+}
+
+_gtb_assignment_submission_update() {
+    _gtb_assignment_submission_set "$@"
+}
+
+_gtb_assignment_submission_get() {
+    local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
+
+    local -r FIELD="${1:?FIELD is required!}"
+    local -r FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
+
+    if ! $GTB_GREP --silent " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
+        fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
+    fi
+
+    awk -v KEY="$PRIMARY_KEY" -v FIELD="$FIELD" -v INDEX="$FIELD_INDEX" \
+        '$0 ~ KEY && $INDEX !~ /^__/ {print $INDEX}' \
+        "$GTB_ASGMT_SUB_FILE"
 }
 
 _gtb_buddy() {
@@ -3989,6 +4122,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: Position of new tag specified by '$1' is missing"
+            fi
+            ;;
+        --pk)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_PK=$2
+                shift 2
+            else
+                fail "Error: primary key specified by '$1' is missing"
             fi
             ;;
         --repo)
