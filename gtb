@@ -1399,7 +1399,15 @@ _gtb_b() {
     _gtb_buddy "$@"
 }
 
-_gtb_buddy_fields() {
+_gtb_buddy_field() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_buddy_f() {
+    _gtb_buddy_field "$@"
+}
+
+_gtb_buddy_field_list() {
     head -n1 $GTB_BUDDIES_FILE \
         | tr ' ' '\n' \
         | _gtb_table_format "$@"
@@ -1413,7 +1421,7 @@ _gtb_buddy_show() {
     [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FULLNAME}', should match excactly one line!"
 
     paste -d ' ' \
-        <(_gtb_buddy_fields -N) \
+        <(_gtb_buddy_field_list -N) \
         <(echo "$buddy_lines" | tr ' ' '\n') \
         | _gtb_table_format
 }
