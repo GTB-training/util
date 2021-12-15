@@ -1932,7 +1932,7 @@ _gtb_student_org_remove() {
 
     if [[ "false" == "$GTB_YES" ]]
     then
-        read -p "about to DELETE ${students_count} students from $GTB_ORG? (y|n) " -n 1 -r
+        read -p "about to DELETE ${students_count} students from their orgs? (y|n) " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]
         then
