@@ -1548,16 +1548,12 @@ _gtb_buddy_add() {
     assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 6 "$MOBILE"
     assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 7 "$WECHAT"
 
-    readonly TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_FILE}).tmp"
-    cp $GTB_BUDDIES_FILE $TMP_FILE
-
     local LINE="$FULLNAME $CN_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT"
     [[ -n "$TAGS" ]] && LINE="$LINE $TAGS"
 
-    echo "$LINE" >> $TMP_FILE
-    cat $TMP_FILE \
-        | awk 'NR<2 {print; next} {print | "sort -u"}' \
-        > $GTB_BUDDIES_FILE
+    echo "$LINE" >>"$GTB_BUDDIES_FILE"
+
+    sort -u --output "$GTB_BUDDIES_FILE" "$GTB_BUDDIES_FILE"
 }
 
 _gtb_buddy_remove() {
@@ -1576,11 +1572,11 @@ _gtb_buddy_remove() {
         fi
     fi
 
-    readonly TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_FILE}).tmp"
-    cp $GTB_BUDDIES_FILE $TMP_FILE
-    cat $TMP_FILE \
-        | awk -v keyword="$keyword" '$1==keyword || $3==keyword {next} {print}' \
-        > $GTB_BUDDIES_FILE
+    gawk \
+        -i inplace \
+        -v keyword="$keyword" \
+        '$1==keyword || $3==keyword {next} {print}' \
+        "$GTB_BUDDIES_FILE"
 
     _gtb_config_diff "$GTB_BUDDIES_FILE"
 }
@@ -1628,16 +1624,11 @@ _gtb_buddy_mapping_add() {
     cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep --silent "^\<$BUDDY_FULLNAME\>" \
         || fail "error: cannot find buddy with fullname '$BUDDY_FULLNAME' specified via --buddy."
 
-    local -r TMP_FILE="/tmp/$(basename ${GTB_BUDDIES_MAPPING_FILE}).tmp"
-    cp $GTB_BUDDIES_MAPPING_FILE $TMP_FILE
-
     gtb student list --raw --fields 2 $(echo $@ | tr ',' ' ' | tr -s ' ') \
         | sed "s/^/$BUDDY_FULLNAME /" \
-        >> $TMP_FILE
+        >>"$GTB_BUDDIES_MAPPING_FILE"
 
-    cat $TMP_FILE \
-        | awk 'NR<2 {print; next} {print | "sort -u"}' \
-        > $GTB_BUDDIES_MAPPING_FILE
+    sort -u --output "$GTB_BUDDIES_MAPPING_FILE" "$GTB_BUDDIES_MAPPING_FILE"
 }
 
 _gtb_buddy_mapping_remove() {
