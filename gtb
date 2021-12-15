@@ -43,6 +43,8 @@ GTB_TRELLO_CARD_DUE_IN_DAYS=3
 GTB_HTTP_METHOD='GET'
 GTB_HTTP_PRINT=''
 
+declare -r NULL='-'
+
 if [[ "$(tty)" == 'not a tty' ]]; then
     GTB_PARALLEL_OPT_PROGRESS_BAR=''
 else
@@ -1418,7 +1420,7 @@ _gtb_assignment_submission_add() {
     assert_value_exists_in_file $GTB_STUDENTS_FILE 2 "$ORG_NAME"
 
     if ! $GTB_GREP --silent "^$STEP_NAME $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
-        echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT __CARD_ID__ __CARD_URL__ __REVIEWERS__ __REVIEWED_AT__" >>"$GTB_ASGMT_SUB_FILE"
+        echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT $NULL $NULL $NULL $NULL" >>"$GTB_ASGMT_SUB_FILE"
         sort -u --output $GTB_ASGMT_SUB_FILE $GTB_ASGMT_SUB_FILE
     fi
 }
@@ -1427,21 +1429,18 @@ _gtb_assignment_submission_has() {
     local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
 
     local -r FIELD="${1:?FIELD is required!}"
+    local FIELD_INDEX
+    FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
+    local -r FIELD_INDEX
+
     local LINE
 
-    # to assert FIELD is a valid name
-    _gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD" 1>/dev/null
+    assert_not_empty "error: field not found!" "$FIELD_INDEX"
 
-    LINE="$($GTB_GREP " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE")"
-    if [[ -z "$LINE" ]]; then
-        fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
-    fi
-
-    if $GTB_GREP --silent "__${FIELD}__" <(echo "$LINE"); then
-        fail 'no'
-    fi
-
-    echo 'yes'
+    gawk \
+        -v KEY="$PRIMARY_KEY" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
+        'BEGIN {err = 1} { if ($0 ~ KEY && $INDEX != NULL_VALUE) { err = 0; } } END { if (err == 0) { print "yes"; } else { print "no"; }  exit err}' \
+        "$GTB_ASGMT_SUB_FILE"
 }
 
 _gtb_assignment_submission_set() {
@@ -1449,13 +1448,18 @@ _gtb_assignment_submission_set() {
 
     local -r FIELD="${1:?FIELD is required!}"
     local -r VALUE="${2:?VALUE is required!}"
+    local -r FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
+
+    assert_not_empty "error: field not found!" "$FIELD_INDEX"
 
     if ! $GTB_GREP --silent " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
         fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
     fi
 
-    sed -i.bak \
-        -e "/ $PRIMARY_KEY /s/__${FIELD}__/${VALUE}/" \
+    gawk \
+        -i inplace \
+        -v KEY="$PRIMARY_KEY" -v VALUE="$VALUE" -v INDEX="$FIELD_INDEX" \
+        '{ if ($0 ~ KEY) { $INDEX = VALUE; } print $0; }' \
         "$GTB_ASGMT_SUB_FILE"
 }
 
@@ -1473,8 +1477,8 @@ _gtb_assignment_submission_get() {
         fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
     fi
 
-    awk -v KEY="$PRIMARY_KEY" -v FIELD="$FIELD" -v INDEX="$FIELD_INDEX" \
-        '$0 ~ KEY && $INDEX !~ /^__/ {print $INDEX}' \
+    gawk -v KEY="$PRIMARY_KEY" -v FIELD="$FIELD" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
+        '$0 ~ KEY && $INDEX != NULL_VALUE {print $INDEX}' \
         "$GTB_ASGMT_SUB_FILE"
 }
 
