@@ -369,7 +369,7 @@ _gtb_unformat() {
 }
 
 _gtb_cuts() {
-    cut -d ' ' -f "${*:-$GTB_FIELDS}" <(cat)
+    cut -d"${2:- }" -f "${1:-$GTB_FIELDS}" <(cat)
 }
 
 _gtb_count() {
