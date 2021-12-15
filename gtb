@@ -3659,9 +3659,8 @@ _gtb_config_push() {
 }
 
 _gtb_config_commit() {
-    run "cd '$GTB_CONFIG_DIR'"
-    run "git add students-*.txt trainers.txt buddies-*.txt"
-    run "git commit --allow-empty -m '$*'"
+    run "git -C ${GTB_CONFIG_DIR} add students-*.txt trainers.txt buddies-*.txt assignment-*.txt"
+    run "git -C ${GTB_CONFIG_DIR} commit --allow-empty -m '$*'"
 }
 
 _gtb_config_show() {
