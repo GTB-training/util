@@ -1421,7 +1421,7 @@ _gtb_assignment_submission_add() {
 
     if ! $GTB_GREP --silent "^$STEP_NAME $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
         echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT $NULL $NULL $NULL $NULL" >>"$GTB_ASGMT_SUB_FILE"
-        sort -u --output $GTB_ASGMT_SUB_FILE $GTB_ASGMT_SUB_FILE
+        LC_ALL=C sort -u --output $GTB_ASGMT_SUB_FILE $GTB_ASGMT_SUB_FILE
     fi
 }
 
@@ -1553,7 +1553,7 @@ _gtb_buddy_add() {
 
     echo "$LINE" >>"$GTB_BUDDIES_FILE"
 
-    sort -u --output "$GTB_BUDDIES_FILE" "$GTB_BUDDIES_FILE"
+    LC_ALL=C sort -u --output "$GTB_BUDDIES_FILE" "$GTB_BUDDIES_FILE"
 }
 
 _gtb_buddy_remove() {
@@ -1628,7 +1628,7 @@ _gtb_buddy_mapping_add() {
         | sed "s/^/$BUDDY_FULLNAME /" \
         >>"$GTB_BUDDIES_MAPPING_FILE"
 
-    sort -u --output "$GTB_BUDDIES_MAPPING_FILE" "$GTB_BUDDIES_MAPPING_FILE"
+    LC_ALL=C sort -u --output "$GTB_BUDDIES_MAPPING_FILE" "$GTB_BUDDIES_MAPPING_FILE"
 }
 
 _gtb_buddy_mapping_remove() {
@@ -2426,7 +2426,7 @@ _gtb_student_register() {
         -e "s/^.* \(${CN_NAME} .*$\)/$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME \1/" \
         -e "s/.* ${CN_NAME} .*$/& $UPDATED_AT/" \
         $GTB_STUDENTS_FILE
-    sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
+    LC_ALL=C sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
 }
 
 _gtb_student_add() {
@@ -2444,7 +2444,7 @@ _gtb_student_add() {
     assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 7 $CN_NAME
 
     echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME $BACKGROUND $OFFICE $UNIT $WEEK_NUM $ADDED_ON" >> $GTB_STUDENTS_FILE
-    sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
+    LC_ALL=C sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
 }
 
 _gtb_student_list_format() {
