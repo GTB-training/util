@@ -77,6 +77,11 @@ GTB_EPOCH_DATETIME='19700101000000'
 SYMBOL_OK='✅'
 SYMBOL_ERROR='❌'
 
+STATUS_OK='OK'
+STATUS_ERROR='Error'
+STATUS_FOUND='Found'
+STATUS_NOT_FOUND='NotFound'
+
 cuts() {
     cat | cut -d' ' "$@"
 }
@@ -737,13 +742,13 @@ gh_show_org_repo() {
     local ENDPOINT="/repos/$ORG/$REPO_NAME"
     local OUTPUT="$ORG $REPO_NAME"
 
-    run "gh api $ENDPOINT 1>/dev/null"
+    run "gh api $ENDPOINT 1>/dev/null $(_gtb_mute_stderr)"
 
     local result=$?
     if [[ $result -eq 0 ]]; then
-        echo "✅" $ORG
+        echo "$ORG" "$REPO_NAME" "$STATUS_FOUND"
     else
-        echo "❌" $ORG
+        echo "$ORG" "$REPO_NAME" "$STATUS_NOT_FOUND"
     fi
 
     return $result
@@ -2285,17 +2290,17 @@ _gtb_student_repo_show() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
 
-    local student_lines=$(_gtb_filter_students "$@")
+    local student_lines="$(_gtb_filter_students "$@")"
 
-    join -1 1 -2 2 -a 1 -a 2 -o '2.1,1.1' -e 'NotFound' \
-        <(echo "$student_lines" | cut -d' ' -f2 | sort) \
-        <(echo "$student_lines" | cut -d' ' -f2 \
-            | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_show_org_repo {1} $REPO_NAME \
-            | sort -k2) \
-        | sort -k1,2 \
-        | tr ' ' '|' \
-        | _gtb_tabularize \
-        | cat -n
+    echo "$student_lines" \
+        | cut -d' ' -f2 \
+        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_show_org_repo {1} $REPO_NAME \
+        | _gtb_sort "${GTB_SORT_ORDER:-3,3;1,1}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" \
+        | _gtb_table_format \
+        | _gtb_highlight \
+            "$STATUS_FOUND" green \
+            "$STATUS_NOT_FOUND" red
 }
 
 _gtb_student_repo_open() {
