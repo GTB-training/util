@@ -2287,8 +2287,7 @@ _gtb_student_repo_check() {
 }
 
 _gtb_student_repo_show() {
-    local REPO_NAME=${1:?Repo name is required!}
-    shift
+    local REPO_NAME=${GTB_REPO:?repo name should be provided using --repo option.}
 
     local student_lines="$(_gtb_filter_students "$@")"
 
