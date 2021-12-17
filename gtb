@@ -66,6 +66,7 @@ GTB_ORG=tws-graduate-program
 
 GTB_YES="false"
 GTB_RAW="false"
+GTB_FORCE="false"
 GTB_ALL_BRANCHES="false"
 GTB_LOCAL="false"
 GTB_NOTIFY="false"
@@ -2525,15 +2526,23 @@ _gtb_actions_url() {
 _gtb_push_to_student_repo() {
     local ORG=${1:?Org is required!}
     local REPO_NAME=${2:?Repo name is required!}
+    local DST_BRANCH
+    local OPTION_FORCE
 
     cd $(_gtb_default_repo_dir $REPO_NAME)
 
     local BRANCHES=$(_git_list_all_branches_of_remote 'origin')
     for BRANCH in ${BRANCHES}
     do
-        if [[ "$GTB_ALL_BRANCHES" == "true" ]] || [[ "${BRANCH}" == "master" ]]
-        then
-            run "git push $ORG origin/${BRANCH}:refs/heads/${BRANCH} $(_gtb_mute_stderr)"
+        if [[ "$GTB_ALL_BRANCHES" == "true" ]] || [[ "${BRANCH}" == "master" ]]; then
+            if [[ "$GTB_FORCE" == "true" ]]; then
+                DST_BRANCH="_${BRANCH}"
+                OPTION_FORCE='--force'
+            else
+                DST_BRANCH="${BRANCH}"
+                OPTION_FORCE=''
+            fi
+            run "git push $OPTION_FORCE $ORG origin/${BRANCH}:refs/heads/${DST_BRANCH} $(_gtb_mute_stderr)"
         fi
     done
 
@@ -4123,6 +4132,10 @@ while (( "$#" )); do
             ;;
         --raw)
             GTB_RAW="true"
+            shift
+            ;;
+        --force)
+            GTB_FORCE="true"
             shift
             ;;
         -N|--no-line-numbers)
