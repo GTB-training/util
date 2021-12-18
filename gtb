@@ -1410,7 +1410,7 @@ _gtb_assignment_submission_list() {
     local -r ORG_NAMES="$(_gtb_filter_students $@ | _gtb_cuts 2 | paste -sd' ' -)"
     _gtb_filter_asgmt_submissions $ORG_NAMES \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
-        | _gtb_cuts "${GTB_FIELDS:-1-4}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-4,7-9}" \
         | _gtb_table_format
 }
 
