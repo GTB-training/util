@@ -3155,6 +3155,45 @@ _gtb_trello_board_field() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_trello_board_label_list() {
+    local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
+
+    _gtb_trello_api "/boards/${BOARD_ID}/labels" </dev/null \
+        | jq -jr $'.[] | .id, " ", .color, " \'", .name, "\'\n"' \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
+        | _gtb_cuts "${GTB_labelS:-1-}" \
+        | _gtb_table_format "$@"
+}
+
+_gtb_trello_board_label_id() {
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+    local -r LABEL_NAME="${1:?label name is required!}"
+    _gtb_trello_api_get_label_id "$LABEL_NAME"
+}
+
+_gtb_trello_api_get_label_id() {
+    local -r QUERY=${1:?search query is required!}
+    local RESULT="$(_gtb_cache_get trello "label-id-${QUERY}")"
+
+    if [[ -n "$RESULT" ]]; then
+        echo "$RESULT"
+        return 0
+    fi
+
+    RESULT=$(_gtb_trello_board_label_list --raw | $GTB_GREP "$QUERY" | _gtb_cuts 1)
+    if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
+        _gtb_cache_set trello "label-id-${QUERY}" "$RESULT"
+        echo "$RESULT"
+        return 0
+    fi
+
+    return 1
+}
+
+_gtb_trello_board_label() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_trello_card_field_set() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --card-id <NAME>.}"
@@ -3358,7 +3397,7 @@ _gtb_trello_board_list() {
 }
 
 _gtb_trello_board() {
-    if ! echo $1 | grep --silent '^\(list\|invite\|remove\|field\)$'; then
+    if ! echo $1 | grep --silent '^\(list\|invite\|remove\|label\|field\)$'; then
         set -- list "$@"
     fi
 
