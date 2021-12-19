@@ -3347,12 +3347,19 @@ _gtb_trello_card_check() {
 
 _gtb_trello_card_list() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
-    GTB_TRELLO_LIST_NAME="${GTB_TRELLO_LIST_NAME:?Trello list name is required! Specify by --list <NAME>.}"
 
-    local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
-    assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
+    local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
+    assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    _gtb_trello_api "/lists/${LIST_ID}/cards" </dev/null \
+    local URL="/boards/${BOARD_ID}/cards"
+
+    if [[ -n "$GTB_TRELLO_LIST_NAME" ]]; then
+        local LIST_ID=$(_gtb_trello_find_list_id "$GTB_TRELLO_BOARD_NAME" "$GTB_TRELLO_LIST_NAME")
+        assert_not_empty "Cannot find list with name '$GTB_TRELLO_LIST_NAME'!" "$LIST_ID"
+        URL="/lists/${LIST_ID}/cards"
+    fi
+
+    _gtb_trello_api "$URL" </dev/null \
         | jq -jr '.[] | .pos, "^", .id, "^", .shortUrl, "^", .name, "\n"' \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1n}" \
         | _gtb_table_format -s '^'
