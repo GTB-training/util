@@ -1426,7 +1426,7 @@ _gtb_assignment_submission_add() {
     assert_value_exists_in_file $GTB_STUDENTS_FILE 2 "$ORG_NAME"
 
     if ! $GTB_GREP --silent "^$STEP_NAME $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
-        echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT $NULL $NULL $NULL $NULL" >>"$GTB_ASGMT_SUB_FILE"
+        echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT $NULL $NULL $NULL $NULL $NULL" >>"$GTB_ASGMT_SUB_FILE"
         LC_ALL=C sort -u --output $GTB_ASGMT_SUB_FILE $GTB_ASGMT_SUB_FILE
     fi
 }
