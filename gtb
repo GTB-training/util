@@ -1365,6 +1365,54 @@ _gtb_trainer() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_report() {
+    assert_students_file_exists
+    assert_assignment_submissions_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_rp() {
+    _gtb_report "$@"
+}
+
+_gtb_report_assignment() {
+    local -r STUDENT_LIST="$(_gtb_filter_students "$@" | sort -k'12,12' -k'2,2' | _gtb_cuts '2,7,8,12')"
+    {
+        echo "Name Background JoinOn" "Step0"{1..8}"-Grade" "Step0"{1..8}"-SubmittedAt"
+        paste -d' ' \
+            <(echo "$STUDENT_LIST" | _gtb_cuts 2-4) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step01' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step02' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step03' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step04' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step05' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step06' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step07' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step08' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step01' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step02' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step03' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step04' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step05' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step06' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step07' "$GTB_ASGMT_SUB_FILE")) \
+            <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step08' "$GTB_ASGMT_SUB_FILE"))
+    } | _gtb_table_format
+}
+
+_gtb_report_assign() {
+    _gtb_report_assignment "$@"
+}
+
+_gtb_report_asgmt() {
+    _gtb_report_assignment "$@"
+}
+
+_gtb_report_as() {
+    _gtb_report_assignment "$@"
+}
+
 _gtb_assignment() {
     assert_students_file_exists
     assert_assignment_submissions_file_exists
