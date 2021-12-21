@@ -1384,14 +1384,14 @@ _gtb_report_assignment() {
         {
             paste -d' ' \
                 <(echo "$STUDENT_LIST" | _gtb_cuts 2-4) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step01' "$GTB_ASGMT_SUB_FILE")) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step02' "$GTB_ASGMT_SUB_FILE")) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step03' "$GTB_ASGMT_SUB_FILE")) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step04' "$GTB_ASGMT_SUB_FILE")) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step05' "$GTB_ASGMT_SUB_FILE")) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step06' "$GTB_ASGMT_SUB_FILE")) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step07' "$GTB_ASGMT_SUB_FILE")) \
-                <(join -1 1 -2 3 -a 1 -e '-' -o '2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step08' "$GTB_ASGMT_SUB_FILE")) \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step01' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step02' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step03' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step04' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step05' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step06' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step07' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
+                <(join -1 1 -2 3 -a 1 -e '-' -o '2.4,2.8' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step08' "$GTB_ASGMT_SUB_FILE") | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}') \
                 <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step01' "$GTB_ASGMT_SUB_FILE")) \
                 <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step02' "$GTB_ASGMT_SUB_FILE")) \
                 <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step03' "$GTB_ASGMT_SUB_FILE")) \
@@ -1402,7 +1402,7 @@ _gtb_report_assignment() {
                 <(join -1 1 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step08' "$GTB_ASGMT_SUB_FILE"))
         } | _gtb_sort "${GTB_SORT_ORDER:-3,3;1,1}"
     } \
-        | _gtb_cuts "${GTB_FIELDS:-1-}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-11}" \
         | _gtb_table_format \
         | _gtb_highlight \
             'Level-0' red \
