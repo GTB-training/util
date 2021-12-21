@@ -1377,10 +1377,10 @@ _gtb_rp() {
 }
 
 _gtb_report_assignment() {
-    local -r STUDENT_LIST="$(_gtb_filter_students "$@" | _gtb_cuts '2,7,8,12')"
+    local -r STUDENT_LIST="$(_gtb_filter_students "$@" | _gtb_cuts '2,7,8,10,12')"
 
     {
-        echo "Name Background JoinOn" "Step0"{1..8}"-Grade" "Step0"{1..8}"-SubmittedAt"
+        echo "Name Background Unit JoinOn" "Step0"{1..8}"-Grade" "Step0"{1..8}"-SubmittedAt"
         {
             paste -d' ' \
                 <(echo "$STUDENT_LIST" | _gtb_cuts 2-4) \
