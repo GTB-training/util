@@ -72,6 +72,7 @@ GTB_LOCAL="false"
 GTB_NOTIFY="false"
 GTB_LINE_NUMBERS="true"
 GTB_SORT_ORDER=""
+GTB_START_NUM='1'
 GTB_TABLE_FORMAT_SEPARATOR=' '
 GTB_EPOCH_DATETIME='19700101000000'
 
@@ -220,6 +221,14 @@ _gtb_table_format() {
                     shift 2
                 else
                     fail "Error: separator specified by '$1' is missing"
+                fi
+                ;;
+            --start-num)
+                if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                    GTB_START_NUM="$2"
+                    shift 2
+                else
+                    fail "Error: index start number specified by '$1' is missing"
                 fi
                 ;;
             *)
@@ -452,7 +461,7 @@ _gtb_nl() {
         esac
     done
 
-    cat | nl -s "${GTB_TABLE_FORMAT_SEPARATOR:- }" | _gtb_unformat
+    cat | nl -v "${GTB_START_NUM}" -s "${GTB_TABLE_FORMAT_SEPARATOR:- }" | _gtb_unformat
 }
 
 _gtb_default_repo_dir() {
@@ -4240,6 +4249,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: HTTP method specified by '$1' is missing"
+            fi
+            ;;
+        --start-num)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_START_NUM="$2"
+                shift 2
+            else
+                fail "Error: index start number specified by '$1' is missing"
             fi
             ;;
         --from-students)
