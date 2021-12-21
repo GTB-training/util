@@ -1412,7 +1412,7 @@ _gtb_report_assignment() {
         } | _gtb_sort "${GTB_SORT_ORDER:-5,5;1,1}"
     } \
         | _gtb_cuts "${GTB_FIELDS:-1-13}" \
-        | _gtb_table_format \
+        | _gtb_table_format --start-num 0 \
         | _gtb_highlight \
             'Level-0' red \
             'Level-1' yellow \
