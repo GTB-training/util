@@ -260,7 +260,7 @@ _gtb_highlight() {
 
     while [[ $# -ge 2 ]]
     do
-        result=$(echo "$result" | sed -E "s/(^| )($1)( |$)/\1$($2 $1)\3/")
+        result=$(echo "$result" | sed -E "s/(^| )($1)( |$)/\1$($2 $1)\3/g")
         shift 2
     done
 
