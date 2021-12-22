@@ -676,23 +676,10 @@ gh_list_org_team_members() {
 
 gh_list_org_members() {
     local ORG=${1:?Organization is required!}
-    local ENDPOINT="/orgs/${ORG}/members?per_page=$GTB_PER_PAGE&page="
+    local ENDPOINT="/orgs/${ORG}/members?per_page=$GTB_PER_PAGE"
 
-    for page in $(seq 1 10)
-    do
-        local res=$(run "gh api '${ENDPOINT}${page}' 2>/dev/null" | jsonpp | grep '    "login":')
-        local lines_count=$(_gtb_count_lines "$res")
-        if [[ $lines_count -gt 0 ]]
-        then
-            echo "$res"
-        fi
-        if [[ $lines_count -lt $GTB_PER_PAGE ]]
-        then
-            break
-        fi
-    done \
-        | tr -d '" ,' \
-        | cut -d':' -f2 \
+    run "gh api --paginate '${ENDPOINT}' $(_gtb_mute_stderr)" \
+        | jq -r '.[] | .login' \
         | sort
 }
 
