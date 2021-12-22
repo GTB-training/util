@@ -655,7 +655,7 @@ gh_list_org_teams() {
     local ORG=${1:-$GTB_ORG}
     local ENDPOINT="/orgs/$ORG/teams"
 
-    gh api $ENDPOINT 2>/dev/null | jsonpp | \
+    run "gh api --paginate $ENDPOINT 2>/dev/null" | jsonpp | \
         grep '    "name":' | \
         tr -d '" ,' | \
         cut -d':' -f2 | \
@@ -667,7 +667,7 @@ gh_list_org_team_members() {
     local TEAM=${2:?Team is required!}
     local ENDPOINT="/orgs/${ORG}/teams/${TEAM}/members?per_page=100"
 
-    run "gh api $ENDPOINT 2>/dev/null" | jsonpp | \
+    run "gh api --paginate $ENDPOINT 2>/dev/null" | jsonpp | \
         grep '    "login":' | \
         tr -d '" ,' | \
         cut -d':' -f2 | \
@@ -816,7 +816,7 @@ gh_create_org_repo() {
 gh_list_org_invitations() {
     local ORG=${1:?Org is required!}
 
-    run "gh api /orgs/$ORG/invitations $(_gtb_mute_stderr)" \
+    run "gh api --paginate '/orgs/$ORG/invitations?per_page=${GTB_PER_PAGE}' $(_gtb_mute_stderr)" \
         | jq -jr 'if type == "array" then .[] | .login, " __ORG__  ", .id, " ", .role, " ", .created_at, "\n" else "\n" end' \
         | grep -v '^$' \
         | sed "s/__ORG__/$ORG/"
@@ -1040,7 +1040,7 @@ clone_or_update_repo() {
 join_repos() {
     readonly INVITATIONS_FILE="/tmp/gtb_invatations_${REPO_NAME}.txt"
 
-    gh api '/user/repository_invitations?per_page=100' | jsonpp | \
+    gh api --paginate '/user/repository_invitations?per_page=100' | jsonpp | \
         grep --color=never '^    "id":\|^      "name":\|^        "login":' | \
         paste -d' ' - - - | \
         tr -d ', :' | tr -s '"' | tr '"' ' ' | \
