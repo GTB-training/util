@@ -2990,6 +2990,7 @@ _gtb_repo_list() {
     gh_list_org_repos \
         | sort -k2,2 \
         | _format_repo_time_fields \
+        | _gtb_sort '3,3;1,2' \
         | _gtb_table_format \
         | _gtb_highlight \
             'public' red
