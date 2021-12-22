@@ -3018,7 +3018,8 @@ _gtb_repo_list() {
         | sort -k2,2 \
         | _format_repo_time_fields \
         | _gtb_table_format \
-        | sed "s/ public / $(red public) /"
+        | _gtb_highlight \
+            'public' red
 }
 
 _gtb_repo() {
