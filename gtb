@@ -700,28 +700,14 @@ gh_list_org_repos() {
     local ORG=${1:-$GTB_ORG}
     local TEAM=${GTB_ORG_TEAM}
 
-    local ENDPOINT="/orgs/$ORG/repos?per_page=100&page="
+    local ENDPOINT="/orgs/$ORG/repos?per_page=${GTB_PER_PAGE}"
     if [[ -n "$TEAM" ]]
     then
-        ENDPOINT="/orgs/$ORG/teams/$TEAM/repos?per_page=100&page="
+        ENDPOINT="/orgs/$ORG/teams/$TEAM/repos?per_page=${GTB_PER_PAGE}"
     fi
 
-    for page in $(seq 1 10)
-    do
-        local res=$(run "gh api '${ENDPOINT}${page}' 2>/dev/null" \
-            | jq -jr '.[] | .owner.login, " ", .name, " ", .private, " ", .created_at, "\n"')
-
-        local lines_count=$(_gtb_count_lines "$res")
-        if [[ $lines_count -gt 0 ]]
-        then
-            echo "$res"
-        fi
-
-        if [[ $lines_count -lt $GTB_PER_PAGE ]]
-        then
-            break
-        fi
-    done \
+    run "gh api --paginate '${ENDPOINT}' $(_gtb_mute_stderr)" \
+        | jq -jr '.[] | .owner.login, " ", .name, " ", .private, " ", .created_at, "\n"' \
         | sed 's/ true / private /;s/ false / public /'
 }
 
