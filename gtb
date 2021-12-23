@@ -495,7 +495,7 @@ _gtb_filter_file() {
         exit 0
     fi
 
-    (
+    {
         local -r PATTERN="$(echo $* | tr ' ' '|')"
         $GTB_GREP -E --color=never "\<(${PATTERN})\>" $FILENAME
 
@@ -511,7 +511,7 @@ _gtb_filter_file() {
                 fi
             done
         fi
-    ) | sort -u
+    } | sort -u
 }
 
 _gtb_filter-file() {
