@@ -519,7 +519,7 @@ _gtb_filter-file() {
 }
 
 _gtb_filter_students() {
-    _gtb_filter_file "$GTB_STUDENTS_FILE" "7" "$@"
+    _gtb_filter_file "$GTB_STUDENTS_FILE" "7" "$@" | sort
 }
 
 _gtb_filter_buddies() {
