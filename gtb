@@ -1382,7 +1382,7 @@ _gtb_report_assignment() {
                 <(join -1 2 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step06' "$GTB_ASGMT_SUB_FILE")) \
                 <(join -1 2 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step07' "$GTB_ASGMT_SUB_FILE")) \
                 <(join -1 2 -2 3 -a 1 -e '-' -o '2.4' <(echo "$STUDENT_LIST") <($GTB_GREP '^Step08' "$GTB_ASGMT_SUB_FILE"))
-        } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;1,1}"
+        } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;4,4;1,1}"
     } \
         | _gtb_cuts "${GTB_FIELDS:-1-13}" \
         | _gtb_table_format --start-num 0 \
