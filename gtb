@@ -3673,7 +3673,8 @@ CHECK_ROLE_ONLY="false"
 
 shopt -s extglob
 
-PARAMS=""
+declare -a PARAMS
+
 while (( "$#" )); do
     case "$1" in
         --jobs)
@@ -3974,7 +3975,7 @@ while (( "$#" )); do
             shift
             ;;
         -+([0-9])[dHMS])
-            PARAMS="$PARAMS $1"
+            PARAMS+=("$1")
             shift
             ;;
         -*|--*=)
@@ -3982,13 +3983,13 @@ while (( "$#" )); do
             shift
             ;;
         *)
-            PARAMS="$PARAMS $1"
+            PARAMS+=("$1")
             shift
             ;;
     esac
 done
 
-eval set -- "$PARAMS"
+eval set -- "${PARAMS[@]}"
 
 source `which env_parallel.bash`
 
