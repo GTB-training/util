@@ -3989,7 +3989,7 @@ while (( "$#" )); do
     esac
 done
 
-eval set -- "${PARAMS[@]}"
+set -- "${PARAMS[@]}"
 
 source `which env_parallel.bash`
 
