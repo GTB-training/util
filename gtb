@@ -1485,7 +1485,7 @@ _gtb_assignment_submission_has() {
 
     gawk \
         -v KEY="$PRIMARY_KEY" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
-        'BEGIN {err = 1} { if ($0 ~ KEY && $INDEX != NULL_VALUE) { err = 0; } } END { if (err == 0) { print "yes"; } else { print "no"; }  exit err}' \
+        'BEGIN {err = 1} { if ($2" "$3 == KEY && $INDEX != NULL_VALUE) { err = 0; } } END { if (err == 0) { print "yes"; } else { print "no"; }  exit err}' \
         "$GTB_ASGMT_SUB_FILE"
 }
 
@@ -1505,7 +1505,7 @@ _gtb_assignment_submission_set() {
     gawk \
         -i inplace \
         -v KEY="$PRIMARY_KEY" -v VALUE="$VALUE" -v INDEX="$FIELD_INDEX" \
-        '{ if ($0 ~ KEY) { $INDEX = VALUE; } print $0; }' \
+        '{ if ($2" "$3 == KEY) { $INDEX = VALUE; } print $0; }' \
         "$GTB_ASGMT_SUB_FILE"
 }
 
@@ -1524,7 +1524,7 @@ _gtb_assignment_submission_get() {
     fi
 
     gawk -v KEY="$PRIMARY_KEY" -v FIELD="$FIELD" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
-        '$0 ~ KEY && $INDEX != NULL_VALUE {print $INDEX}' \
+        '$2" "$3 == KEY && $INDEX != NULL_VALUE {print $INDEX}' \
         "$GTB_ASGMT_SUB_FILE"
 }
 
