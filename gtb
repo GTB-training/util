@@ -2334,9 +2334,17 @@ _gtb_student_repo_list() {
 }
 
 _gtb_student_repo_check() {
-    local REPO_NAME=${1:?Repo name is required!}
+    local -r REPO_NAME=${1:?Repo name is required!}
     shift 1
-    local COMMIT_REF=$(_gtb_last_commit_of_branch $REPO_NAME master)
+
+    local -r REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
+    if [[ -d $REPO_DIR ]]; then
+        _gtb_update_default_repo "${REPO_NAME}"
+    else
+        _gtb_clone_default_repo "${REPO_NAME}"
+    fi
+
+    local COMMIT_REF=$(_gtb_last_commit_of_branch $REPO_NAME origin/master)
     local student_lines=$(_gtb_filter_students "$@")
 
     join -1 1 -2 2 -a 1 -o '2.1,1.1' -e 'NotFound' \
@@ -2345,7 +2353,10 @@ _gtb_student_repo_check() {
             | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_show_org_repo_commit {1} $REPO_NAME $COMMIT_REF \
             | sort -k2) \
         | _gtb_sort "1,1r;2,2" \
-        | _gtb_table_format
+        | _gtb_table_format \
+        | _gtb_highlight \
+            'OK' green \
+            'ERROR' red
 }
 
 _gtb_student_repo_show() {
