@@ -884,6 +884,26 @@ _gtb_trello_find_board_id() {
     return 1
 }
 
+_gtb_trello_find_card_id() {
+    local -r BOARD_NAME=${1:?Board name is required!}
+    local -r CARD_NAME=${2:?Card name is required!}
+
+    local -r BOARD_ID=$(_gtb_trello_find_board_id "$BOARD_NAME")
+    assert_not_empty "Cannot find board with name '$BOARD_NAME'!" "$BOARD_ID"
+
+    local -r URL="/search?modelTypes=cards&card_fields=name&idBoards=${BOARD_ID}&query=${CARD_NAME}"
+    local -r RESULT="$(_gtb_trello_api "$URL" </dev/null \
+        | jq -r ".cards[] | select(.name == \"$CARD_NAME\") | .id" \
+        | head -n1)"
+
+    if [[ -n "$RESULT" ]]; then
+        echo "$RESULT"
+        return 0
+    fi
+
+    return 1
+}
+
 _gtb_trello_find_list_id() {
     local BOARD_NAME=${1:?Board name is required!}
     local LIST_NAME=${2:?List name is required!}
@@ -3408,6 +3428,13 @@ _gtb_trello_card_list() {
         | _gtb_table_format -s '^'
 }
 
+_gtb_trello_card_id() {
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+    GTB_TRELLO_CARD_NAME="${GTB_TRELLO_CARD_NAME:?Trello card name is required! Specify by --card-name <NAME>.}"
+
+    _gtb_trello_find_card_id "${GTB_TRELLO_BOARD_NAME}" "${GTB_TRELLO_CARD_NAME}"
+}
+
 _gtb_trello_card() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
@@ -4071,6 +4098,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: Trello card ID specified by '$1' is missing"
+            fi
+            ;;
+        --card-name)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_TRELLO_CARD_NAME=$2
+                shift 2
+            else
+                fail "Error: Trello card name specified by '$1' is missing"
             fi
             ;;
         --name)
