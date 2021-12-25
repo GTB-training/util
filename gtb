@@ -871,8 +871,9 @@ _gtb_trello_find_board_id() {
         return 0
     fi
 
-    RESULT=$(_gtb_trello_api "/members/${GTB_TRELLO_USERNAME}/boards" </dev/null \
-        | jq -r ".[] | select(.name == \"$BOARD_NAME\") | .id")
+    RESULT=$(_gtb_trello_api "/search?modelTypes=boards&query=${BOARD_NAME}" </dev/null \
+        | jq -r ".boards[] | select(.name == \"$BOARD_NAME\") | .id" \
+        | head -n1)
 
     if [[ -n "$RESULT" ]]; then
         _gtb_cache_set trello "board-id-${BOARD_NAME}" "$RESULT"
@@ -3485,6 +3486,11 @@ _gtb_trello_board_list() {
     _gtb_trello_api "/members/${GTB_TRELLO_USERNAME}/boards" </dev/null \
         | jq -jr '.[] | .id, "^", .shortUrl, "^", .name, "\n"' \
         | _gtb_table_format -s '^'
+}
+
+_gtb_trello_board_id() {
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+    _gtb_trello_find_board_id "${GTB_TRELLO_BOARD_NAME}"
 }
 
 _gtb_trello_board() {
