@@ -3482,8 +3482,6 @@ _gtb_trello_board_invite() {
 }
 
 _gtb_trello_board_list() {
-    GTB_TRELLO_USERNAME="${GTB_TRELLO_USERNAME:?Trello username is required! Specify by GTB_TRELLO_USERNAME or --username.}"
-
     _gtb_trello_api "/members/${GTB_TRELLO_USERNAME}/boards" </dev/null \
         | jq -jr '.[] | .id, "^", .shortUrl, "^", .name, "\n"' \
         | _gtb_table_format -s '^'
@@ -3627,6 +3625,7 @@ _gtb_trello() {
     GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
     GTB_TRELLO_TOKEN="${GTB_TRELLO_TOKEN:?Trello token should be set! 'https://trello.com/app-key'}"
     GTB_TRELLO_AUTH="&key=$GTB_TRELLO_API_KEY&token=$GTB_TRELLO_TOKEN"
+    GTB_TRELLO_USERNAME="${GTB_TRELLO_USERNAME:?Trello username should be set! 'Avatar -> Profile and visibility -> About -> Username'}"
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
