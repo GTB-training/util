@@ -3490,10 +3490,6 @@ _gtb_trello_board_list() {
 }
 
 _gtb_trello_board() {
-    if ! echo $1 | grep --silent '^\(list\|invite\|remove\|label\|field\)$'; then
-        set -- list "$@"
-    fi
-
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
