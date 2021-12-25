@@ -2479,7 +2479,7 @@ _gtb_student_add() {
     local -r BACKGROUND="${2:?background is required!}"
     local -r OFFICE="${3:?office is required!}"
     local -r UNIT="${4:?unit is required!}"
-    local -r ADDED_ON="$(gdate --iso-8601=date)"
+    local -r ADDED_ON="${5:?join date is required!}"
     local -r WEEK_NUM="$(gdate --date=${ADDED_ON} +%V)"
 
     local -r PY_NAME="~PINYIN_NAME~"
