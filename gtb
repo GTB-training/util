@@ -3635,6 +3635,20 @@ _gtb_tr() {
     _gtb_trello "$@"
 }
 
+_gtb_github() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_gh() {
+    _gtb_github "$@"
+}
+
+_gtb_github_limits() {
+    gh api --include /users/octocat \
+        | grep --color=never X-Ratelimit \
+        | _gtb_table_format -N
+}
+
 _gtb_cache() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
