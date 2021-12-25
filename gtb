@@ -497,7 +497,7 @@ _gtb_filter_file() {
 
     {
         local -r PATTERN="$(echo $* | tr ' ' '|')"
-        $GTB_GREP -E --color=never "\<(${PATTERN})\>" $FILENAME
+        $GTB_GREP -E --color=never "(^| )${PATTERN}( |$)" $FILENAME
 
         if [[ "$OSTYPE" == "darwin"* ]]; then
             for FILTER in "$@"; do
