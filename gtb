@@ -3501,6 +3501,9 @@ _gtb_trello_board_remove() {
 }
 
 _gtb_trello_board_invite() {
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+    GTB_TRELLO_MEMBER_TYPE="${GTB_TRELLO_MEMBER_TYPE:?Trello member type is required! Specify by --type <admin|normal|observer>.}"
+
     # input should have two fields: name, email
     local input
 
