@@ -984,30 +984,6 @@ _gtb_trello_invite_member_to_board() {
     return 1
 }
 
-build_repo() {
-    local repo_name=$1
-    local fullname=$2
-    local term_name=$3
-    local HOMEWORK_ROOT="$GTB_ROOT/$GTB_TERMS_DIR/$term_name/$repo_name"
-    local STUDENT_HOMEWORK_PATH="$HOMEWORK_ROOT/$fullname"
-
-    if [[ ! -d $STUDENT_HOMEWORK_PATH ]]
-    then
-        error "Skip building repo \`$STUDENT_HOMEWORK_PATH\` due to folder is not exist!"
-        return
-    fi
-
-    run "cd $STUDENT_HOMEWORK_PATH"
-
-    if [[ -f "package.json" ]]; then
-        run "yarn"
-    elif [[ -f "build.gradle" ]]; then
-        run "./gradlew build </dev/null"
-    else
-        error "Failed to build project due to unknown build tool!"
-    fi
-}
-
 clone_repo() {
     local repo_name=$1
     local username=$2
@@ -1056,60 +1032,6 @@ clone_or_update_repo() {
     else
         clone_repo $@
     fi
-}
-
-join_repos() {
-    readonly INVITATIONS_FILE="/tmp/gtb_invatations_${REPO_NAME}.txt"
-
-    gh api --paginate '/user/repository_invitations?per_page=100' | jsonpp | \
-        grep --color=never '^    "id":\|^      "name":\|^        "login":' | \
-        paste -d' ' - - - | \
-        tr -d ', :' | tr -s '"' | tr '"' ' ' | \
-        grep --color=never "${REPO_NAME}" > $INVITATIONS_FILE
-
-    readonly login_list_size=$(cat $INVITATIONS_FILE | wc -l | tr -d ' ')
-
-    if [[ 0 -eq $login_list_size ]]
-    then
-        info "Found $login_list_size invitations for repo ${REPO_NAME}."
-        return
-    fi
-
-    info "Found $login_list_size invitations for repo ${REPO_NAME} from following users:"
-    cat $INVITATIONS_FILE | cut -d' ' -f7 | \
-        xargs -I % grep '\<%\>' $GTB_STUDENTS_FILE | \
-        cut -d' ' -f1-2 | sort | cat -n
-
-    if [[ "$AUTO_ACCEPT" == "false" ]]
-    then
-        return
-    fi
-
-    while read -r cid id cname name clogin login
-    do
-        info "about to accept invitation from user ${login}..."
-        run "gh api -X PATCH --silent /user/repository_invitations/${id}"
-
-        [[ $? -eq 0 ]] && info "DONE" || error "FAILED"
-    done < $INVITATIONS_FILE
-}
-
-build_repos() {
-    if [[ "$AUTO_BUILD" != "true" ]]
-    then
-        return
-    fi
-
-    while read -r FULLNAME USERNAME TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                build_repo $REPO_NAME $FULLNAME $TERM_NAME
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
 }
 
 clone_or_update_repos() {
@@ -3908,45 +3830,6 @@ _gtb_comments() {
     strip_blank_details_block $GTB_TMP_COMMENTS_FILE | tee $GTB_COMMENTS_FILE | tee /dev/tty | pbcopy
 }
 
-_gtb_check() {
-    assert_students_file_exists
-
-    while read -r FULLNAME USERNAME TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                if gh api "/users/$USERNAME" | jsonpp | grep --silent "\"login\": \"$USERNAME\""
-                then
-                    info "$TERM_NAME $FULLNAME $USERNAME"
-                else
-                    error "$TERM_NAME $FULLNAME $USERNAME"
-                fi
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
-}
-
-_gtb_join() {
-    assert_students_file_exists
-
-    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
-    shift
-
-    join_repos $@
-}
-
-_gtb_build() {
-    assert_students_file_exists
-
-    AUTO_BUILD="true"
-    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
-    shift
-
-    build_repos $@
-}
-
 _gtb_update() {
     assert_students_file_exists
 
@@ -3955,7 +3838,6 @@ _gtb_update() {
     shift
 
     clone_or_update_repos $@
-    build_repos $@
 }
 
 _gtb_clone() {
@@ -3965,30 +3847,6 @@ _gtb_clone() {
     shift
 
     clone_or_update_repos $@
-    build_repos $@
-}
-
-_gtb_show() {
-    assert_students_file_exists
-
-    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
-    shift
-
-    while read -r FULLNAME USERNAME TERM_NAME TAGS
-    do
-        if echo "$TERM_NAME" | grep --silent "$GTB_TERM"
-        then
-            if [[ -z "$*" ]] || echo "$@" | grep --silent "\<${FULLNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-            then
-                if gh api /repos/$USERNAME/$REPO_NAME 1>/dev/null 2>&1
-                then
-                    info "$TERM_NAME $FULLNAME $USERNAME"
-                else
-                    error "$TERM_NAME $FULLNAME $USERNAME"
-                fi
-            fi
-        fi
-    done < $GTB_STUDENTS_FILE
 }
 
 _gtb_colors() {
