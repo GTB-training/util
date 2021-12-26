@@ -300,56 +300,6 @@ _gtb_auto_notify() {
     echo "$result"
 }
 
-_gtb_auto_schedule() {
-    [[ -z "$GTB_SCHEDULE" ]] && return
-
-    local START_AT=$(echo $GTB_SCHEDULE | sed -E 's/[^0-9]//g' | cut -c1-12)
-    START_AT=$(echo $(($START_AT * 1000000)) | cut -c1-12)
-
-    # date -v4m -v16d -v9H -v0M -v0S '+%Y-%m-%dT%H:%M:%S%z' | sed -E 's/(..)$/:\1/'
-    # 2021-04-16T09:00:00+08:00
-    local time_to_start=$(date \
-        -v$(echo $START_AT | cut -c1-4)y \
-        -v$(echo $START_AT | cut -c5-6)m \
-        -v$(echo $START_AT | cut -c7-8)d \
-        -v$(echo $START_AT | cut -c9-10)H \
-        -v$(echo $START_AT | cut -c11-12)M \
-        -v0S \
-        '+%Y-%m-%d %A %H:%M:%S')
-    local timestamp_to_start=$(date \
-        -j -f '%Y-%m-%d %A %H:%M:%S' "$time_to_start" '+%s')
-
-    local secs=$(( $timestamp_to_start - $(date +%s) ))
-    if [[ "$secs" -le 0 ]]
-    then
-        warn 'warn: scheduled time is before the current time.'
-    fi
-
-    echo "this command is scheduled running at '$(red $time_to_start)'"
-
-    if [[ "false" == "$GTB_YES" ]]
-    then
-        read -p "do you want to start countdown? (y|n) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]
-        then
-            fail 'error: user canceled the schedule, abort running'
-        fi
-    fi
-
-    secs=$(( $timestamp_to_start - $(date +%s) ))
-    while [[ "$secs" -gt 0 ]]
-    do
-        echo -ne "$((secs/86400))d $((secs%86400/3600))h $((secs%3600/60))m $((secs%60))s left to continue...\n"
-        sleep 1
-        secs=$(( $timestamp_to_start - $(date +%s) ))
-        tput cuu1
-        tput el
-    done
-
-    echo
-}
-
 _current_datetime() {
     date "+%Y%m%d-%H%M%S"
 }
@@ -2565,8 +2515,6 @@ _gtb_repo_pick() {
         fi
     fi
 
-    _gtb_auto_schedule
-
     header "Clone repo $REPO_NAME..."
     _gtb_clone_default_repo $REPO_NAME
 
@@ -2644,8 +2592,6 @@ _gtb_repo_publish() {
             return 1
         fi
     fi
-
-    _gtb_auto_schedule
 
     header "Clone repo $REPO_NAME..."
     _gtb_clone_default_repo $REPO_NAME
@@ -3894,14 +3840,6 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: column to sort with specified by '$1' is missing, e.g. total, evaluation, homework, performance, '1,1nr;2,2'"
-            fi
-            ;;
-        --schedule)
-            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
-                GTB_SCHEDULE="$2"
-                shift 2
-            else
-                fail "Error: scheduled time specified by '$1' is missing, e.g. 20200601_0900"
             fi
             ;;
         --team)
