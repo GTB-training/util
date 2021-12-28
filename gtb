@@ -3574,11 +3574,7 @@ _gtb_config_dir() {
 }
 
 _gtb_config() {
-    assert_students_file_exists
-
-    if ! echo $1 | grep --silent '^\(dir\|list\|diff\|edit\|show\|commit\|push\|pull\)$'; then
-        set -- dir "$@"
-    fi
+    [[ -d $GTB_CONFIG_DIR ]] || fail 'Cannot find config directory `$GTB_CONFIG_DIR`. Please run `gtb init`.'
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
