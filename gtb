@@ -3549,6 +3549,14 @@ _gtb_config_edit() {
     vim "$GTB_CONFIG_DIR/students-${TERM_NAME}.txt"
 }
 
+_gtb_config_checkout() {
+    run "git -C ${GTB_CONFIG_DIR} checkout ."
+}
+
+_gtb_config_status() {
+    run "git -C ${GTB_CONFIG_DIR} status"
+}
+
 _gtb_config_diff() {
     local FILES="${1:-.}"
     run "cd '$GTB_CONFIG_DIR'"
