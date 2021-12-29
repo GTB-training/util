@@ -442,7 +442,7 @@ _gtb_filter_file() {
 
     if [[ -z "$*" ]]; then
         run "cat $FILENAME"
-        exit 0
+        return 0
     fi
 
     {
