@@ -485,16 +485,23 @@ _gtb_filter_asgmt_submissions() {
 }
 
 _gtb_filter_buddies_mapping() {
-    tail -n +2 $GTB_BUDDIES_MAPPING_FILE | while read -r BUDDY_FULLNAME BUDDEE_FULLNAME
-    do
-        if [[ -z "$*" ]] \
-            || echo "$*" | grep --silent "\<${BUDDY_FULLNAME}\>" \
-            || echo "$*" | grep --silent "\<${BUDDEE_FULLNAME}\>"
-        then
-            printf "%s\n" "$BUDDY_FULLNAME $BUDDEE_FULLNAME"
-            continue
-        fi
-    done
+    if [[ $# -le 1 ]]; then
+        cat "${GTB_BUDDIES_MAPPING_FILE}"
+        return
+    fi
+
+    local -r FILTER_BY="${1:?please specify filtery-by using 1 for buddy, 2 for buddee!}"
+    shift
+
+    local -r KEYWORDS="$(echo $* | tr ' ' '|')"
+    local PATTERN
+
+    if [[ "1" == "${FILTER_BY}" ]]; then
+        PATTERN="^${KEYWORDS} "
+    else
+        PATTERN=" ${KEYWORDS}$"
+    fi
+    $GTB_GREP -E --color=never "${PATTERN}" "${GTB_BUDDIES_MAPPING_FILE}"
 }
 
 _gtb_field_index() {
@@ -1491,7 +1498,7 @@ _gtb_buddy_mapping_list() {
         A=2
         B=1
     fi
-    _gtb_filter_buddies_mapping "$@" \
+    _gtb_filter_buddies_mapping "${A}" "$@" \
         | awk -v A=$A -v B=$B '{map[$A]=map[$A]" "$B;count[$A]+=1} END{for (name in map) print name, count[name], map[name]}' \
         | tr -s ' ' \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
