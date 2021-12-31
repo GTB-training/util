@@ -1914,6 +1914,21 @@ _gtb_student_user() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_student_repo_update() {
+    AUTO_UPDATE="true"
+    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
+    shift
+
+    clone_or_update_repos $@
+}
+
+_gtb_student_repo_clone() {
+    REPO_NAME=${1:?Repo name is required! (e.g. homework-xxx-xxx, assignment-xxx-xxx, etc.)}
+    shift
+
+    clone_or_update_repos $@
+}
+
 _gtb_student_repo_delete() {
     local REPO_NAME=${1:?Repo name is required!}
     shift
@@ -3602,25 +3617,6 @@ _gtb_comments() {
 
     extract_and_format_comments > $GTB_TMP_COMMENTS_FILE
     strip_blank_details_block $GTB_TMP_COMMENTS_FILE | tee $GTB_COMMENTS_FILE | tee /dev/tty | pbcopy
-}
-
-_gtb_update() {
-    assert_students_file_exists
-
-    AUTO_UPDATE="true"
-    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
-    shift
-
-    clone_or_update_repos $@
-}
-
-_gtb_clone() {
-    assert_students_file_exists
-
-    REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
-    shift
-
-    clone_or_update_repos $@
 }
 
 _gtb_colors() {
