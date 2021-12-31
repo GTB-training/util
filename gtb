@@ -3645,8 +3645,7 @@ _gtb_upgrade() {
 }
 
 _gtb_update() {
-    [[ -d $GTB_CONFIG_DIR ]] || fail 'Cannot find config directory `$GTB_CONFIG_DIR`. Please run `gtb init` to re-init.'
-    update_repo $GTB_CONFIG_DIR
+    _gtb_config_pull "$@"
 }
 
 _gtb_init() {
