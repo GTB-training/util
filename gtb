@@ -2022,9 +2022,9 @@ _gtb_sort() {
 
     if [[ -z "$FIELD_SEPARATOR" ]]
     then
-        cat | sort $SORT_KEYS
+        cat | LC_ALL=C sort $SORT_KEYS
     else
-        cat | sort -t"$FIELD_SEPARATOR" $SORT_KEYS
+        cat | LC_ALL=C sort -t"$FIELD_SEPARATOR" $SORT_KEYS
     fi
 }
 
