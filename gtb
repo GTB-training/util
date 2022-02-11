@@ -2143,9 +2143,9 @@ _gtb_student_quit() {
     # TODO refactor following hard-coded Board names
     _gtb_org_remove "$@"
     _gtb_student_org_remove "$@"
-    GTB_TRELLO_BOARD_NAME="GTB-Dev-2022"
+    GTB_TRELLO_BOARD_NAME="$(echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/')"
     _gtb_trello board remove "$@"
-    GTB_TRELLO_BOARD_NAME="GTB-Dev-2022-Forum"
+    GTB_TRELLO_BOARD_NAME="$(echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/' -e 's/$/-Forum/')"
     _gtb_trello board remove "$@"
     _gtb_student_delete "$@"
     _gtb_config_commit "chore: $GTB_TERM quit students $@"
