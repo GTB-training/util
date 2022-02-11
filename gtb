@@ -855,7 +855,7 @@ _gtb_trello_remove_member_from_board() {
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
     local -r username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
-    local -r member_id=$(_gtb_trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+    local -r member_id=$(trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
 
     local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${member_id}" </dev/null)
 
@@ -881,7 +881,7 @@ _gtb_trello_invite_member_to_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local -r MEMBER_ID=$(_gtb_trello_member_id "$TRELLO_EMAIL" | _gtb_cuts 1 | head -n1)
+    local -r MEMBER_ID=$(trello_member_id "$TRELLO_EMAIL" | _gtb_cuts 1 | head -n1)
     assert_not_empty "Cannot find member with email '$TRELLO_EMAIL'!" "$MEMBER_ID"
 
     local -r JSON="$(_gtb_trello_api --method 'PUT' "/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}")"
@@ -3043,7 +3043,7 @@ _gtb_trello_card_label() {
 _gtb_trello_card_member_add() {
     GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --card-id <NAME>.}"
 
-    _gtb_trello_member_id "$@" \
+    trello_member_id "$@" \
         | env_parallel \
             --linebuffer \
             --jobs $JOBS \
@@ -3080,7 +3080,7 @@ _gtb_trello_card_create() {
 
     local MEMBER_IDS=''
     if [[ -n "$GTB_TRELLO_CARD_MEMBERS" ]]; then
-        MEMBER_IDS=$(_gtb_trello_member_id $GTB_TRELLO_CARD_MEMBERS | _gtb_cuts 1 | paste -sd',' -)
+        MEMBER_IDS=$(trello_member_id $GTB_TRELLO_CARD_MEMBERS | _gtb_cuts 1 | paste -sd',' -)
     fi
 
     local PARAMS="idList=${LIST_ID}&pos=top"
@@ -3261,21 +3261,25 @@ _gtb_trello_member_username() {
 }
 
 _gtb_trello_member_id() {
-    local input
-    if [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
-        input=$(_gtb_filter_buddies "$@" | _gtb_cuts '1,3')
+    trello_member_id "$@" \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1;3,3}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" \
+        | _gtb_table_format
+}
+
+trello_member_id() {
+    if [[ -p /dev/stdin ]]; then
+        cat
+    elif [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
+        _gtb_filter_buddies "$@" | awk '{print $3, $1, $2, $4}'
     elif [[ "true" == "$GTB_FROM_TRAINERS" ]]; then
-        input=$(_gtb_filter_trainers "$@" | _gtb_cuts '1,3')
+        _gtb_filter_trainers "$@" | awk '{print $3, $1, $4}'
     else
-        input=$(_gtb_filter_students "$@" | _gtb_unformat | _gtb_cuts '1,5')
-    fi
-
-    [[ -z "$input" ]] && return 0
-
-    # TODO support input from pipe
-    echo "$input" | while read -r fullname email; do
-        _gtb_trello_api_get_member_id "$email" "$fullname"
-    done | _gtb_sort '2,2'
+        _gtb_filter_students "$@" | _gtb_unformat | awk '{print $5, $1, $2, $7}'
+    fi \
+        | while read -r email hint; do
+            _gtb_trello_api_get_member_id "$email" "$hint"
+        done
 }
 
 _gtb_trello_api_get_member_username() {
@@ -3300,7 +3304,6 @@ _gtb_trello_api_get_member_username() {
 
 _gtb_trello_api_get_member_id() {
     local -r QUERY=${1:?search query is required!}
-    shift
     local RESULT="$(_gtb_cache_get trello "member-id-${QUERY}")"
 
     if [[ -n "$RESULT" ]]; then
@@ -3315,6 +3318,7 @@ _gtb_trello_api_get_member_id() {
         return 0
     fi
 
+    echo "${STATUS_NOT_FOUND} $*"
     return 1
 }
 
