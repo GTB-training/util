@@ -3164,6 +3164,48 @@ _gtb_trello_list() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_trello_board_member() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_trello_board_member_list() {
+    trello_board_member_list \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1}" '|' \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" '|' \
+        | _gtb_table_format -s '|'
+}
+
+trello_board_member_list() {
+    GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
+
+    local -r BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
+    assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
+
+    _gtb_trello_api --method 'GET' "/boards/${BOARD_ID}/members" </dev/null \
+        | jq -jr '.[] | .id, "|", .username, "|", .fullName, "\n"'
+}
+
+_gtb_trello_board_member_check() {
+    local KEEP_FILE='1'
+
+    [[ $# -ne 0 ]] && KEEP_FILE='2'
+
+    join -1 1 -2 1 -a "${KEEP_FILE}" -o '1.1,1.2,1.3,2.2,2.3,2.4,2.5' -e "${STATUS_NOT_FOUND}" -t '|' \
+        <(trello_board_member_list | _gtb_sort '1,1' '|') \
+        <(
+            {
+                GTB_FROM_TRAINERS=true trello_member_id "$@" | sed 's/ / 3 Coach /2'
+                GTB_FROM_BUDDIES=true trello_member_id "$@" | sed 's/ / 2 Buddy /2'
+                GTB_FROM_STUDENTS=true trello_member_id "$@" | sed 's/ / 1 Student /2'
+            } | _gtb_cuts '1-5' | _gtb_sort '1,1;5,5' | tr ' ' '|'
+        ) \
+        | _gtb_sort "5,5nr;7,7" '|' \
+        | _gtb_cuts '1-4,6-7' '|' \
+        | _gtb_table_format -s '|' \
+        | _gtb_highlight \
+            "${STATUS_NOT_FOUND}" red
+}
+
 _gtb_trello_board_remove() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
 
