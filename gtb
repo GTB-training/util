@@ -3238,6 +3238,10 @@ _gtb_trello_board() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_trello_member() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_trello_member_username() {
     local input
     if [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
@@ -3312,10 +3316,6 @@ _gtb_trello_api_get_member_id() {
     fi
 
     return 1
-}
-
-_gtb_trello_member() {
-    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_trello_limits() {
