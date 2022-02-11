@@ -2217,7 +2217,7 @@ _gtb_student_add() {
 
     local -r PY_NAME="~PINYIN_NAME~"
     local -r GITHUB_USERNAME="_GITHUB_USERNAME_"
-    local -r TRELLO_EMAIL="_TRELLP_EMAIL_"
+    local -r TRELLO_EMAIL="_TRELLO_EMAIL_"
 
     assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 7 $CN_NAME
 
