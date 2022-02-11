@@ -854,20 +854,20 @@ _gtb_trello_remove_member_from_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local -r trello_username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
-    local -r trello_member_id=$(_gtb_trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+    local -r username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+    local -r member_id=$(_gtb_trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
 
-    local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${trello_member_id}" </dev/null)
+    local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${member_id}" </dev/null)
 
-    local -r RESULT="$(jq -jr ".members[] | select(.username==\"$trello_username\") | .username, \" \", .memberType, \" \", .fullName, \"\n\"" <(echo "$JSON"))"
+    local -r RESULT="$(jq -jr ".members[] | select(.username==\"$username\") | .username, \" \", .memberType, \" \", .fullName, \"\n\"" <(echo "$JSON"))"
     echo $RESULT
 
     if [[ -n "$RESULT" ]]; then
-        echo "❌ $ORG $trello_username $TRELLO_EMAIL $RESULT"
+        echo "❌ $ORG $username $TRELLO_EMAIL $RESULT"
         return 1
     fi
 
-    echo "✅ $ORG $trello_username $TRELLO_EMAIL"
+    echo "✅ $ORG $username $TRELLO_EMAIL"
     return 0
 }
 
