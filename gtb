@@ -2737,6 +2737,14 @@ _gtb_repo_list() {
             'public' red
 }
 
+_gtb_repo_check() {
+    local REPO_NAME="${1:?Repo name is required!}"
+
+    gh_show_org_repo "${GTB_ORG}" "${REPO_NAME}" \
+        | _gtb_highlight \
+            "${STATUS_NOT_FOUND}" red
+}
+
 _gtb_repo() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
