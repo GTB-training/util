@@ -2123,8 +2123,7 @@ _gtb_student_group() {
         xargs -n$GROUPS_COUNT echo | \
         datamash transpose --no-strict -t' ' | \
         sed 's: N/A::' | \
-        cat -n | \
-        column -t
+        _gtb_table_format
 }
 
 _gtb_count_lines() {
