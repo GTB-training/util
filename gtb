@@ -1025,42 +1025,6 @@ assert_value_is_uniq_in_file() {
     fi
 }
 
-prepare_run_context() {
-    local HOMEWORK_ROOT=${1:?homework root is required!}
-    local HOMEWORK_TESTS_ROOT=${2:?homework tests root is required!}
-    local REPO_NAME=${3:?repository name is required!}
-
-    info "Start preparing run context..."
-    cd "$HOMEWORK_ROOT"
-    cp ${HOMEWORK_TESTS_ROOT}/docker/* .
-    cp settings.gradle settings.gradle.backup
-    echo "rootProject.name = '${REPO_NAME}'" > settings.gradle
-}
-
-clear_run_context() {
-    local HOMEWORK_ROOT=${1:?homework root is required!}
-
-    info "Start clearing run context..."
-    cd "$HOMEWORK_ROOT"
-    for f in `echo ${HOMEWORK_TESTS_ROOT}/docker/*`; do
-        rm `basename $f`
-    done
-    mv settings.gradle.backup settings.gradle
-}
-
-ensure_application_is_ready() {
-    local TIMEOUT=${1:?timeout is required!}
-
-    timeout ${TIMEOUT}s bash << "EOF"
-while :; do
-    sleep 1; curl http://localhost:8080 > /dev/null 2>&1
-    [[ "$?" -eq 0 ]] && break
-done
-EOF
-
-    return $?
-}
-
 _gtb_is_a_trainer() {
     if [[ -z "$*" ]]; then
         return 1
