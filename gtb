@@ -1005,18 +1005,6 @@ assert_students_file_exists() {
     fi
 }
 
-extract_comment_context() {
-    while read -r line
-    do
-        echo "$line" | \
-            sed 's:^.*TODO ::' | \
-            sed 's: \{0,\}-->$::' | \
-            sed 's: \{0,\}\*/}$::' | \
-            sed 's: \{0,\}\*/$::' | \
-            cut -d' ' -f2-
-    done
-}
-
 assert_value_exists_in_file() {
     local -r FILENAME="${1:? filename is required!}"
     local -r FIELD="${2:?1-based field number is required!}"
@@ -1035,21 +1023,6 @@ assert_value_is_uniq_in_file() {
     if [[ -n "$(awk -v FIELD="$FIELD" -v VALUE="$VALUE" '$FIELD == VALUE' $FILENAME)" ]]; then
         fail "error: value '$VALUE' already exists on field '$FIELD' in file '$(basename $FILENAME)'!"
     fi
-}
-
-extract_summary_comments_for_dimension() {
-    local DIMENSION=${1:?dimension code is required!}
-    grep "TODO GTB-\(${DIMENSION}\): \*" -R ${GTB_EXCLUDE_DIRS[@]} * | \
-        extract_comment_context
-}
-
-extract_detail_comments_for_dimension() {
-    local DIMENSION=${1:?dimension code is required!}
-    local SYMBOL=${2:?symbol is required!}
-
-    grep "TODO GTB-\(${DIMENSION}\): ${SYMBOL}" -R ${GTB_EXCLUDE_DIRS[@]} * | \
-        extract_comment_context | \
-        sed "s:^:${SYMBOL} \\\\:"
 }
 
 prepare_run_context() {
@@ -1086,56 +1059,6 @@ done
 EOF
 
     return $?
-}
-
-strip_blank_details_block() {
-    cat $1 | \
-        tr '\n' '\t' | \
-        sed 's/__Details:__		/__Details:__	/g' | \
-        sed 's/__Details:__			//g' | \
-        sed 's/	\{3,\}/		/g' | \
-        tr '\t' '\n'
-}
-
-extract_and_format_comments() {
-    cat <<-EOF
-### 完成度：
-$(extract_summary_comments_for_dimension '1\|完成度')
-$([ -f ./gtb-test-results.md ] && echo '* 具体验收测试结果详见：`gtb-test-results.md`')
-
-__Details:__
-$(extract_detail_comments_for_dimension '1\|完成度' '+')
-$(extract_detail_comments_for_dimension '1\|完成度' '-')
-
-### 测试：
-$(extract_summary_comments_for_dimension '2\|测试')
-
-__Details:__
-$(extract_detail_comments_for_dimension '2\|测试' '+')
-$(extract_detail_comments_for_dimension '2\|测试' '-')
-
-### 知识点：
-$(extract_summary_comments_for_dimension '3\|知识点')
-
-__Details:__
-$(extract_detail_comments_for_dimension '3\|知识点' '+')
-$(extract_detail_comments_for_dimension '3\|知识点' '-')
-
-### 工程实践：
-$(extract_summary_comments_for_dimension '4\|工程实践')
-
-__Details:__
-$(extract_detail_comments_for_dimension '4\|工程实践' '+')
-$(extract_detail_comments_for_dimension '4\|工程实践' '-')
-
-### 综合：
-$(extract_summary_comments_for_dimension '0\|综合')
-
-__Details:__
-$(extract_detail_comments_for_dimension '0\|综合' '+')
-$(extract_detail_comments_for_dimension '0\|综合' '-')
-
-EOF
 }
 
 _gtb_is_a_trainer() {
@@ -3662,14 +3585,6 @@ _gtb_config() {
     [[ -d $GTB_CONFIG_DIR ]] || fail 'Cannot find config directory `$GTB_CONFIG_DIR`. Please run `gtb init`.'
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_comments() {
-    local GTB_TMP_COMMENTS_FILE="/tmp/gtb-comments.md"
-    local GTB_COMMENTS_FILE="gtb-comments.md"
-
-    extract_and_format_comments > $GTB_TMP_COMMENTS_FILE
-    strip_blank_details_block $GTB_TMP_COMMENTS_FILE | tee $GTB_COMMENTS_FILE | tee /dev/tty | pbcopy
 }
 
 _gtb_colors() {
