@@ -1313,11 +1313,11 @@ _gtb_buddy_field_list() {
 }
 
 _gtb_buddy_show() {
-    local BUDDY_FULLNAME=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
+    local BUDDY_FILTER=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
 
-    local buddy_lines=$(_gtb_filter_buddies "${BUDDY_FULLNAME}")
+    local buddy_lines=$(_gtb_filter_buddies "${BUDDY_FILTER}")
     local buddies_count=$(_gtb_count_lines "$buddy_lines")
-    [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FULLNAME}', should match excactly one line!"
+    [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FILTER}', should match excactly one line!"
 
     paste -d ' ' \
         <(_gtb_buddy_field_list -N) \
