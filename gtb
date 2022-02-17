@@ -3130,7 +3130,6 @@ _gtb_trello_board_remove() {
     fi
 
     echo "$student_lines" \
-        | _gtb_unformat \
         | _gtb_cuts '2,5' \
         | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
             _gtb_trello_remove_member_from_board {1} {2} \
@@ -3154,7 +3153,7 @@ _gtb_trello_board_invite() {
     elif [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
         input=$(_gtb_filter_buddies "$@" | _gtb_cuts '1,3')
     else
-        input=$(_gtb_filter_students "$@" | _gtb_unformat | _gtb_cuts '1,5')
+        input=$(_gtb_filter_students "$@" | _gtb_cuts '1,5')
     fi
 
     echo "$input" \
@@ -3191,7 +3190,7 @@ _gtb_trello_member_username() {
     elif [[ "true" == "$GTB_FROM_TRAINERS" ]]; then
         input=$(_gtb_filter_trainers "$@" | _gtb_cuts '1,3')
     else
-        input=$(_gtb_filter_students "$@" | _gtb_unformat | _gtb_cuts '1,5')
+        input=$(_gtb_filter_students "$@" | _gtb_cuts '1,5')
     fi
 
     [[ -z "$input" ]] && return 0
@@ -3217,7 +3216,7 @@ trello_member_id() {
     elif [[ "true" == "$GTB_FROM_TRAINERS" ]]; then
         _gtb_filter_trainers "$@" | awk '{print $3, $1, $4}'
     else
-        _gtb_filter_students "$@" | _gtb_unformat | awk '{print $5, $1, $2, $7}'
+        _gtb_filter_students "$@" | awk '{print $5, $1, $2, $7}'
     fi \
         | while read -r email hint; do
             _gtb_trello_api_get_member_id "$email" "$hint"
