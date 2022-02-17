@@ -1421,10 +1421,8 @@ _gtb_buddy_mapping_list() {
 }
 
 _gtb_buddy_mapping_add() {
-    local -r BUDDY_FULLNAME="$GTB_BUDDY_FILTER"
-
-    cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep --silent "^\<$BUDDY_FULLNAME\>" \
-        || fail "error: cannot find buddy with fullname '$BUDDY_FULLNAME' specified via --buddy."
+    local -r BUDDY_FULLNAME="$(gtb buddy show --raw "$GTB_BUDDY_FILTER" | $GTB_GREP 'FULLNAME' | _gtb_cuts 2)"
+    assert_not_empty "error: cannot find buddy with filter '$GTB_BUDDY_FILTER' specified via --buddy." "${BUDDY_FULLNAME}"
 
     gtb student list --raw --fields 2 $(echo $@ | tr ',' ' ' | tr -s ' ') \
         | sed "s/^/$BUDDY_FULLNAME /" \
