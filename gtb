@@ -466,7 +466,7 @@ _gtb_filter_file() {
                 fi
             done
         fi
-    } | sort -u
+    } | LC_ALL=C sort -u
 }
 
 _gtb_filter-file() {
@@ -474,7 +474,7 @@ _gtb_filter-file() {
 }
 
 _gtb_filter_students() {
-    _gtb_filter_file "$GTB_STUDENTS_FILE" "7" "$@" | sort
+    _gtb_filter_file "$GTB_STUDENTS_FILE" "7" "$@"
 }
 
 _gtb_filter_buddies() {
@@ -1142,7 +1142,7 @@ extract_asgmt_info() {
     local -r STEP_NAME="${1:?step name is required!}"
     local -r FIELDS="${2:?fields are required! ('2.4', '2.4,2.8', etc)}"
     local -r STUDENTS_FILE="${3:?students file is required!}"
-    join -1 2 -2 3 -a 1 -e '-' -o "${FIELDS}" "$STUDENTS_FILE" <($GTB_GREP "^${STEP_NAME}" "$GTB_ASGMT_SUB_FILE")
+    LC_ALL=C join -1 2 -2 3 -a 1 -e '-' -o "${FIELDS}" "$STUDENTS_FILE" <($GTB_GREP "^${STEP_NAME}" "$GTB_ASGMT_SUB_FILE")
 }
 
 parse_assignment_level() {
