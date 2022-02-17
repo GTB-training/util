@@ -855,7 +855,7 @@ _gtb_trello_remove_member_from_board() {
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
     local -r username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
-    local -r member_id=$(trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+    local -r member_id=$(trello_member_id $TRELLO_EMAIL </dev/null | _gtb_cuts 1 | head -n1)
 
     local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${member_id}" </dev/null)
 
@@ -881,7 +881,7 @@ _gtb_trello_invite_member_to_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local -r MEMBER_ID=$(trello_member_id "$TRELLO_EMAIL" | _gtb_cuts 1 | head -n1)
+    local -r MEMBER_ID=$(trello_member_id "$TRELLO_EMAIL" </dev/null | _gtb_cuts 1 | head -n1)
     assert_not_empty "Cannot find member with email '$TRELLO_EMAIL'!" "$MEMBER_ID"
 
     local -r JSON="$(_gtb_trello_api --method 'PUT' "/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}")"
