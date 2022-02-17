@@ -14,6 +14,7 @@ GTB_BUDDIES_MAPPING_FILE="${GTB_BUDDIES_MAPPING_FILE:-$GTB_CONFIG_DIR/buddies-ma
 GTB_STUDENTS_FILE_DEFAULT="${GTB_CONFIG_DIR}/students.txt"
 GTB_STUDENTS_FILE_TERM="${GTB_CONFIG_DIR}/students-${GTB_TERM}.txt"
 GTB_ASGMT_SUB_FILE="${GTB_ASGMT_SUB_FILE:-${GTB_CONFIG_DIR}/assignment-submissions-${GTB_TERM}.txt}"
+GTB_STEP_ASGMT_FILE="${GTB_STEP_ASGMT_FILE:-${GTB_CONFIG_DIR}/step-assignments-${GTB_TERM}.txt}"
 
 if [[ -f $GTB_STUDENTS_FILE ]]; then
     GTB_STUDENTS_FILE=$GTB_STUDENTS_FILE
@@ -1178,6 +1179,19 @@ _gtb_asgmt() {
 
 _gtb_as() {
     _gtb_assignment "$@"
+}
+
+_gtb_assignment_list() {
+    cat "$GTB_STEP_ASGMT_FILE" \
+        | _gtb_table_format
+}
+
+_gtb_assignment_check() {
+    local -r STEP_NAME="${1:?step name is required!}"
+    local -r ASGMT_NAME="${2:?assignment name is required!}"
+
+    $GTB_GREP --silent "^${STEP_NAME} ${ASGMT_NAME}$" "$GTB_STEP_ASGMT_FILE" \
+        || fail "error: Invalid assignment '${STEP_NAME} ${ASGMT_NAME}'!"
 }
 
 _gtb_assignment_submission() {
