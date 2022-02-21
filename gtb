@@ -671,7 +671,7 @@ gh_list_org_repos() {
     fi
 
     run "gh api --paginate '${ENDPOINT}' $(_gtb_mute_stderr)" \
-        | jq -jr '.[] | .owner.login, " ", .name, " ", .private, " ", .created_at, "\n"' \
+        | jq -jr 'if type == "array" then .[] | .owner.login, " ", .name, " ", .private, " ", .created_at, "\n" else "\n" end' \
         | sed 's/ true / private /;s/ false / public /'
 }
 
