@@ -442,7 +442,7 @@ _gtb_filter_file() {
     shift 2
 
     if [[ -z "$*" ]]; then
-        run "cat $FILENAME"
+        cat "${FILENAME}" | _gtb_split
         return 0
     fi
 
@@ -467,7 +467,8 @@ _gtb_filter_file() {
                 fi
             done
         fi
-    } | LC_ALL=C sort -u
+    } | LC_ALL=C sort -u \
+        | _gtb_split
 }
 
 _gtb_filter-file() {
