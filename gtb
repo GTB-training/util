@@ -3351,7 +3351,8 @@ _gtb_gh() {
 _gtb_github_limits() {
     gh api --include /users/octocat \
         | grep --color=never X-Ratelimit \
-        | _gtb_table_format -N
+        | awk '{if ($1 == "X-Ratelimit-Reset:") { print $1, "^", strftime("%c", $2); } else { print $1, "^", $2; } }' \
+        | _gtb_table_format -N -s '^'
 }
 
 _gtb_cache() {
