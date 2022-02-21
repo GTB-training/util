@@ -523,6 +523,19 @@ _gtb_field_index() {
     echo "$FIELDS" | tr ' ' '\n' | nl -n ln | $GTB_GREP "$FIELD" | _gtb_cuts 1
 }
 
+_gtb_split() {
+    if [[ -n "$1" ]]; then
+        GTB_CHUNK="$1"
+    fi
+
+    if [[ -z "${GTB_CHUNK}" ]]; then
+        cat
+        return 0
+    fi
+
+    cat | gsplit -n "r/${GTB_CHUNK}"
+}
+
 gh_check_user() {
     local USERNAME=${1:?username is required!}
     local result=$(run "gh api '/users/$USERNAME' $(_gtb_mute_stderr)" \
@@ -3860,6 +3873,14 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: index start number specified by '$1' is missing"
+            fi
+            ;;
+        --chunk)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_CHUNK="$2"
+                shift 2
+            else
+                fail "Error: CHUNK specified by '$1' is missing, e.g. 1/10, 3/24"
             fi
             ;;
         --from-students)
