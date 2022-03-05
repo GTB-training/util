@@ -1329,7 +1329,7 @@ _gtb_feedback_list() {
         | _gtb_table_format
 }
 
-_gtb_feedback_remove_submission() {
+gtb_feedback_remove_submission() {
     local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
     local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
 
@@ -1353,7 +1353,7 @@ _gtb_feedback_remove_submission() {
     _gtb_config_diff "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
 }
 
-_gtb_feedback_delete_file() {
+gtb_feedback_delete_file() {
     local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
     local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
 
@@ -1372,6 +1372,40 @@ _gtb_feedback_delete_file() {
     [[ -f $FEEDBACK_FILE ]] && run "rm -rf '$FEEDBACK_FILE'"
 }
 
+_gtb_report_feedback() {
+    local -r TMP_STUDENTS_EOT_INIT_FILE="/tmp/gtb-report-feedback-init-$$"
+    local -r TMP_STUDENTS_EOT_FILE="/tmp/gtb-report-feedback-$$"
+    local -r TMP_STUDENTS_EOT_CSV_FILE="/tmp/gtb-report-feedback-$$.csv"
+
+    _gtb_filter_students "$@" | _gtb_cuts '1,2,7,8,10,12' > "$TMP_STUDENTS_EOT_INIT_FILE"
+
+    {
+        echo "Org ID Name Background Unit JoinOn" "BuddyEmail BuddyName BuddyUnit SubmittedAt Feedback"
+        {
+          paste -d ',' \
+          <( \
+            LC_ALL=C join -1 2 -2 1 -a 2 "$TMP_STUDENTS_EOT_INIT_FILE" <( \
+                LC_ALL=C join -1 2 -2 3 -o "1.1,1.2,2.2,2.4,1.3" <($GTB_GREP "^gtb-" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE") "$GTB_BUDDIES_FILE" \
+            )
+          )
+        } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;4,4;1,1}"
+    } > $TMP_STUDENTS_EOT_FILE
+
+    while read -r Org ID Name Background Unit JoinOn BuddyEmail BuddyName BuddyUnit SubmittedAt Feedback
+    do
+        local FEEDBACK_FILE=$GTB_ROOT/$GTB_FEEDBACKS_DIR/$Org-$BuddyEmail.txt
+        if [[ ! -f "$FEEDBACK_FILE" ]]
+        then
+            echo "$Org,$ID,$Name,$Background,$Unit,$JoinOn,$BuddyEmail,$BuddyName,$BuddyUnit,$SubmittedAt,$Feedback" >> "$TMP_STUDENTS_EOT_CSV_FILE"
+        else
+            local FEEDBACK_CONTENT="\"$(cat "$FEEDBACK_FILE" | sed 's/"/""/g')\""
+            echo "$Org,$ID,$Name,$Background,$Unit,$JoinOn,$BuddyEmail,$BuddyName,$BuddyUnit,$SubmittedAt,$FEEDBACK_CONTENT" >> "$TMP_STUDENTS_EOT_CSV_FILE"
+        fi
+    done < $TMP_STUDENTS_EOT_FILE
+
+    cat $TMP_STUDENTS_EOT_CSV_FILE
+}
+
 _gtb_feedback_remove() {
     local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
     local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
@@ -1379,8 +1413,8 @@ _gtb_feedback_remove() {
     assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
     assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
 
-    _gtb_feedback_remove_submission "$ORG" "$BUDDY_EMAIL"
-    _gtb_feedback_delete_file "$ORG" "$BUDDY_EMAIL"
+    gtb_feedback_remove_submission "$ORG" "$BUDDY_EMAIL"
+    gtb_feedback_delete_file "$ORG" "$BUDDY_EMAIL"
 }
 
 _gtb_feedback_show() {
