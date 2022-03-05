@@ -15,6 +15,7 @@ GTB_STUDENTS_FILE_DEFAULT="${GTB_CONFIG_DIR}/students.txt"
 GTB_STUDENTS_FILE_TERM="${GTB_CONFIG_DIR}/students-${GTB_TERM}.txt"
 GTB_ASGMT_SUB_FILE="${GTB_ASGMT_SUB_FILE:-${GTB_CONFIG_DIR}/assignment-submissions-${GTB_TERM}.txt}"
 GTB_STEP_ASGMT_FILE="${GTB_STEP_ASGMT_FILE:-${GTB_CONFIG_DIR}/step-assignments-${GTB_TERM}.txt}"
+GTB_EOT_FEEDBACK_SUBMISSIONS_FILE="${GTB_EOT_FEEDBACK_SUBMISSIONS_FILE:-$GTB_CONFIG_DIR/eot-feedback-submissions.txt}"
 
 if [[ -f $GTB_STUDENTS_FILE ]]; then
     GTB_STUDENTS_FILE=$GTB_STUDENTS_FILE
@@ -29,6 +30,7 @@ GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 GTB_REPOS_DIR="repos"
 GTB_TERMS_DIR="terms"
+GTB_FEEDBACKS_DIR="feedbacks"
 GTB_USER_CACHE_DIR="$HOME/.cache/gtb"
 SUBCMD_PREFIX='_gtb'
 GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default}"
@@ -1031,6 +1033,15 @@ assert_value_exists_in_file() {
     fi
 }
 
+assert_eot_feedback_submission_file_exists() {
+    if [[ ! -f $GTB_EOT_FEEDBACK_SUBMISSIONS_FILE ]]
+    then
+        error "Cannot find EOT feedbacks file: '$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE'."
+        error "If you upgrade from the old versions, please run \`gtb init\` to clone config repo."
+        exit 1
+    fi
+}
+
 assert_value_is_uniq_in_file() {
     local -r FILENAME="${1:? filename is required!}"
     local -r FIELD="${2:?1-based field number is required!}"
@@ -1313,8 +1324,108 @@ _gtb_assignment_submission_get() {
         "$GTB_ASGMT_SUB_FILE"
 }
 
+_gtb_feedback_list() {
+    cat "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" \
+        | _gtb_table_format
+}
+
+_gtb_feedback_remove_submission() {
+    local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+    local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+
+    if [[ "false" == "$GTB_YES" ]]
+    then
+        read -p "about to DELETE $(red "$ORG") $(red "$BUDDY_EMAIL") from $(red "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
+    fi
+
+    gawk \
+        -i inplace \
+        -v org="$ORG" \
+        -v email="$BUDDY_EMAIL" \
+        '$1==org && $2==email {next} {print}' \
+        "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+
+    _gtb_config_diff "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+}
+
+_gtb_feedback_delete_file() {
+    local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+    local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+
+    if [[ "false" == "$GTB_YES" ]]
+    then
+        read -p "about to DELETE $(red "$ORG") $(red "$BUDDY_EMAIL") from $(red "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
+    fi
+
+    local -r FEEDBACK_FILE="$GTB_ROOT/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
+
+    [[ -f $FEEDBACK_FILE ]] && run "rm -rf '$FEEDBACK_FILE'"
+}
+
+_gtb_feedback_remove() {
+    local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+    local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+
+    assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
+    assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
+
+    _gtb_feedback_remove_submission "$ORG" "$BUDDY_EMAIL"
+    _gtb_feedback_delete_file "$ORG" "$BUDDY_EMAIL"
+}
+
+_gtb_feedback_show() {
+    local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+    local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+    local -r QUERY_FILTER="$ORG$BUDDY_EMAIL"
+    local -r COUNT=$(_gtb_count_lines "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")
+
+    gawk '{print $1$2}' "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" | $GTB_GREP --silent "$QUERY_FILTER"
+
+    RESULT=$?
+
+    [[ 0 -lt $RESULT ]] && fail "error: $COUNT lines filtered with filter: '$QUERY_FILTER', should match exactly one line!"
+
+    return $RESULT
+}
+
+_gtb_feedback_add() {
+    local -r ORG="${1:?org name is required!}"
+    local -r BUDDY_EMAIL="${2:?buddy email is required!}"
+    local CREATED_AT="$(gdate --iso-8601=seconds)"
+    CREATED_AT="${3:-$CREATED_AT}"
+    local -r FEEDBACK="${4:?feedback is required!}"
+
+    assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
+    assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
+
+    # add feedback submission
+    echo "$ORG" "$BUDDY_EMAIL" "$CREATED_AT" >> "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+    LC_ALL=C sort -u --output "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+
+    # create feedback file
+    local -r FEEDBACK_FILE="$GTB_ROOT/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
+    echo "$FEEDBACK" > "$FEEDBACK_FILE"
+  }
+
 _gtb_buddy() {
     assert_trainers_file_exists
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_feedback() {
+    assert_students_file_exists
+    assert_eot_feedback_submission_file_exists
 
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
@@ -1325,6 +1436,10 @@ _gtb_bu() {
 
 _gtb_b() {
     _gtb_buddy "$@"
+}
+
+_gtb_fd() {
+    _gtb_feedback "$@"
 }
 
 _gtb_buddy_field() {
@@ -1346,7 +1461,7 @@ _gtb_buddy_show() {
 
     local buddy_lines=$(_gtb_filter_buddies "${BUDDY_FILTER}")
     local buddies_count=$(_gtb_count_lines "$buddy_lines")
-    [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FILTER}', should match excactly one line!"
+    [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FILTER}', should match exactly one line!"
 
     paste -d ' ' \
         <(_gtb_buddy_field_list -N) \
@@ -2177,7 +2292,7 @@ _gtb_student_show() {
 
     local -r FILTERED_LINES=$(_gtb_filter_students "${FULLNAME}")
     local -r COUNT=$(_gtb_count_lines "$FILTERED_LINES")
-    [[ 1 -ne $COUNT ]] && fail "error: $COUNT lines filtered with filter: '${FULLNAME}', should match excactly one line!"
+    [[ 1 -ne $COUNT ]] && fail "error: $COUNT lines filtered with filter: '${FULLNAME}', should match exactly one line!"
 
     echo "$FILTERED_LINES" \
         | _gtb_student_reorder_columns \
@@ -3611,6 +3726,7 @@ _gtb_update() {
 _gtb_init() {
     mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
     mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
+    mkdir -p $GTB_ROOT/$GTB_FEEDBACKS_DIR
     mkdir -p $GTB_USER_CACHE_DIR
 
     if [[ -d $GTB_CONFIG_DIR ]]
