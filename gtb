@@ -1435,9 +1435,9 @@ _gtb_feedback_show() {
 _gtb_feedback_add() {
     local -r ORG="${1:?org name is required!}"
     local -r BUDDY_EMAIL="${2:?buddy email is required!}"
+    local -r FEEDBACK="${3:?feedback is required!}"
     local CREATED_AT="$(gdate --iso-8601=seconds)"
-    CREATED_AT="${3:-$CREATED_AT}"
-    local -r FEEDBACK="${4:?feedback is required!}"
+    CREATED_AT="${4:-$CREATED_AT}"
 
     assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
     assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
