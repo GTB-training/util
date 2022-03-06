@@ -1384,11 +1384,15 @@ _gtb_report_feedback() {
         {
           paste -d ',' \
           <( \
-            LC_ALL=C join -1 2 -2 1 -a 2 "$TMP_STUDENTS_EOT_INIT_FILE" <( \
-                LC_ALL=C join -1 2 -2 3 -o "1.1,1.2,2.2,2.4,1.3" <($GTB_GREP "^gtb-" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE") "$GTB_BUDDIES_FILE" \
+            LC_ALL=C join -1 2 -2 1 -a 2 <(cat "$TMP_STUDENTS_EOT_INIT_FILE" | _gtb_sort "2") \
+            <( \
+                LC_ALL=C join -1 2 -2 3 -o "1.1,1.2,2.2,2.4,1.3" \
+                  <($GTB_GREP "^gtb-" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" | _gtb_sort "2") \
+                  <(cat "$GTB_BUDDIES_FILE" | _gtb_sort "3") \
+                | _gtb_sort "1" \
             )
           )
-        } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;4,4;1,1}"
+        }
     } > $TMP_STUDENTS_EOT_FILE
 
     while read -r Org ID Name Background Unit JoinOn BuddyEmail BuddyName BuddyUnit SubmittedAt Feedback
