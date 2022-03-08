@@ -28,6 +28,8 @@ checksum=$(run "shasum -a 256 $HOME/Downloads/${VERSION}.tar.gz | cut -d' ' -f1"
     log 'Start to update homebrew-gtb...'
 
     cd ../homebrew-gtb/
+
+    git pull --rebase --autostash
     sed -i '' -e "s:/v.*\":/$VERSION\":" -e "s:sha256 \".*\":sha256 \"$checksum\":" util.rb
 
     git diff
