@@ -3299,6 +3299,7 @@ _gtb_trello_board_member_check() {
         ) \
         | _gtb_sort "5,5nr;7,7" '|' \
         | _gtb_cuts '1-4,6-7' '|' \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" '|' \
         | _gtb_table_format -s '|' \
         | _gtb_highlight \
             "${STATUS_NOT_FOUND}" red
