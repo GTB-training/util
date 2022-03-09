@@ -2233,14 +2233,10 @@ _gtb_student_quit() {
     # TODO refactor following hard-coded Board names
     _gtb_org_remove "$@"
     _gtb_student_org_remove "$@"
-    GTB_TRELLO_BOARD_NAME="$(echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/')"
-    _gtb_trello board remove "$@"
-    GTB_TRELLO_BOARD_NAME="$(echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/' -e 's/$/-Forum/')"
-    _gtb_trello board remove "$@"
-    GTB_TRELLO_BOARD_NAME="$(echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/$/-Buddy/')"
-    _gtb_trello board remove "$@"
-    GTB_TRELLO_BOARD_NAME="Image-Host"
-    _gtb_trello board remove "$@"
+    for BOARD_NAME in $(_gtb_trello boards); do
+        GTB_TRELLO_BOARD_NAME="${BOARD_NAME}"
+        _gtb_trello board remove "$@"
+    done
     _gtb_student_delete "$@"
     _gtb_config_commit "chore: $GTB_TERM quit students $@"
     _gtb_config_push
@@ -3376,6 +3372,13 @@ _gtb_trello_board_id() {
 
 _gtb_trello_board() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_trello_boards() {
+    echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/'
+    echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/' -e 's/$/-Forum/'
+    echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/$/-Buddy/'
+    echo "Image-Host"
 }
 
 _gtb_trello_member() {
