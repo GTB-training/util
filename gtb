@@ -2228,6 +2228,10 @@ _gtb_student_quit() {
     _gtb_trello board remove "$@"
     GTB_TRELLO_BOARD_NAME="$(echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/' -e 's/$/-Forum/')"
     _gtb_trello board remove "$@"
+    GTB_TRELLO_BOARD_NAME="$(echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/$/-Buddy/')"
+    _gtb_trello board remove "$@"
+    GTB_TRELLO_BOARD_NAME="Image-Host"
+    _gtb_trello board remove "$@"
     _gtb_student_delete "$@"
     _gtb_config_commit "chore: $GTB_TERM quit students $@"
     _gtb_config_push
