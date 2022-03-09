@@ -1535,7 +1535,7 @@ _gtb_buddy_add() {
     local -r MOBILE="${6:?MOBILE is required!}"
     local -r WECHAT="${7:?WECHAT is required!}"
     shift 7
-    local -r TAGS="$*"
+    local -r TAGS="$GTB_TERM $*"
 
     assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 1 "$FULLNAME"
     assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 2 "$CN_NAME"
