@@ -971,7 +971,7 @@ clone_or_update_repo() {
     then
         info "Repo ${repo_name} for student $fullname has already been downloaded."
     else
-        clone_repo $@
+        clone_repo "$@"
     fi
 }
 
@@ -1252,7 +1252,7 @@ _gtb_assignment_submission_field_list() {
 }
 
 _gtb_assignment_submission_list() {
-    local -r ORG_NAMES="$(_gtb_filter_students $@ | _gtb_cuts 2 | paste -sd' ' -)"
+    local -r ORG_NAMES="$(_gtb_filter_students "$@" | _gtb_cuts 2 | paste -sd' ' -)"
     _gtb_filter_asgmt_submissions $ORG_NAMES \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
         | _gtb_cuts "${GTB_FIELDS:-1-4,7-9}" \
@@ -2007,14 +2007,14 @@ _gtb_student_repo_update() {
     REPO_NAME=${1:?Repo name is required! (e.g. B-spring-config-homework, F-jest-homework, etc.)}
     shift
 
-    clone_or_update_repos $@
+    clone_or_update_repos "$@"
 }
 
 _gtb_student_repo_clone() {
     REPO_NAME=${1:?Repo name is required! (e.g. homework-xxx-xxx, assignment-xxx-xxx, etc.)}
     shift
 
-    clone_or_update_repos $@
+    clone_or_update_repos "$@"
 }
 
 _gtb_student_repo_delete() {
@@ -2770,7 +2770,7 @@ _gtb_repo_remove() {
         done
     fi
 
-    for repo in $@
+    for repo in "$@"
     do
         remove_repo_from_team $ORG $TEAM $repo
     done
@@ -2803,7 +2803,7 @@ _gtb_repo_add() {
     fi
 
 
-    for repo in $@
+    for repo in "$@"
     do
         add_repo_to_team $GTB_ORG $TEAM $repo
     done
@@ -4156,5 +4156,5 @@ if [[ "$(type -t ${SUBCMD_PREFIX}_$SUBCOMMAND)" != 'function' ]]; then
     exit 2
 fi
 
-${SUBCMD_PREFIX}_${SUBCOMMAND} $@
+${SUBCMD_PREFIX}_${SUBCOMMAND} "$@"
 
