@@ -2232,10 +2232,20 @@ _gtb_student_quit() {
     # TODO refactor following hard-coded Board names
     _gtb_org_remove "$@"
     _gtb_student_org_remove "$@"
+
+    for STUDENT_FULLNAME in $(cut -d' ' -f1 <(echo "${student_lines}")); do
+        while read -r BUDDY_NAME BUDDEE_NAME; do
+            GTB_BUDDY_FILTER="${BUDDY_NAME}" _gtb_buddy_mapping_remove "${BUDDEE_NAME}"
+        done < <(_gtb_filter_buddies_mapping "2" "${STUDENT_FULLNAME}")
+
+        GTB_FIELDS="1-4,6-8" _gtb_assignment_submission_list "${STUDENT_FULLNAME}"
+    done
+
     for BOARD_NAME in $(_gtb_trello boards); do
         GTB_TRELLO_BOARD_NAME="${BOARD_NAME}"
         _gtb_trello board remove "$@"
     done
+
     _gtb_student_delete "$@"
     _gtb_config_commit "chore: $GTB_TERM quit students $@"
     _gtb_config_push
