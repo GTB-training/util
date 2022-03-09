@@ -2219,11 +2219,14 @@ _gtb_student_quit() {
         | sort \
         | _gtb_table_format
 
-    read -p "about to QUIT above $(red ${students_count}) students? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
+    if [[ "false" == "$GTB_YES" ]]
     then
-        return 1
+        read -p "about to QUIT above $(red ${students_count}) students? (y|n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]
+        then
+            return 1
+        fi
     fi
 
     # TODO refactor following hard-coded Board names
