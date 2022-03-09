@@ -867,25 +867,34 @@ _gtb_trello_remove_member_from_board() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
 
     local ORG=${1:?Student org is required!}
-    local TRELLO_EMAIL=${2:?Trello member email is required!}
 
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local -r username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
-    local -r member_id=$(trello_member_id $TRELLO_EMAIL </dev/null | _gtb_cuts 1 | head -n1)
+    local username
+    local member_id
+
+    if [[ $# -eq 2 ]]; then
+        local -r TRELLO_EMAIL=${2:?Trello member email is required!}
+        username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
+        member_id=$(trello_member_id $TRELLO_EMAIL </dev/null | _gtb_cuts 1 | head -n1)
+    elif [[ $# -eq 3 ]]; then
+        username="${2:?Trello username is required!}"
+        member_id="${3:?Trello member id is required!}"
+    else
+        fail "usage: gtb trello remove_member_from_board --board <BOARD_NAME> <TRELLO_EMAIL|TRELLO_USERNAME TRELLO_MEMBER_ID>"
+    fi
 
     local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${member_id}" </dev/null)
 
     local -r RESULT="$(jq -jr ".members[] | select(.username==\"$username\") | .username, \" \", .memberType, \" \", .fullName, \"\n\"" <(echo "$JSON"))"
-    echo $RESULT
 
     if [[ -n "$RESULT" ]]; then
-        echo "❌ $ORG $username $TRELLO_EMAIL $RESULT"
+        echo "❌ $@ $RESULT"
         return 1
     fi
 
-    echo "✅ $ORG $username $TRELLO_EMAIL"
+    echo "✅ $@"
     return 0
 }
 
