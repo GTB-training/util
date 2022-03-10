@@ -3335,9 +3335,9 @@ _gtb_trello_board_member_check() {
         <(trello_board_member_list | _gtb_sort '1,1' '|') \
         <(
             {
-                GTB_FROM_TRAINERS=true trello_member_id "$@" | sed 's/ / 3 Coach /2'
-                GTB_FROM_BUDDIES=true trello_member_id "$@" | sed 's/ / 2 Buddy /2'
-                GTB_FROM_STUDENTS=true trello_member_id "$@" | sed 's/ / 1 Student /2'
+                GTB_FROM_TRAINERS=true trello_member_id "$@" </dev/null | sed 's/ / 3 Coach /2'
+                GTB_FROM_BUDDIES=true trello_member_id "$@" </dev/null | sed 's/ / 2 Buddy /2'
+                GTB_FROM_STUDENTS=true trello_member_id "$@" </dev/null | sed 's/ / 1 Student /2'
             } | _gtb_cuts '1-5' | _gtb_sort '1,1;5,5' | tr ' ' '|'
         ) \
         | _gtb_sort "5,5nr;7,7" '|' \
