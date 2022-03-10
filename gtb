@@ -2249,7 +2249,7 @@ _gtb_student_quit() {
     _gtb_org_remove "$@"
     _gtb_student_org_remove "$@"
 
-    for STUDENT_FULLNAME in $(cut -d' ' -f1 <(echo "${student_lines}")); do
+    while read -r STUDENT_FULLNAME ORG_NAME OTHER; do
         while read -r BUDDY_NAME BUDDEE_NAME; do
             GTB_BUDDY_FILTER="${BUDDY_NAME}" _gtb_buddy_mapping_remove "${BUDDEE_NAME}"
         done < <(_gtb_filter_buddies_mapping "2" "${STUDENT_FULLNAME}")
@@ -2259,7 +2259,9 @@ _gtb_student_quit() {
         for CARD_ID in $(GTB_FIELDS="5" GTB_RAW=true _gtb_assignment_submission_list "${STUDENT_FULLNAME}"); do
             GTB_TRELLO_CARD_ID="${CARD_ID}" _gtb_trello card archive
         done
-    done
+
+        GTB_ORG_NAME="${ORG_NAME}" _gtb_assignment_submission_delete
+    done < <(echo "${student_lines}")
 
     for BOARD_NAME in $(_gtb_trello boards); do
         GTB_TRELLO_BOARD_NAME="${BOARD_NAME}"
