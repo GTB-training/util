@@ -1276,6 +1276,21 @@ _gtb_assignment_submission_add() {
     fi
 }
 
+_gtb_assignment_submission_delete() {
+    local -r STEP_NAME=${GTB_STEP:-}
+    local -r REPO_NAME=${GTB_REPO:-}
+    local -r ORG_NAME=${GTB_ORG_NAME:-}
+
+    local -r PATTERN=$(sed -E "s/^ {1,}| {1,}$//g" <(echo "$STEP_NAME $REPO_NAME $ORG_NAME"))
+    assert_not_empty "error: please provide filter via options: --step, --repo, --org" "$PATTERN"
+
+    sed -i.bak -E "/(^| )${PATTERN} /d" "$GTB_ASGMT_SUB_FILE"
+}
+
+_gtb_assignment_submission_remove() {
+    _gtb_assignment_submission_delete "$@"
+}
+
 _gtb_assignment_submission_has() {
     local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
 
@@ -3973,6 +3988,22 @@ while (( "$#" )); do
                 shift 2
             else
                 fail "Error: primary key specified by '$1' is missing"
+            fi
+            ;;
+        --step)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_STEP=$2
+                shift 2
+            else
+                fail "Error: step name specified by '$1' is missing"
+            fi
+            ;;
+        --org)
+            if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+                GTB_ORG_NAME=$2
+                shift 2
+            else
+                fail "Error: GitHub org name specified by '$1' is missing"
             fi
             ;;
         --repo)
