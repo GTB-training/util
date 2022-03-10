@@ -3744,6 +3744,10 @@ _gtb_config_list() {
     run 'ls -l students*.txt'
 }
 
+_gtb_config_add() {
+    run "git add ."
+}
+
 _gtb_config_dir() {
     echo "$GTB_CONFIG_DIR"
 }
