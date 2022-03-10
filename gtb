@@ -2300,6 +2300,7 @@ _gtb_student_add() {
     local -r UNIT="${4:?unit is required!}"
     local -r ADDED_ON="${5:?join date is required!}"
     local -r WEEK_NUM="$(gdate --date=${ADDED_ON} +%V)"
+    local -r TYPE="${6:-formal}" # default to formal, but can be informal
 
     local -r PY_NAME="~PINYIN_NAME~"
     local -r GITHUB_USERNAME="_GITHUB_USERNAME_"
@@ -2307,7 +2308,7 @@ _gtb_student_add() {
 
     assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 7 $CN_NAME
 
-    echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME $BACKGROUND $OFFICE $UNIT $WEEK_NUM $ADDED_ON" >> $GTB_STUDENTS_FILE
+    echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME $BACKGROUND $OFFICE $UNIT $WEEK_NUM $ADDED_ON $TYPE" >> $GTB_STUDENTS_FILE
     LC_ALL=C sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
 }
 
