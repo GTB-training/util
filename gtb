@@ -1376,11 +1376,9 @@ gtb_feedback_delete_file() {
         fi
     fi
 
-    local -r FEEDBACK_FILE="$GTB_ROOT/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
-    echo "delete file: $FEEDBACK_FILE"
+    local -r FEEDBACK_FILE="$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
 
     [[ -f $FEEDBACK_FILE ]] && rm -rf "$FEEDBACK_FILE"
-    echo "delete completed"
 }
 
 _gtb_report_feedback() {
@@ -1408,7 +1406,7 @@ _gtb_report_feedback() {
 
     while read -r Org ID Name Background Unit JoinOn BuddyEmail BuddyName BuddyUnit SubmittedAt Feedback
     do
-        local FEEDBACK_FILE=$GTB_ROOT/$GTB_FEEDBACKS_DIR/$Org-$BuddyEmail.txt
+        local FEEDBACK_FILE=$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$Org-$BuddyEmail.txt
         if [[ ! -f "$FEEDBACK_FILE" ]]
         then
             echo "$Org,$ID,$Name,$Background,$Unit,$JoinOn,$BuddyEmail,$BuddyName,$BuddyUnit,$SubmittedAt,$Feedback" >> "$TMP_STUDENTS_EOT_CSV_FILE"
@@ -1428,9 +1426,7 @@ _gtb_feedback_remove() {
     assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
     assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
 
-    echo "start remove submission"
     gtb_feedback_remove_submission "$ORG" "$BUDDY_EMAIL"
-    echo "start remove file"
     gtb_feedback_delete_file "$ORG" "$BUDDY_EMAIL"
 }
 
@@ -1464,7 +1460,7 @@ _gtb_feedback_add() {
     LC_ALL=C sort -u --output "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
 
     # mv temp file to feedback dir
-    mv "$FEEDBACK_FILE" "$GTB_ROOT/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
+    mv "$FEEDBACK_FILE" "$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
   }
 
 _gtb_buddy() {
@@ -3791,7 +3787,6 @@ _gtb_update() {
 _gtb_init() {
     mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
     mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
-    mkdir -p $GTB_ROOT/$GTB_FEEDBACKS_DIR
     mkdir -p $GTB_USER_CACHE_DIR
 
     if [[ -d $GTB_CONFIG_DIR ]]
