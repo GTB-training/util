@@ -2229,6 +2229,7 @@ _gtb_student_quit() {
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     local students_count=$(_gtb_count_lines "$student_lines")
+    [[ 1 -ne "$students_count" ]] && fail "error: $students_count lines filtered with filter: '$@', should match exactly one line!"
 
     echo "$student_lines" \
         | sort \
