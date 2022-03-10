@@ -3373,7 +3373,7 @@ _gtb_trello_board_remove() {
 
     echo "$student_lines" \
         | _gtb_cuts '2,5' \
-        | env_parallel --jobs $JOBS --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
+        | env_parallel --jobs 1 --colsep ' ' $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer \
             _gtb_trello_remove_member_from_board {1} {2} \
         | _gtb_sort 1r \
         | _gtb_table_format \
