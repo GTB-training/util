@@ -2245,7 +2245,6 @@ _gtb_student_quit() {
         fi
     fi
 
-    # TODO refactor following hard-coded Board names
     _gtb_org_remove "$@"
     _gtb_student_org_remove "$@"
 
