@@ -3710,7 +3710,7 @@ _gtb_config_push() {
 }
 
 _gtb_config_commit() {
-    run "git -C ${GTB_CONFIG_DIR} add students-*.txt trainers.txt buddies-*.txt assignment-*.txt eot-*.txt"
+    run "git -C ${GTB_CONFIG_DIR} add students-*.txt trainers.txt buddies-*.txt assignment-*.txt eot-*.txt feedbacks"
     run "git -C ${GTB_CONFIG_DIR} commit --allow-empty -m '$*'"
 }
 
@@ -3742,11 +3742,6 @@ _gtb_config_diff() {
 _gtb_config_list() {
     run "cd '$GTB_CONFIG_DIR'"
     run 'ls -l students*.txt'
-}
-
-_gtb_config_add() {
-    run "cd '$GTB_CONFIG_DIR'"
-    run "git add $GTB_FEEDBACKS_DIR"
 }
 
 _gtb_config_dir() {
