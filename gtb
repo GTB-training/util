@@ -3745,7 +3745,8 @@ _gtb_config_list() {
 }
 
 _gtb_config_add() {
-    run "git add ."
+    run "cd '$GTB_CONFIG_DIR'"
+    run "git add $GTB_FEEDBACKS_DIR"
 }
 
 _gtb_config_dir() {
