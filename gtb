@@ -3547,8 +3547,8 @@ _gtb_trello_api() {
     HTTP_PRINT=${HTTP_PRINT:-$GTB_HTTP_PRINT}
 
     local -r API_PATH="${1:?path is required! (e.g. /cards/\{id\})}"
-    local PRINT_OPTION=''
-    [[ -n "$HTTP_PRINT" ]] && PRINT_OPTION="--print $HTTP_PRINT"
+    local OPTION_PRINT=''
+    [[ -n "$HTTP_PRINT" ]] && OPTION_PRINT="--print $HTTP_PRINT"
 
     local URL="${GTB_TRELLO_API}${API_PATH}"
     if [[ "$API_PATH" =~ '?' ]]; then
@@ -3557,7 +3557,7 @@ _gtb_trello_api() {
         URL="${URL}${GTB_TRELLO_AUTH/&/?}"
     fi
 
-    run "http $PRINT_OPTION $HTTP_METHOD '${URL}'"
+    run "http $OPTION_PRINT $HTTP_METHOD '${URL}'"
 }
 
 _gtb_trello() {
