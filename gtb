@@ -803,7 +803,7 @@ _gtb_trello_find_board_id() {
         return 0
     fi
 
-    RESULT=$(_gtb_trello_api "/search?modelTypes=boards&query=${BOARD_NAME}" </dev/null \
+    RESULT=$(_gtb_trello_api "/search?modelTypes=boards&query=${BOARD_NAME}" \
         | jq -r ".boards[] | select(.name == \"$BOARD_NAME\") | .id" \
         | head -n1)
 
@@ -824,7 +824,7 @@ _gtb_trello_find_card_id() {
     assert_not_empty "Cannot find board with name '$BOARD_NAME'!" "$BOARD_ID"
 
     local -r URL="/search?modelTypes=cards&card_fields=name&idBoards=${BOARD_ID}&query=${CARD_NAME}"
-    local -r RESULT="$(_gtb_trello_api "$URL" </dev/null \
+    local -r RESULT="$(_gtb_trello_api "$URL" \
         | jq -r ".cards[] | select(.name == \"$CARD_NAME\") | .id" \
         | head -n1)"
 
@@ -851,7 +851,7 @@ _gtb_trello_find_list_id() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    RESULT=$(_gtb_trello_api "/boards/${BOARD_ID}/lists" </dev/null \
+    RESULT=$(_gtb_trello_api "/boards/${BOARD_ID}/lists" \
         | jq -r ".[] | select(.name == \"$LIST_NAME\") | .id")
 
     if [[ -n "$RESULT" ]]; then
@@ -877,7 +877,7 @@ _gtb_trello_remove_member_from_board() {
     if [[ $# -eq 2 ]]; then
         local -r TRELLO_EMAIL=${2:?Trello member email is required!}
         username=$(_gtb_trello_member_username $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
-        member_id=$(trello_member_id $TRELLO_EMAIL </dev/null | _gtb_cuts 1 | head -n1)
+        member_id=$(trello_member_id $TRELLO_EMAIL | _gtb_cuts 1 | head -n1)
     elif [[ $# -eq 3 ]]; then
         username="${2:?Trello username is required!}"
         member_id="${3:?Trello member id is required!}"
@@ -885,7 +885,7 @@ _gtb_trello_remove_member_from_board() {
         fail "usage: gtb trello remove_member_from_board --board <BOARD_NAME> <TRELLO_EMAIL|TRELLO_USERNAME TRELLO_MEMBER_ID>"
     fi
 
-    local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${member_id}" </dev/null)
+    local -r board_json=$(_gtb_trello_api --method 'DELETE' "/boards/${BOARD_ID}/members/${member_id}")
 
     local -r RESULT="$(jq -jr ".members[] | select(.username==\"$username\") | .username, \" \", .memberType, \" \", .fullName, \"\n\"" <(echo "$JSON"))"
 
@@ -908,7 +908,7 @@ _gtb_trello_invite_member_to_board() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    local -r MEMBER_ID=$(trello_member_id "$TRELLO_EMAIL" </dev/null | _gtb_cuts 1 | head -n1)
+    local -r MEMBER_ID=$(trello_member_id "$TRELLO_EMAIL" | _gtb_cuts 1 | head -n1)
     assert_not_empty "Cannot find member with email '$TRELLO_EMAIL'!" "$MEMBER_ID"
 
     local -r JSON="$(_gtb_trello_api --method 'PUT' "/boards/${BOARD_ID}/members?email=${TRELLO_EMAIL}&type=${GTB_TRELLO_MEMBER_TYPE}")"
@@ -3015,7 +3015,7 @@ _gtb_org() {
 _gtb_trello_board_field_list() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
 
-    _gtb_trello_api "/boards/${BOARD_ID}/customFields" </dev/null \
+    _gtb_trello_api "/boards/${BOARD_ID}/customFields" \
         | jq -jr '.[] | .name, " ", .type, " ", .id, "\n"' \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
         | _gtb_cuts "${GTB_FIELDS:-1-}" \
@@ -3054,7 +3054,7 @@ _gtb_trello_board_field() {
 _gtb_trello_board_label_list() {
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
 
-    _gtb_trello_api "/boards/${BOARD_ID}/labels" </dev/null \
+    _gtb_trello_api "/boards/${BOARD_ID}/labels" \
         | jq -jr $'.[] | .id, " ", .color, " \'", .name, "\'\n"' \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
         | _gtb_cuts "${GTB_labelS:-1-}" \
@@ -3113,7 +3113,7 @@ _gtb_trello_card_field_get() {
     local -r FIELD_ID="$(_gtb_trello_board_field_id $FIELD_NAME)"
     assert_not_empty "Cannot find custom field '$FIELD_NAME' on board '$GTB_TRELLO_BOARD_NAME'!" "FIELD_ID"
 
-    _gtb_trello_api "/cards/${GTB_TRELLO_CARD_ID}?customFieldItems=true" </dev/null \
+    _gtb_trello_api "/cards/${GTB_TRELLO_CARD_ID}?customFieldItems=true" \
         | jq -r ".customFieldItems[] | select (.idCustomField == \"${FIELD_ID}\") | .value.text"
 }
 
@@ -3157,7 +3157,7 @@ _gtb_trello_card_label_list() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --card-id <NAME>.}"
 
-    _gtb_trello_api "/cards/${GTB_TRELLO_CARD_ID}" </dev/null \
+    _gtb_trello_api "/cards/${GTB_TRELLO_CARD_ID}" \
         | jq -jr '.labels[] | .color, " ", .name, "\n"'
 }
 
@@ -3173,7 +3173,7 @@ _gtb_trello_card_member_add() {
             --linebuffer \
             --jobs 1 \
             $GTB_PARALLEL_OPT_PROGRESS_BAR \
-            "_gtb_trello_api --method 'POST' '/cards/${GTB_TRELLO_CARD_ID}/idMembers?value={1}' </dev/null 1>/dev/null 2>&1"
+            "_gtb_trello_api --method 'POST' '/cards/${GTB_TRELLO_CARD_ID}/idMembers?value={1}' 1>/dev/null 2>&1"
 
     local -r MEMBER_LIST="$(_gtb_trello_card_member_list)"
     echo "${MEMBER_LIST}"
@@ -3188,7 +3188,7 @@ _gtb_trello_card_member_add() {
 _gtb_trello_card_member_list() {
     GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --card-id <NAME>.}"
 
-    _gtb_trello_api "/cards/${GTB_TRELLO_CARD_ID}/members" </dev/null \
+    _gtb_trello_api "/cards/${GTB_TRELLO_CARD_ID}/members" \
         | jq -jr '.[] | .username, "|", .initials, "|", .fullName, "|", .id, "\n"' \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1}" '|' \
         | _gtb_cuts "${GTB_FIELDS:-1-}" '|' \
@@ -3204,7 +3204,7 @@ _gtb_trello_card_archive() {
 
     local URL="/cards/${GTB_TRELLO_CARD_ID}?closed=true"
 
-    _gtb_trello_api --method 'PUT' "$URL" </dev/null >/dev/null
+    _gtb_trello_api --method 'PUT' "$URL" >/dev/null
 }
 
 _gtb_trello_card_create() {
@@ -3230,7 +3230,7 @@ _gtb_trello_card_create() {
     [[ -n "$MEMBER_IDS" ]] && PARAMS="$PARAMS&idMembers=${MEMBER_IDS}"
     PARAMS="$PARAMS&due=$(gdate --date="$GTB_TRELLO_CARD_DUE_IN_DAYS days" --iso-8601=seconds)"
 
-    _gtb_trello_api --method 'POST' "/cards?${PARAMS}" </dev/null \
+    _gtb_trello_api --method 'POST' "/cards?${PARAMS}" \
         | jq -jr '.id, " ", .shortUrl, " ", .name, "\n"'
 }
 
@@ -3270,7 +3270,7 @@ _gtb_trello_card_list() {
         URL="/lists/${LIST_ID}/cards"
     fi
 
-    _gtb_trello_api "$URL" </dev/null \
+    _gtb_trello_api "$URL" \
         | jq -jr '.[] | .pos, "^", .id, "^", .shortUrl, "^", .name, "\n"' \
         | _gtb_sort "${GTB_SORT_ORDER:-1,1n}" \
         | _gtb_table_format -s '^'
@@ -3291,7 +3291,7 @@ _gtb_trello_list_list() {
     GTB_TRELLO_BOARD_NAME="${GTB_TRELLO_BOARD_NAME:?Trello board name is required! Specify by --board <NAME>.}"
     local BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
 
-    _gtb_trello_api "/boards/${BOARD_ID}/lists" </dev/null \
+    _gtb_trello_api "/boards/${BOARD_ID}/lists" \
         | jq -jr '.[] | .id, "^", .name, "\n"' \
         | _gtb_table_format -s '^'
 }
@@ -3321,7 +3321,7 @@ trello_board_member_list() {
     local -r BOARD_ID=$(_gtb_trello_find_board_id "$GTB_TRELLO_BOARD_NAME")
     assert_not_empty "Cannot find board with name '$GTB_TRELLO_BOARD_NAME'!" "$BOARD_ID"
 
-    _gtb_trello_api "/boards/${BOARD_ID}/members" </dev/null \
+    _gtb_trello_api "/boards/${BOARD_ID}/members" \
         | jq -jr '.[] | .id, "|", .username, "|", .fullName, "\n"'
 }
 
@@ -3334,9 +3334,9 @@ _gtb_trello_board_member_check() {
         <(trello_board_member_list | _gtb_sort '1,1' '|') \
         <(
             {
-                GTB_FROM_TRAINERS=true trello_member_id "$@" </dev/null | sed 's/ / 3 Coach /2'
-                GTB_FROM_BUDDIES=true trello_member_id "$@" </dev/null | sed 's/ / 2 Buddy /2'
-                GTB_FROM_STUDENTS=true trello_member_id "$@" </dev/null | sed 's/ / 1 Student /2'
+                GTB_FROM_TRAINERS=true trello_member_id "$@" | sed 's/ / 3 Coach /2'
+                GTB_FROM_BUDDIES=true trello_member_id "$@" | sed 's/ / 2 Buddy /2'
+                GTB_FROM_STUDENTS=true trello_member_id "$@" | sed 's/ / 1 Student /2'
             } | _gtb_cuts '1-5' | _gtb_sort '1,1;5,5' | tr ' ' '|'
         ) \
         | _gtb_sort "5,5nr;7,7" '|' \
@@ -3406,7 +3406,7 @@ _gtb_trello_board_invite() {
 }
 
 _gtb_trello_board_list() {
-    _gtb_trello_api "/members/${GTB_TRELLO_USERNAME}/boards" </dev/null \
+    _gtb_trello_api "/members/${GTB_TRELLO_USERNAME}/boards" \
         | jq -jr '.[] | .id, "^", .shortUrl, "^", .name, "\n"' \
         | _gtb_table_format -s '^'
 }
@@ -3481,7 +3481,7 @@ _gtb_trello_api_get_member_username() {
         return 0
     fi
 
-    RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null | jq -r '.[0].username')
+    RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" | jq -r '.[0].username')
     if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
         _gtb_cache_set trello "member-username-${QUERY}" "$RESULT"
         echo "$RESULT $*"
@@ -3500,7 +3500,7 @@ _gtb_trello_api_get_member_id() {
         return 0
     fi
 
-    RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" </dev/null | jq -r '.[0].id')
+    RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" | jq -r '.[0].id')
     if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
         _gtb_cache_set trello "member-id-${QUERY}" "$RESULT"
         echo "$RESULT $*"
@@ -3512,7 +3512,7 @@ _gtb_trello_api_get_member_id() {
 }
 
 _gtb_trello_limits() {
-    _gtb_trello_api "/resource/limits" </dev/null
+    _gtb_trello_api "/resource/limits"
 }
 
 _gtb_trello_api() {
