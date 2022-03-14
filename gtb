@@ -37,6 +37,7 @@ GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default
 GTB_PER_PAGE=100
 GTB_TRAINER_FILTER=''
 GTB_BUDDY_FILTER=''
+GTB_FROM_STDIN='false'
 GTB_FROM_STUDENTS='true'
 GTB_FROM_BUDDIES='false'
 GTB_FROM_TRAINERS='false'
@@ -3457,7 +3458,7 @@ _gtb_trello_member_id() {
 }
 
 trello_member_id() {
-    if [[ -p /dev/stdin ]]; then
+    if [[ "true" == "$GTB_FROM_STDIN" && -p /dev/stdin ]]; then
         cat
     elif [[ "true" == "$GTB_FROM_BUDDIES" ]]; then
         _gtb_filter_buddies "$@" | awk '{print $3, $1, $2, $4}'
@@ -4124,6 +4125,10 @@ while (( "$#" )); do
             else
                 fail "Error: CHUNK specified by '$1' is missing, e.g. 1/10, 3/24"
             fi
+            ;;
+        --from-stdin)
+            GTB_FROM_STDIN="true"
+            shift
             ;;
         --from-students)
             GTB_FROM_STUDENTS="true"
