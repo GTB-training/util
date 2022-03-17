@@ -2348,13 +2348,14 @@ _gtb_student_add() {
     local -r TYPE="${6:-formal}" # default to formal, but can be informal
 
     local -r ENTRY_DATE="9999-12-31"
+    local -r TWU_TERM="twu"
     local -r PY_NAME="~PINYIN_NAME~"
     local -r GITHUB_USERNAME="_GITHUB_USERNAME_"
     local -r TRELLO_EMAIL="_TRELLO_EMAIL_"
 
     assert_value_is_uniq_in_file $GTB_STUDENTS_FILE 7 $CN_NAME
 
-    echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME $BACKGROUND $OFFICE $UNIT $WEEK_NUM $ADDED_ON $TYPE $ENTRY_DATE" >> $GTB_STUDENTS_FILE
+    echo "$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME $CN_NAME $BACKGROUND $OFFICE $UNIT $WEEK_NUM $ADDED_ON $TYPE $ENTRY_DATE $TWU_TERM" >> $GTB_STUDENTS_FILE
     LC_ALL=C sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
 }
 
