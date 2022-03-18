@@ -2378,7 +2378,7 @@ _gtb_student_list_format() {
 _gtb_student_list() {
     _gtb_filter_students "$@" \
         | _gtb_student_reorder_columns \
-        | _gtb_sort "${GTB_SORT_ORDER:-2,2}" \
+        | _gtb_sort "${GTB_SORT_ORDER:-13,13;12,12;2,2}" \
         | _gtb_cuts "${GTB_FIELDS:-1-10,12-14}" \
         | _gtb_table_format
 }
