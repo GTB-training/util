@@ -2331,10 +2331,16 @@ _gtb_student_register() {
     assert_value_is_uniq_in_file <(grep -v " $CN_NAME " $GTB_STUDENTS_FILE) 4 $GITHUB_USERNAME
     assert_value_is_uniq_in_file <(grep -v " $CN_NAME " $GTB_STUDENTS_FILE) 5 $TRELLO_EMAIL
 
-    sed -i.bak \
-        -e "s/^.* \(${CN_NAME} .*$\)/$PY_NAME ${GTB_TERM}-${PY_NAME//./-} $GTB_TERM $GITHUB_USERNAME $TRELLO_EMAIL $PY_NAME \1/" \
-        -e "s/.* ${CN_NAME} .*$/& $UPDATED_AT/" \
-        $GTB_STUDENTS_FILE
+    gawk -i inplace \
+        -v CN_NAME="$CN_NAME" \
+        -v PY_NAME="$PY_NAME" \
+        -v GITHUB_USERNAME="$GITHUB_USERNAME" \
+        -v GITHUB_ORG_NAME="${GTB_TERM}-${PY_NAME//./-}" \
+        -v TRELLO_EMAIL="$TRELLO_EMAIL" \
+        -v UPDATED_AT="$UPDATED_AT" \
+        '{ if ($7 == CN_NAME) { $1=PY_NAME; $2=GITHUB_ORG_NAME; $4=GITHUB_USERNAME; $5=TRELLO_EMAIL; $1=$1; $0=$0; print $0, UPDATED_AT; } else { print $0; } }' \
+        "$GTB_STUDENTS_FILE"
+
     LC_ALL=C sort -u --output $GTB_STUDENTS_FILE $GTB_STUDENTS_FILE
 }
 
