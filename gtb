@@ -1631,6 +1631,7 @@ _gtb_buddy_mapping_add() {
     assert_not_empty "error: cannot find buddy with filter '$GTB_BUDDY_FILTER' specified via --buddy." "${BUDDY_FULLNAME}"
 
     gtb student list --raw --fields 2 $(echo $@ | tr ',' ' ' | tr -s ' ') \
+        | grep -v '~PINYIN_NAME~' \
         | sed "s/^/$BUDDY_FULLNAME /" \
         >>"$GTB_BUDDIES_MAPPING_FILE"
 
