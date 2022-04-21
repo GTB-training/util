@@ -2247,9 +2247,6 @@ _gtb_student_quit() {
         fi
     fi
 
-    info "Remove from GTB official GitHub org..."
-    _gtb_org_remove "$@"
-
     info "Remove from trainee GitHub org..."
     _gtb_student_org_remove "$@"
 
