@@ -572,6 +572,22 @@ gh_invite_user_to_org() {
     echo "$result $*"
 }
 
+gh_check_user_in_org() {
+    local ORG=${1:?org is required!}
+    local USERNAME=${2:?username is required!}
+
+    local result=$(run "gh api -X GET /orgs/${ORG}/members" \
+        | jq -r --arg u "$USERNAME" 'if any(.[]; .login ==$u) == true then "OK" else "ER" end')
+
+    if [[ -z "$result" ]]
+    then
+        result='ER'
+    fi
+    echo "$result $*"
+
+    [[ "$result" = "ER" ]] && fail "error: remove user '$USERNAME' from org '$ORG' failed!"
+}
+
 gh_remove_user_from_org() {
     local ORG=${1:?org is required!}
     local USERNAME=${2:?username is required!}
@@ -2247,7 +2263,7 @@ _gtb_student_quit() {
         fi
     fi
 
-    info "Remove from trainee GitHub org..."
+    info "Remove from coachee GitHub org..."
     _gtb_student_org_remove "$@"
 
     while read -r STUDENT_FULLNAME ORG_NAME OTHER; do
@@ -2875,6 +2891,14 @@ _gtb_repo() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_org_user_check() {
+  local student_lines=$(_gtb_filter_students "$@")
+  local students_count=$(_gtb_count_lines "$student_lines")
+  assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+  gh_check_user_in_org $(echo "$student_lines" | _gtb_cuts 2) $(echo "$student_lines" | _gtb_cuts 4)
+}
+
 _gtb_org_team_open() {
     run "open https://github.com/orgs/${GTB_ORG}/teams/${GTB_TERM}/members"
 }
@@ -2933,6 +2957,14 @@ _gtb_org_team_list() {
 
 _gtb_org_team() {
     if ! echo $1 | grep --silent '^\(list\|open\|invite\|members\)$'; then
+        set -- open "$@"
+    fi
+
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_org_user() {
+    if ! echo $1 | grep --silent '^\(check\)$'; then
         set -- open "$@"
     fi
 
@@ -3022,7 +3054,7 @@ _gtb_org_open() {
 _gtb_org() {
     assert_students_file_exists
 
-    if ! echo $1 | grep --silent '^\(open\|invite\|remove\|team\|members\)$'; then
+    if ! echo $1 | grep --silent '^\(open\|invite\|remove\|team\|members\|user\)$'; then
         set -- open "$@"
     fi
 
