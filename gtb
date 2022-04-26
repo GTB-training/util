@@ -572,20 +572,20 @@ gh_invite_user_to_org() {
     echo "$result $*"
 }
 
-gh_check_user_in_org() {
-    local ORG=${1:?org is required!}
-    local USERNAME=${2:?username is required!}
+gh_check_user_not_in_org() {
+    local student_lines=$(_gtb_filter_students "$@")
+    local students_count=$(_gtb_count_lines "$student_lines")
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+
+    local ORG=$(echo "$student_lines" | _gtb_cuts 2)
+    local USERNAME=$(echo "$student_lines" | _gtb_cuts 4)
 
     local result=$(run "gh api -X GET /orgs/${ORG}/members" \
-        | jq -r --arg u "$USERNAME" 'if any(.[]; .login ==$u) == true then "OK" else "ER" end')
+        | jq -r --arg u "$USERNAME" \
+            'if any(.[]; .login ==$u) == true then "ER" else "OK" end')
 
-    if [[ -z "$result" ]]
-    then
-        result='ER'
-    fi
     echo "$result $*"
-
-    [[ "$result" = "ER" ]] && fail "error: remove user '$USERNAME' from org '$ORG' failed!"
+    [[ "$result" != "OK" ]] && fail "error: user $USERNAME still in org $ORG"
 }
 
 gh_remove_user_from_org() {
@@ -2266,6 +2266,9 @@ _gtb_student_quit() {
     info "Remove from coachee GitHub org..."
     _gtb_student_org_remove "$@"
 
+    echo "Check whether coachee removed from GitHub org..."
+    gh_check_user_not_in_org "$@"
+
     while read -r STUDENT_FULLNAME ORG_NAME OTHER; do
         while read -r BUDDY_NAME BUDDEE_NAME; do
             info "Delete mapping to buddy '${BUDDY_NAME}' ..."
@@ -2288,6 +2291,8 @@ _gtb_student_quit() {
         info "Remove from Trello board '$BOARD_NAME' ..."
         GTB_TRELLO_BOARD_NAME="${BOARD_NAME}"
         _gtb_trello board remove "$@"
+
+        _gtb_trello_api_check_member_not_in_trello $(_gtb_filter_students "$@" | awk '{print $5, $1}')
     done
 
     info "Delete from student file ..."
@@ -2891,14 +2896,6 @@ _gtb_repo() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
-_gtb_org_user_check() {
-  local student_lines=$(_gtb_filter_students "$@")
-  local students_count=$(_gtb_count_lines "$student_lines")
-  assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
-
-  gh_check_user_in_org $(echo "$student_lines" | _gtb_cuts 2) $(echo "$student_lines" | _gtb_cuts 4)
-}
-
 _gtb_org_team_open() {
     run "open https://github.com/orgs/${GTB_ORG}/teams/${GTB_TERM}/members"
 }
@@ -3254,6 +3251,8 @@ _gtb_trello_card_archive() {
     local URL="/cards/${GTB_TRELLO_CARD_ID}?closed=true"
 
     _gtb_trello_api --method 'PUT' "$URL" >/dev/null
+
+    _gtb_trello_card_id "$GTB_TRELLO_CARD_ID" && fail "failed to archive card ${GTB_TRELLO_CARD_ID}!"
 }
 
 _gtb_trello_card_create() {
@@ -3558,6 +3557,16 @@ _gtb_trello_api_get_member_id() {
 
     echo "${STATUS_NOT_FOUND} $*"
     return 1
+}
+
+_gtb_trello_api_check_member_not_in_trello() {
+    local -r QUERY=${1:?search query is required!}
+
+    local RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" | jq -r '.[0].id')
+    if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
+        echo "$RESULT $*"
+        fail "failed to remove ${QUERY} from trello, ${QUERY} still in trello"
+    fi
 }
 
 _gtb_trello_limits() {
