@@ -834,6 +834,21 @@ _gtb_trello_find_board_id() {
     return 1
 }
 
+_gtb_trello_fetch_card_by_id() {
+    local -r CARD_ID=${1:?Card id is required!}
+    local -r URL="/cards/$CARD_ID"
+
+    RESULT=$(_gtb_trello_api "/cards/${CARD_ID}" \
+        | jq -r ".id")
+
+    if [[ -n "$RESULT" ]]; then
+        echo "$RESULT"
+        return 0
+    fi
+
+    return 1
+}
+
 _gtb_trello_find_card_id() {
     local -r BOARD_NAME=${1:?Board name is required!}
     local -r CARD_NAME=${2:?Card name is required!}
@@ -909,7 +924,7 @@ _gtb_trello_remove_member_from_board() {
 
     if [[ -n "$RESULT" ]]; then
         echo "❌ $@ $RESULT"
-        return 1
+        fail "failed to remove member ${username} from board ${GTB_TRELLO_BOARD_NAME}"
     fi
 
     echo "✅ $@"
@@ -2295,8 +2310,6 @@ _gtb_student_quit() {
             info "Remove from Trello board '$BOARD_NAME' ..."
             GTB_TRELLO_BOARD_NAME="${BOARD_NAME}"
             _gtb_trello board remove "$@"
-
-            _gtb_trello_api_check_member_not_in_trello $(_gtb_filter_students "$@" | awk '{print $5, $1}')
         done
     fi
 
@@ -3261,7 +3274,7 @@ _gtb_trello_card_archive() {
 
     _gtb_trello_api --method 'PUT' "$URL" >/dev/null
 
-    _gtb_trello_card_id "$GTB_TRELLO_CARD_ID" && fail "failed to archive card ${GTB_TRELLO_CARD_ID}!"
+    _gtb_trello_fetch_card_by_id "$GTB_TRELLO_CARD_ID" && fail "failed to archive card ${GTB_TRELLO_CARD_ID}!"
 }
 
 _gtb_trello_card_create() {
@@ -3566,16 +3579,6 @@ _gtb_trello_api_get_member_id() {
 
     echo "${STATUS_NOT_FOUND} $*"
     return 1
-}
-
-_gtb_trello_api_check_member_not_in_trello() {
-    local -r QUERY=${1:?search query is required!}
-
-    local RESULT=$(_gtb_trello_api "/search/members?query=${QUERY}&limit=1" | jq -r '.[0].id')
-    if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
-        echo "$RESULT $*"
-        fail "failed to remove ${QUERY} from trello, ${QUERY} still in trello"
-    fi
 }
 
 _gtb_trello_limits() {
