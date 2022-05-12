@@ -834,7 +834,7 @@ _gtb_trello_find_board_id() {
     return 1
 }
 
-_gtb_trello_fetch_card_by_id() {
+_gtb_trello_check_card_closed() {
     local -r CARD_ID=${1:?Card id is required!}
     local -r URL="/cards/$CARD_ID"
 
@@ -846,7 +846,7 @@ _gtb_trello_fetch_card_by_id() {
         return 0
     fi
 
-    return 1
+    fail "failed to archive card ${GTB_TRELLO_CARD_ID}!"
 }
 
 _gtb_trello_find_card_id() {
@@ -3274,7 +3274,7 @@ _gtb_trello_card_archive() {
 
     _gtb_trello_api --method 'PUT' "$URL" >/dev/null
 
-    _gtb_trello_fetch_card_by_id "$GTB_TRELLO_CARD_ID" && fail "failed to archive card ${GTB_TRELLO_CARD_ID}!"
+    _gtb_trello_check_card_closed "$GTB_TRELLO_CARD_ID"
 }
 
 _gtb_trello_card_create() {
