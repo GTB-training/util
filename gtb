@@ -839,9 +839,9 @@ _gtb_trello_fetch_card_by_id() {
     local -r URL="/cards/$CARD_ID"
 
     RESULT=$(_gtb_trello_api "/cards/${CARD_ID}" \
-        | jq -r ".id")
+        | jq -r ".closed")
 
-    if [[ -n "$RESULT" ]]; then
+    if [[ "$RESULT" = "true" ]]; then
         echo "$RESULT"
         return 0
     fi
