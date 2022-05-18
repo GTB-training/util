@@ -445,6 +445,8 @@ _gtb_filter_file() {
     local -r CN_COL_INDICES=${2}
     shift 2
 
+    local FILTER
+
     if [[ -z "$*" ]]; then
         cat "${FILENAME}" | _gtb_split
         return 0
