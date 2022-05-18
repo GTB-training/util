@@ -1152,10 +1152,6 @@ _gtb_trainer_list() {
 _gtb_trainer() {
     assert_trainers_file_exists
 
-    if ! echo $1 | grep --silent '^\(list\|fullname\|username\|id\)$'; then
-        set -- list "$@"
-    fi
-
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
