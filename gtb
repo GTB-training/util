@@ -1067,6 +1067,15 @@ assert_students_file_exists() {
     fi
 }
 
+assert_eot_feedback_submission_file_exists() {
+    if [[ ! -f $GTB_EOT_FEEDBACK_SUBMISSIONS_FILE ]]
+    then
+        error "Cannot find EOT feedbacks file: '$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE'."
+        error "If you upgrade from the old versions, please run \`gtb init\` to clone config repo."
+        exit 1
+    fi
+}
+
 assert_value_exists_in_file() {
     local -r FILENAME="${1:? filename is required!}"
     local -r FIELD="${2:?1-based field number is required!}"
@@ -1074,15 +1083,6 @@ assert_value_exists_in_file() {
 
     if [[ -z "$(awk -v FIELD="$FIELD" -v VALUE="$VALUE" '$FIELD == VALUE' $FILENAME)" ]]; then
         fail "error: value '$VALUE' not found on field '$FIELD' in file '$(basename $FILENAME)'!"
-    fi
-}
-
-assert_eot_feedback_submission_file_exists() {
-    if [[ ! -f $GTB_EOT_FEEDBACK_SUBMISSIONS_FILE ]]
-    then
-        error "Cannot find EOT feedbacks file: '$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE'."
-        error "If you upgrade from the old versions, please run \`gtb init\` to clone config repo."
-        exit 1
     fi
 }
 
