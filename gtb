@@ -1143,13 +1143,10 @@ _gtb_trainer_fullname() {
 }
 
 _gtb_trainer_list() {
-    while read -r FULLNAME USERNAME ID TAGS
-    do
-        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-        then
-            echo "$FULLNAME $USERNAME $ID $TAGS"
-        fi
-    done < $GTB_TRAINERS_FILE
+    _gtb_filter_trainers "$@" \
+        | _gtb_sort "${GTB_SORT_ORDER:-1,1}" \
+        | _gtb_cuts "${GTB_FIELDS:-1-}" \
+        | _gtb_table_format
 }
 
 _gtb_trainer() {
