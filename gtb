@@ -1096,50 +1096,31 @@ assert_value_is_uniq_in_file() {
     fi
 }
 
-_gtb_is_a_trainer() {
-    if [[ -z "$*" ]]; then
+_gtb_trainer_username() {
+    local -r FILTER=${1:?Filter is required! (e.g. zhang.san, li.si, etc.)}
+    local -r FLAG_RAW="$GTB_RAW"
+    local -r FLAG_LINE_NUMBERS="$GTB_LINE_NUMBERS"
+
+    GTB_RAW="true"
+    GTB_LINE_NUMBERS="false"
+    _gtb_trainer_show "$FILTER" | sed -n '2p'
+    GTB_RAW="$FLAG_RAW"
+    GTB_LINE_NUMBERS="$FLAG_LINE_NUMBERS"
+}
+
+_gtb_trainer_show() {
+    local -r FILTER=${1:?filter is required! (e.g. zhang.san, li.si, etc.)}
+
+    local -r FILTERED_LINES=$(_gtb_filter_trainers "${FILTER}")
+    local -r COUNT=$(_gtb_count_lines "$FILTERED_LINES")
+    if [[ 1 -ne $COUNT ]]; then
+        error "error: $COUNT lines filtered with filter: '${FILTER}', should match exactly one line!"
         return 1
     fi
 
-    while read -r FULLNAME USERNAME ID TAGS
-    do
-        if echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-        then
-            return 0
-        fi
-    done < $GTB_TRAINERS_FILE
-
-    return 2
-}
-
-_gtb_trainer_id() {
-    while read -r FULLNAME USERNAME ID TAGS
-    do
-        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-        then
-            echo "$ID"
-        fi
-    done < $GTB_TRAINERS_FILE
-}
-
-_gtb_trainer_username() {
-    while read -r FULLNAME USERNAME ID TAGS
-    do
-        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-        then
-            echo "$USERNAME"
-        fi
-    done < $GTB_TRAINERS_FILE
-}
-
-_gtb_trainer_fullname() {
-    while read -r FULLNAME USERNAME ID TAGS
-    do
-        if [[ -z "$*" ]] || echo "$*" | grep --silent "\<${FULLNAME}\>" || echo "$*" | grep --silent "\<${USERNAME}\>" || echo "$TAGS" | grep --silent "\<$1\>"
-        then
-            echo "$FULLNAME"
-        fi
-    done < $GTB_TRAINERS_FILE
+    echo "$FILTERED_LINES" \
+        | tr ' ' '\n' \
+        | _gtb_table_format
 }
 
 _gtb_trainer_list() {
@@ -1909,10 +1890,6 @@ _gtb_student_org_join() {
 }
 
 _gtb_check_student_org_for_presence() {
-    if _gtb_is_a_trainer $1; then
-        shift
-    fi
-
     header "Checking presence of student org..."
 
     _gtb_filter_students "$@" | cut -d' ' -f2 \
@@ -1993,16 +1970,22 @@ _gtb_student_org_delete() {
 }
 
 _gtb_student_org_check() {
+    local TRAINER_FULLNAME
+
+    if _gtb_trainer_show "$1" 1>/dev/null 2>&1; then
+        TRAINER_FULLNAME="$1"
+        shift
+    fi
+
     if [[ "$CHECK_ROLE_ONLY" == "false" ]]; then
         _gtb_check_student_org_for_presence "$@"
     fi
 
-    assert_trainers_file_exists
-    if ! _gtb_is_a_trainer $1; then
+    if [[ -z "$TRAINER_FULLNAME" ]]; then
         return 0
     fi
 
-    _gtb_check_student_org_for_trainer_role "$@"
+    _gtb_check_student_org_for_trainer_role "$TRAINER_FULLNAME" "$@"
 }
 
 _gtb_student_org_open() {
