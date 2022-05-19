@@ -2285,11 +2285,6 @@ _gtb_student_quit() {
             info "Show existing assignment submissions..."
             GTB_FIELDS="1-4,6-8" _gtb_assignment_submission_list "${STUDENT_FULLNAME}"
 
-            for CARD_ID in $(GTB_FIELDS="5" GTB_RAW=true _gtb_assignment_submission_list "${STUDENT_FULLNAME}"); do
-                info "Archive Trello card '${CARD_ID}' ..."
-                GTB_TRELLO_CARD_ID="${CARD_ID}" _gtb_trello card archive
-            done
-
             info "Delete assignment submissions..."
             GTB_ORG_NAME="${ORG_NAME}" _gtb_assignment_submission_delete
         done < <(echo "${student_lines}")
