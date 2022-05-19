@@ -1293,7 +1293,17 @@ _gtb_assignment_submission_delete() {
     local -r PATTERN=$(sed -E "s/^ {1,}| {1,}$//g" <(echo "$STEP_NAME $REPO_NAME $ORG_NAME"))
     assert_not_empty "error: please provide filter via options: --step, --repo, --org" "$PATTERN"
 
+    declare CARD_ID
+
+    for CARD_ID in $(sed -nE "/(^| )${PATTERN} /p" "$GTB_ASGMT_SUB_FILE" | _gtb_cuts 5); do
+        info "Archive Trello card '${CARD_ID}' ..."
+        GTB_TRELLO_CARD_ID="${CARD_ID}" _gtb_trello card archive
+    done
+
+    info "Delete related data from $GTB_ASGMT_SUB_FILE ..."
     sed -i.bak -E "/(^| )${PATTERN} /d" "$GTB_ASGMT_SUB_FILE"
+
+    _gtb_config_diff "$GTB_ASGMT_SUB_FILE"
 }
 
 _gtb_assignment_submission_remove() {
