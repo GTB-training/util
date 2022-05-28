@@ -439,6 +439,10 @@ _gtb_run_subcommand() {
     $subcommand_function "$@"
 }
 
+_gtb_filter() {
+    _gtb_filter_file <(cat -) '' "$@"
+}
+
 _gtb_filter_file() {
     local -r FILENAME=${1:?filename is required!}
     # CN column indices is required, you can pass an empty string or comma separated index string! (e.g. 2,7)
