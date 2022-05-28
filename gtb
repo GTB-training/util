@@ -3225,7 +3225,7 @@ _gtb_trello_card_label() {
 }
 
 _gtb_trello_card_member_add() {
-    GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --card-id <NAME>.}"
+    GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --card-id <ID>.}"
 
     trello_member_id "$@" \
         | env_parallel \
