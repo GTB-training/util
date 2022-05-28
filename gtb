@@ -583,9 +583,13 @@ gh_check_user_not_in_org() {
     local ORG=$(echo "$student_lines" | _gtb_cuts 2)
     local USERNAME=$(echo "$student_lines" | _gtb_cuts 4)
 
-    local result=$(run "gh api -X GET /orgs/${ORG}/members" \
-        | jq -r --arg u "$USERNAME" \
+    local result=$(run "gh api -X GET /orgs/${ORG}/members")
+    if [[ $(echo $result | jq -r '.message?') != "Not Found" ]];then
+        result=$(echo $result | jq -r --arg u "$USERNAME" \
             'if any(.[]; .login ==$u) == true then "ER" else "OK" end')
+    else
+        result="OK"
+    fi
 
     echo "$result $*"
     [[ "$result" != "OK" ]] && fail "error: user $USERNAME still in org $ORG"
