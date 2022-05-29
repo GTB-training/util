@@ -209,6 +209,10 @@ _gtb_tabularize() {
     fi
 }
 
+_gtb_table() {
+    _gtb_table_format "$@"
+}
+
 _gtb_table_format() {
     while (( "$#" )); do
         case "$1" in
