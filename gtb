@@ -349,10 +349,12 @@ _gtb_cuts() {
 }
 
 _gtb_count() {
-    local input="$(cat)"
+    GTB_FIELDS="${1:-1-}"
+
+    local input="$(cat | _gtb_cuts)"
     local lines_count=$(_gtb_count_lines "$input")
     {
-        echo "$input" | sort | uniq -c | sed -E 's/^ +//g'
+        echo "$input" | sort | uniq -c | sed -E 's/^ +//g' | _gtb_sort "${GTB_SORT_ORDER:-2}"
         echo -e "$lines_count TOTAL"
     } | column -t
 }
@@ -3715,9 +3717,8 @@ _gtb_tag_stat() {
     fi
 
     GTB_RAW="true"
-    GTB_FIELDS="$POSITION"
 
-    _gtb_student_list "$@" | _gtb_count
+    _gtb_student_list "$@" | _gtb_count "$POSITION"
 }
 
 _gtb_tag_remove() {
