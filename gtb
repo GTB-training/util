@@ -2159,11 +2159,10 @@ _gtb_sort() {
 }
 
 _gtb_student_repo_list() {
-    local student_lines=$(_gtb_filter_students "$@")
-    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
+    local student_orgs=$(_gtb_filter_students "$@" | cut -d' ' -f2)
+    assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_orgs"
 
-    echo "$student_lines" \
-        | cut -d' ' -f2 \
+    echo "$student_orgs" \
         | env_parallel \
             --jobs $JOBS \
             --colsep ' ' \
