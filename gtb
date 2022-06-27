@@ -629,21 +629,22 @@ gh_find_org() {
 
     if run "gh api /orgs/$ORG $(_gtb_mute_stderr)" | jsonpp | grep --silent "\"login\": \"$ORG\""
     then
-        echo "✅" $ORG
+        echo "created" "$@"
     else
-        echo "❌" $ORG
+        echo "not_found" "$@"
     fi
 }
 
 gh_membership() {
     local ORG=${1:?org is required!}
-    local USERNAME=${2:?username is required!}
+    local CN_NAME=${2:?CN name is required!}
+    local USERNAME=${3:?username is required!}
     run "gh api '/orgs/${ORG}/memberships/${USERNAME}' $(_gtb_mute_stderr)" \
-        | jq -jr --arg ORG $ORG --arg USERNAME $USERNAME \
+        | jq -jr --arg ORG $ORG --arg USERNAME $USERNAME --arg CN_NAME $CN_NAME \
         'if .role then
-            .user.login, " ", .organization.login, " ", .role, " ", .state, "\n"
+            .user.login, " ", .organization.login, " ", $CN_NAME, " ", .role, " ", .state, "\n"
         else
-            $USERNAME, " ", $ORG, " ", "not_a_member", " ", "404", "\n"
+            $USERNAME, " ", $ORG, " ", $CN_NAME, " ", "not_a_member", " ", "404", "\n"
         end'
 }
 
@@ -1889,8 +1890,8 @@ _gtb_student_org_join() {
     assert_not_empty "error: cannot find any students with filters: '$@'!" "$student_lines"
 
     local orgs_to_join=$(echo "$student_lines" \
-        | _gtb_cuts 2 \
-        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_membership "{}" "$trainer_username" \
+        | _gtb_cuts 2,7 \
+        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer --colsep ' ' gh_membership "{1}" "{2}" "$trainer_username" \
         | grep --color=never 'admin pending')
     assert_not_empty "no pending admin invitations to join!" "$orgs_to_join"
 
@@ -1914,20 +1915,13 @@ _gtb_student_org_join() {
 }
 
 _gtb_check_student_org_for_presence() {
-    header "Checking presence of student org..."
-
-    _gtb_filter_students "$@" | cut -d' ' -f2 \
-        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_find_org {1} \
-        | sort -k1,2 \
-        | tr ' ' '|' \
-        | _gtb_tabularize \
-        | cat -n
+    _gtb_filter_students "$@" \
+        | cut -d' ' -f'2,7' \
+        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer --colsep ' ' gh_find_org {1} {2}
 }
 
 _gtb_check_student_org_for_trainer_role() {
     assert_trainers_file_exists
-
-    header "Checking trainer's role in student org..."
 
     local TRAINER_FULLNAME=${1:?Trainer fullname is required! (e.g. zhang.zhe, wang.ke)}
     shift
@@ -1936,18 +1930,14 @@ _gtb_check_student_org_for_trainer_role() {
     assert_not_empty "Cannot find '$TRAINER_FULLNAME' in ${GTB_TRAINERS_FILE}!" "$trainer_username"
 
     _gtb_filter_students "$@" \
-        | _gtb_cuts 2 \
-        | env_parallel --jobs $JOBS $GTB_PARALLEL_OPT_PROGRESS_BAR --linebuffer gh_membership "{}" "$trainer_username" \
-        | sed "s/^/$TRAINER_FULLNAME /" \
-        | _gtb_sort '4,4;5,5;3,3' \
-        | _gtb_table_format \
-        | _gtb_highlight \
-            'admin' green \
-            'active' green \
-            'pending' blue \
-            'member' yellow \
-            'not_a_member' red \
-            '404' red
+        | _gtb_cuts 2,7 \
+        | env_parallel \
+            $GTB_PARALLEL_OPT_PROGRESS_BAR \
+            --jobs $JOBS \
+            --colsep ' ' \
+            --linebuffer \
+            gh_membership "{1}" "{2}" "$trainer_username" \
+        | sed "s/^/$TRAINER_FULLNAME /"
 }
 
 _gtb_student_org_remove() {
@@ -1995,6 +1985,8 @@ _gtb_student_org_delete() {
 
 _gtb_student_org_check() {
     local TRAINER_FULLNAME
+    local ORG_CHECK_RESULT
+    local MEMBER_CHECK_RESULT
 
     if _gtb_trainer_show "$1" 1>/dev/null 2>&1; then
         TRAINER_FULLNAME="$1"
@@ -2002,14 +1994,41 @@ _gtb_student_org_check() {
     fi
 
     if [[ "$CHECK_ROLE_ONLY" == "false" ]]; then
-        _gtb_check_student_org_for_presence "$@"
+        header "Checking presence of student org..."
+        ORG_CHECK_RESULT="$(_gtb_check_student_org_for_presence "$@")"
+    else
+        ORG_CHECK_RESULT="$(_gtb_filter_students "$@" \
+            | cut -d' ' -f'2,7' \
+            | sed 's/^/no_check /')"
     fi
+
+    ORG_CHECK_RESULT="$(echo "$ORG_CHECK_RESULT" | sort -k'3,3')"
 
     if [[ -z "$TRAINER_FULLNAME" ]]; then
-        return 0
+        MEMBER_CHECK_RESULT=""
+    else
+        header "Checking trainer's role in student org..."
+        MEMBER_CHECK_RESULT="$(_gtb_check_student_org_for_trainer_role "$TRAINER_FULLNAME" "$@")"
     fi
 
-    _gtb_check_student_org_for_trainer_role "$TRAINER_FULLNAME" "$@"
+    MEMBER_CHECK_RESULT="$(echo "$MEMBER_CHECK_RESULT" | sort -k'4,4')"
+
+    join -1 3 -2 4 -a 1 -o '2.1,2.2,1.3,1.2,1.1,2.5,2.6' -e 'ERROR' \
+        <(echo "$ORG_CHECK_RESULT") \
+        <(echo "$MEMBER_CHECK_RESULT") \
+        | sort -k5,7 -k4,4 -k3,3 \
+        | _gtb_table_format \
+        | _gtb_highlight \
+            'created' green \
+            'not_found' red \
+            'no_check' yellow \
+            'admin' green \
+            'active' green \
+            'pending' blue \
+            'member' yellow \
+            'not_a_member' red \
+            '404' red \
+            'ERROR' red
 }
 
 _gtb_student_org_open() {
