@@ -3681,6 +3681,42 @@ _gtb_github_limits() {
         | _gtb_table_format -N -s '^'
 }
 
+_gtb_github_key() {
+    _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_github_key_get() {
+    ssh -T git@github.com
+}
+
+_gtb_github_key_show() {
+    _gtb_github_key_get "$@"
+}
+
+_gtb_github_key_status() {
+    _gtb_github_key_get "$@"
+}
+
+_gtb_github_key_st() {
+    _gtb_github_key_get "$@"
+}
+
+_gtb_github_key_set() {
+    local -r KEY_NAME="${1:?SSH key name is required!}"
+
+    # remove key from ssh agent
+    ssh-add -d "$HOME/.ssh/id_rsa_gh" &>/dev/null
+
+    # remove control socket for SSH connection reuse
+    rm -rf '/tmp/ssh-git@github.com:22'
+
+    # overwrite private key for git@github.com by specified one
+    [[ -f "$HOME/.ssh/id_rsa_${KEY_NAME}" ]] || fail "error: cannot find specified private key '$HOME/.ssh/id_rsa_${KEY_NAME}'."
+    cp "$HOME/.ssh/id_rsa_${KEY_NAME}" "$HOME/.ssh/id_rsa_gh"
+
+    ssh -T git@github.com
+}
+
 _gtb_cache() {
     _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
