@@ -15,7 +15,7 @@ GTB_STUDENTS_FILE_DEFAULT="${GTB_CONFIG_DIR}/students.txt"
 GTB_STUDENTS_FILE_TERM="${GTB_CONFIG_DIR}/students-${GTB_TERM}.txt"
 GTB_ASGMT_SUB_FILE="${GTB_ASGMT_SUB_FILE:-${GTB_CONFIG_DIR}/assignment-submissions-${GTB_TERM}.txt}"
 GTB_STEP_ASGMT_FILE="${GTB_STEP_ASGMT_FILE:-${GTB_CONFIG_DIR}/step-assignments-${GTB_TERM}.txt}"
-GTB_EOT_FEEDBACK_SUBMISSIONS_FILE="${GTB_EOT_FEEDBACK_SUBMISSIONS_FILE:-$GTB_CONFIG_DIR/eot-feedback-submissions.txt}"
+GTB_EOT_FEEDBACK_SUBMISSIONS_FILE="${GTB_EOT_FEEDBACK_SUBMISSIONS_FILE:-$GTB_CONFIG_DIR/eot-feedback-submissions-${GTB_TERM}.txt}"
 
 if [[ -f $GTB_STUDENTS_FILE ]]; then
     GTB_STUDENTS_FILE=$GTB_STUDENTS_FILE
@@ -30,7 +30,7 @@ GTB_RANDOM_LIST_FILE="/tmp/gtb_random_list.txt"
 GTB_EXCLUDE_DIRS=( --exclude-dir '.git' --exclude-dir 'build' --exclude-dir 'gradle' --exclude-dir 'node_modules' --exclude-dir 'dist' --exclude-dir '.cache' )
 GTB_REPOS_DIR="repos"
 GTB_TERMS_DIR="terms"
-GTB_FEEDBACKS_DIR="feedbacks"
+GTB_FEEDBACKS_DIR="feedbacks-${GTB_TERM}"
 GTB_USER_CACHE_DIR="$HOME/.cache/gtb"
 SUBCMD_PREFIX='_gtb'
 GTB_DEFAULT_REPO_ROOT="${GTB_DEFAULT_REPO_ROOT:-$GTB_ROOT/$GTB_REPOS_DIR/default}"
@@ -3957,6 +3957,7 @@ _gtb_update() {
 _gtb_init() {
     mkdir -p $GTB_ROOT/$GTB_REPOS_DIR
     mkdir -p $GTB_ROOT/$GTB_TERMS_DIR
+    mkdir -p $GTB_ROOT/$GTB_FEEDBACKS_DIR
     mkdir -p $GTB_USER_CACHE_DIR
 
     if [[ -d $GTB_CONFIG_DIR ]]
