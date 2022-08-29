@@ -3508,10 +3508,10 @@ _gtb_trello_board() {
 }
 
 _gtb_trello_boards() {
-    echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/'
-    echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/-/-Dev-/' -e 's/$/-Forum/'
-    echo $GTB_TERM | sed -e 's/gtb/GTB/' -e 's/$/-Buddy/'
-    echo "Image-Host"
+    echo "${GTB_TERM//gtb/GTB}"
+    echo "$GTB_TERM" | sed -e 's/gtb/GTB/' -e 's/$/-Buddy/'
+    echo "$GTB_TERM" | sed -e 's/gtb/GTB/' -e 's/$/-Forum/'
+    echo "$GTB_TERM" | sed -e 's/gtb/GTB/' -e 's/$/-Resource/'
 }
 
 _gtb_trello_member() {
