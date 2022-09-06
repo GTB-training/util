@@ -3861,7 +3861,7 @@ _gtb_upgrade() {
     fi
   fi
 
-  run "brew install --ignore-dependencies GTB-training/gtb/util"
+  run "brew update && brew install --ignore-dependencies GTB-training/gtb/util"
 }
 
 _gtb_update() {
