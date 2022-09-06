@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=1.255.1
+VERSION=1.255.2
 
 GTB_DEBUG=${GTB_DEBUG:-false}
 
@@ -4353,4 +4353,3 @@ if [[ "$(type -t ${SUBCMD_PREFIX}_$SUBCOMMAND)" != 'function' ]]; then
 fi
 
 ${SUBCMD_PREFIX}_${SUBCOMMAND} "$@"
-
