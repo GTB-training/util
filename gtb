@@ -3430,10 +3430,10 @@ _gtb_trello_board() {
 }
 
 _gtb_trello_boards() {
-  echo "${GTB_TERM//gtb/GTB}"
-  echo "$GTB_TERM" | sed -e 's/gtb/GTB/' -e 's/$/-Buddy/'
-  echo "$GTB_TERM" | sed -e 's/gtb/GTB/' -e 's/$/-Forum/'
-  echo "$GTB_TERM" | sed -e 's/gtb/GTB/' -e 's/$/-Resource/'
+  echo "GTB-Dev-Content"
+  echo "GTB-Dev-Forum"
+  echo "GTB-Dev-Resource"
+  echo "$GTB_TERM" | sed -e 's/gtb/GTB-Dev/' -e 's/$/-Buddy/'
 }
 
 _gtb_trello_member() {
