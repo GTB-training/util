@@ -1164,7 +1164,6 @@ _gtb_rp() {
 
 _gtb_report_assignment() {
     local -r TMP_STUDENTS_FILE="/tmp/gtb-report-assignment-$$"
-    echo $TMP_STUDENTS_FILE
     _gtb_filter_students "$@" | _gtb_cuts '1,2,7,8,10,12' >"$TMP_STUDENTS_FILE"
 
     if [[ $GTB_TERM = "gtb-2022" ]]
