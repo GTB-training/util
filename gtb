@@ -4,6 +4,8 @@ VERSION=1.258.1
 
 GTB_DEBUG=${GTB_DEBUG:-false}
 
+GTB_MODULES_DIR="$(dirname $(realpath "$0"))/modules"
+
 GTB_ROOT="${GTB_ROOT:-$HOME/code/gtb}"
 GTB_TERM="${GTB_TERM:-gtb-404}"
 GTB_CONFIG_REPO=config
