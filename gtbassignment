@@ -1,0 +1,143 @@
+_gtb_assignment_list() {
+  cat "$GTB_STEP_ASGMT_FILE" |
+    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
+    _gtb_cuts "${GTB_FIELDS:-1-}" |
+    _gtb_table_format
+}
+
+_gtb_assignment_check() {
+  local -r STEP_NAME="${1:?step name is required!}"
+  local -r ASGMT_NAME="${2:?assignment name is required!}"
+
+  $GTB_GREP --silent "^${STEP_NAME} ${ASGMT_NAME}$" "$GTB_STEP_ASGMT_FILE" ||
+    fail "error: Invalid assignment '${STEP_NAME} ${ASGMT_NAME}'!"
+}
+
+_gtb_assignment_submission() {
+  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_assignment_sub() {
+  _gtb_assignment_submission "$@"
+}
+
+_gtb_assignment_submission_field() {
+  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_assignment_submission_f() {
+  _gtb_assignment_submission_field "$@"
+}
+
+_gtb_assignment_submission_field_list() {
+  head -n1 $GTB_ASGMT_SUB_FILE |
+    tr ' ' '\n' |
+    _gtb_table_format "$@"
+}
+
+_gtb_assignment_submission_list() {
+  local -r ORG_NAMES="$(_gtb_filter_students "$@" | _gtb_cuts 2 | paste -sd' ' -)"
+  _gtb_filter_asgmt_submissions $ORG_NAMES |
+    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
+    _gtb_cuts "${GTB_FIELDS:-1-4,7-9}" |
+    _gtb_table_format
+}
+
+_gtb_assignment_submission_add() {
+  local -r STEP_NAME="${1:?step name is required!}"
+  local -r REPO_NAME="${2:?repo name is required!}"
+  local -r ORG_NAME="${3:?org name is required!}"
+  local -r PRIMARY_KEY="$REPO_NAME $ORG_NAME"
+  local CREATED_AT="$(gdate --iso-8601=seconds)"
+  CREATED_AT="${4:-$CREATED_AT}"
+  local -r CREATED_AT
+
+  assert_value_exists_in_file $GTB_STUDENTS_FILE 2 "$ORG_NAME"
+
+  if ! $GTB_GREP --silent "^$STEP_NAME $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
+    echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT $NULL $NULL $NULL $NULL $NULL" >>"$GTB_ASGMT_SUB_FILE"
+    LC_ALL=C sort -u --output $GTB_ASGMT_SUB_FILE $GTB_ASGMT_SUB_FILE
+  fi
+}
+
+_gtb_assignment_submission_delete() {
+  local -r STEP_NAME=${GTB_STEP:-}
+  local -r REPO_NAME=${GTB_REPO:-}
+  local -r ORG_NAME=${GTB_ORG_NAME:-}
+
+  local -r PATTERN=$(sed -E "s/^ {1,}| {1,}$//g" <(echo "$STEP_NAME $REPO_NAME $ORG_NAME"))
+  assert_not_empty "error: please provide filter via options: --step, --repo, --org" "$PATTERN"
+
+  declare CARD_ID
+
+  for CARD_ID in $(sed -nE "/(^| )${PATTERN} /p" "$GTB_ASGMT_SUB_FILE" | _gtb_cuts 5); do
+    info "Archive Trello card '${CARD_ID}' ..."
+    GTB_TRELLO_CARD_ID="${CARD_ID}" _gtb_trello card archive
+  done
+
+  info "Delete related data from $GTB_ASGMT_SUB_FILE ..."
+  sed -i.bak -E "/(^| )${PATTERN} /d" "$GTB_ASGMT_SUB_FILE"
+
+  _gtb_config_diff "$GTB_ASGMT_SUB_FILE"
+}
+
+_gtb_assignment_submission_remove() {
+  _gtb_assignment_submission_delete "$@"
+}
+
+_gtb_assignment_submission_has() {
+  local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
+
+  local -r FIELD="${1:?FIELD is required!}"
+  local FIELD_INDEX
+  FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
+  local -r FIELD_INDEX
+
+  local LINE
+
+  assert_not_empty "error: field not found!" "$FIELD_INDEX"
+
+  gawk \
+    -v KEY="$PRIMARY_KEY" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
+    'BEGIN {err = 1} { if ($2" "$3 == KEY && $INDEX != NULL_VALUE) { err = 0; } } END { if (err == 0) { print "yes"; } else { print "no"; }  exit err}' \
+    "$GTB_ASGMT_SUB_FILE"
+}
+
+_gtb_assignment_submission_set() {
+  local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
+
+  local -r FIELD="${1:?FIELD is required!}"
+  local -r VALUE="${2:?VALUE is required!}"
+  local -r FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
+
+  assert_not_empty "error: field not found!" "$FIELD_INDEX"
+
+  if ! $GTB_GREP --silent " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
+    fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
+  fi
+
+  gawk \
+    -i inplace \
+    -v KEY="$PRIMARY_KEY" -v VALUE="$VALUE" -v INDEX="$FIELD_INDEX" \
+    '{ if ($2" "$3 == KEY) { $INDEX = VALUE; } print $0; }' \
+    "$GTB_ASGMT_SUB_FILE"
+}
+
+_gtb_assignment_submission_update() {
+  _gtb_assignment_submission_set "$@"
+}
+
+_gtb_assignment_submission_get() {
+  local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
+
+  local -r FIELD="${1:?FIELD is required!}"
+  local -r FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
+
+  if ! $GTB_GREP --silent " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
+    fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
+  fi
+
+  gawk -v KEY="$PRIMARY_KEY" -v FIELD="$FIELD" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
+    '$2" "$3 == KEY && $INDEX != NULL_VALUE {print $INDEX}' \
+    "$GTB_ASGMT_SUB_FILE"
+}

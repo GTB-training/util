@@ -983,47 +983,12 @@ _gtb_report() {
   assert_students_file_exists
   assert_assignment_submissions_file_exists
 
+  source "gtbreport"
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_rp() {
   _gtb_report "$@"
-}
-
-_gtb_report_assignment() {
-  local -r TMP_STUDENTS_FILE="/tmp/gtb-report-assignment-$$"
-  _gtb_filter_students "$@" | _gtb_cuts '1,2,7,8,10,12' >"$TMP_STUDENTS_FILE"
-
-  {
-    echo "ID Name Background Unit JoinOn" "Step0"{1..8}"-Grade" "Step0"{1..8}"-SubmittedAt"
-    {
-      paste -d' ' \
-        <(cat "$TMP_STUDENTS_FILE" | _gtb_cuts 1,3-) \
-        <(extract_asgmt_info 'Step01' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step02' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step03' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step04' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step05' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step06' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step07' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step08' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-        <(extract_asgmt_info 'Step01' '2.4' "$TMP_STUDENTS_FILE") \
-        <(extract_asgmt_info 'Step02' '2.4' "$TMP_STUDENTS_FILE") \
-        <(extract_asgmt_info 'Step03' '2.4' "$TMP_STUDENTS_FILE") \
-        <(extract_asgmt_info 'Step04' '2.4' "$TMP_STUDENTS_FILE") \
-        <(extract_asgmt_info 'Step05' '2.4' "$TMP_STUDENTS_FILE") \
-        <(extract_asgmt_info 'Step06' '2.4' "$TMP_STUDENTS_FILE") \
-        <(extract_asgmt_info 'Step07' '2.4' "$TMP_STUDENTS_FILE") \
-        <(extract_asgmt_info 'Step08' '2.4' "$TMP_STUDENTS_FILE")
-    } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;4,4;1,1}"
-  } |
-    _gtb_cuts "${GTB_FIELDS:-1-13}" |
-    _gtb_table_format --start-num 0 |
-    _gtb_highlight \
-      'Level-0' red \
-      'Level-1' yellow \
-      'Level-2' blue \
-      'Level-3' green
 }
 
 extract_asgmt_info() {
@@ -1053,6 +1018,8 @@ _gtb_assignment() {
   assert_students_file_exists
   assert_assignment_submissions_file_exists
 
+  source "gtbassignment"
+
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
@@ -1068,276 +1035,8 @@ _gtb_as() {
   _gtb_assignment "$@"
 }
 
-_gtb_assignment_list() {
-  cat "$GTB_STEP_ASGMT_FILE" |
-    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
-    _gtb_cuts "${GTB_FIELDS:-1-}" |
-    _gtb_table_format
-}
-
-_gtb_assignment_check() {
-  local -r STEP_NAME="${1:?step name is required!}"
-  local -r ASGMT_NAME="${2:?assignment name is required!}"
-
-  $GTB_GREP --silent "^${STEP_NAME} ${ASGMT_NAME}$" "$GTB_STEP_ASGMT_FILE" ||
-    fail "error: Invalid assignment '${STEP_NAME} ${ASGMT_NAME}'!"
-}
-
-_gtb_assignment_submission() {
-  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_assignment_sub() {
-  _gtb_assignment_submission "$@"
-}
-
-_gtb_assignment_submission_field() {
-  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_assignment_submission_f() {
-  _gtb_assignment_submission_field "$@"
-}
-
-_gtb_assignment_submission_field_list() {
-  head -n1 $GTB_ASGMT_SUB_FILE |
-    tr ' ' '\n' |
-    _gtb_table_format "$@"
-}
-
-_gtb_assignment_submission_list() {
-  local -r ORG_NAMES="$(_gtb_filter_students "$@" | _gtb_cuts 2 | paste -sd' ' -)"
-  _gtb_filter_asgmt_submissions $ORG_NAMES |
-    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
-    _gtb_cuts "${GTB_FIELDS:-1-4,7-9}" |
-    _gtb_table_format
-}
-
-_gtb_assignment_submission_add() {
-  local -r STEP_NAME="${1:?step name is required!}"
-  local -r REPO_NAME="${2:?repo name is required!}"
-  local -r ORG_NAME="${3:?org name is required!}"
-  local -r PRIMARY_KEY="$REPO_NAME $ORG_NAME"
-  local CREATED_AT="$(gdate --iso-8601=seconds)"
-  CREATED_AT="${4:-$CREATED_AT}"
-  local -r CREATED_AT
-
-  assert_value_exists_in_file $GTB_STUDENTS_FILE 2 "$ORG_NAME"
-
-  if ! $GTB_GREP --silent "^$STEP_NAME $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
-    echo "$STEP_NAME $PRIMARY_KEY $CREATED_AT $NULL $NULL $NULL $NULL $NULL" >>"$GTB_ASGMT_SUB_FILE"
-    LC_ALL=C sort -u --output $GTB_ASGMT_SUB_FILE $GTB_ASGMT_SUB_FILE
-  fi
-}
-
-_gtb_assignment_submission_delete() {
-  local -r STEP_NAME=${GTB_STEP:-}
-  local -r REPO_NAME=${GTB_REPO:-}
-  local -r ORG_NAME=${GTB_ORG_NAME:-}
-
-  local -r PATTERN=$(sed -E "s/^ {1,}| {1,}$//g" <(echo "$STEP_NAME $REPO_NAME $ORG_NAME"))
-  assert_not_empty "error: please provide filter via options: --step, --repo, --org" "$PATTERN"
-
-  declare CARD_ID
-
-  for CARD_ID in $(sed -nE "/(^| )${PATTERN} /p" "$GTB_ASGMT_SUB_FILE" | _gtb_cuts 5); do
-    info "Archive Trello card '${CARD_ID}' ..."
-    GTB_TRELLO_CARD_ID="${CARD_ID}" _gtb_trello card archive
-  done
-
-  info "Delete related data from $GTB_ASGMT_SUB_FILE ..."
-  sed -i.bak -E "/(^| )${PATTERN} /d" "$GTB_ASGMT_SUB_FILE"
-
-  _gtb_config_diff "$GTB_ASGMT_SUB_FILE"
-}
-
-_gtb_assignment_submission_remove() {
-  _gtb_assignment_submission_delete "$@"
-}
-
-_gtb_assignment_submission_has() {
-  local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
-
-  local -r FIELD="${1:?FIELD is required!}"
-  local FIELD_INDEX
-  FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
-  local -r FIELD_INDEX
-
-  local LINE
-
-  assert_not_empty "error: field not found!" "$FIELD_INDEX"
-
-  gawk \
-    -v KEY="$PRIMARY_KEY" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
-    'BEGIN {err = 1} { if ($2" "$3 == KEY && $INDEX != NULL_VALUE) { err = 0; } } END { if (err == 0) { print "yes"; } else { print "no"; }  exit err}' \
-    "$GTB_ASGMT_SUB_FILE"
-}
-
-_gtb_assignment_submission_set() {
-  local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
-
-  local -r FIELD="${1:?FIELD is required!}"
-  local -r VALUE="${2:?VALUE is required!}"
-  local -r FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
-
-  assert_not_empty "error: field not found!" "$FIELD_INDEX"
-
-  if ! $GTB_GREP --silent " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
-    fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
-  fi
-
-  gawk \
-    -i inplace \
-    -v KEY="$PRIMARY_KEY" -v VALUE="$VALUE" -v INDEX="$FIELD_INDEX" \
-    '{ if ($2" "$3 == KEY) { $INDEX = VALUE; } print $0; }' \
-    "$GTB_ASGMT_SUB_FILE"
-}
-
-_gtb_assignment_submission_update() {
-  _gtb_assignment_submission_set "$@"
-}
-
-_gtb_assignment_submission_get() {
-  local -r PRIMARY_KEY="${GTB_PK:?primary key is required! (REPO_NAME ORG_NAME)}"
-
-  local -r FIELD="${1:?FIELD is required!}"
-  local -r FIELD_INDEX="$(_gtb_field_index "$GTB_ASGMT_SUB_FILE" "$FIELD")"
-
-  if ! $GTB_GREP --silent " $PRIMARY_KEY " "$GTB_ASGMT_SUB_FILE"; then
-    fail "error: cannot find assignment submission '$PRIMARY_KEY'!"
-  fi
-
-  gawk -v KEY="$PRIMARY_KEY" -v FIELD="$FIELD" -v INDEX="$FIELD_INDEX" -v NULL_VALUE="$NULL" \
-    '$2" "$3 == KEY && $INDEX != NULL_VALUE {print $INDEX}' \
-    "$GTB_ASGMT_SUB_FILE"
-}
-
-_gtb_feedback_list() {
-  cat "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" |
-    _gtb_table_format
-}
-
-gtb_feedback_remove_submission() {
-  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
-  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
-
-  if [[ "false" == "$GTB_YES" ]]; then
-    read -p "about to DELETE $(red "$ORG") $(red "$BUDDY_EMAIL") from $(red "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      return 1
-    fi
-  fi
-
-  gawk \
-    -i inplace \
-    -v org="$ORG" \
-    -v email="$BUDDY_EMAIL" \
-    '$1==org && $2==email {next} {print}' \
-    "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
-
-  _gtb_config_diff "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
-}
-
-gtb_feedback_delete_file() {
-  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
-  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
-
-  if [[ "false" == "$GTB_YES" ]]; then
-    read -p "about to DELETE $(red "$ORG") $(red "$BUDDY_EMAIL") from $(red "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      return 1
-    fi
-  fi
-
-  local -r FEEDBACK_FILE="$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
-
-  [[ -f $FEEDBACK_FILE ]] && rm -rf "$FEEDBACK_FILE"
-}
-
-_gtb_report_feedback() {
-  local -r TMP_STUDENTS_EOT_INIT_FILE="/tmp/gtb-report-feedback-init-$$"
-  local -r TMP_STUDENTS_EOT_FILE="/tmp/gtb-report-feedback-$$"
-  local -r TMP_STUDENTS_EOT_CSV_FILE="/tmp/gtb-report-feedback-$$.csv"
-
-  _gtb_filter_students "$@" | _gtb_cuts '1,2,7,8,10,12' >"$TMP_STUDENTS_EOT_INIT_FILE"
-
-  {
-    echo "Org ID Name Background Unit JoinOn" "BuddyEmail BuddyName BuddyUnit SubmittedAt Feedback"
-    {
-      paste -d ',' \
-        <(
-          LC_ALL=C join -1 2 -2 1 -a 2 <(cat "$TMP_STUDENTS_EOT_INIT_FILE" | _gtb_sort "2") \
-            <(
-              LC_ALL=C join -1 2 -2 3 -o "1.1,1.2,2.2,2.4,1.3" \
-                <($GTB_GREP "^gtb-" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" | _gtb_sort "2") \
-                <(cat "$GTB_BUDDIES_FILE" | _gtb_sort "3") |
-                _gtb_sort "1"
-            )
-        )
-    }
-  } >$TMP_STUDENTS_EOT_FILE
-
-  while read -r Org ID Name Background Unit JoinOn BuddyEmail BuddyName BuddyUnit SubmittedAt Feedback; do
-    local FEEDBACK_FILE=$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$Org-$BuddyEmail.txt
-    if [[ ! -f "$FEEDBACK_FILE" ]]; then
-      echo "$Org,$ID,$Name,$Background,$Unit,$JoinOn,$BuddyEmail,$BuddyName,$BuddyUnit,$SubmittedAt,$Feedback" >>"$TMP_STUDENTS_EOT_CSV_FILE"
-    else
-      local FEEDBACK_CONTENT="\"$(cat "$FEEDBACK_FILE" | sed 's/"/""/g')\""
-      echo "$Org,$ID,$Name,$Background,$Unit,$JoinOn,$BuddyEmail,$BuddyName,$BuddyUnit,$SubmittedAt,$FEEDBACK_CONTENT" >>"$TMP_STUDENTS_EOT_CSV_FILE"
-    fi
-  done <$TMP_STUDENTS_EOT_FILE
-
-  cat $TMP_STUDENTS_EOT_CSV_FILE
-}
-
-_gtb_feedback_remove() {
-  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
-  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
-
-  assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
-  assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
-
-  gtb_feedback_remove_submission "$ORG" "$BUDDY_EMAIL"
-  gtb_feedback_delete_file "$ORG" "$BUDDY_EMAIL"
-}
-
-_gtb_feedback_show() {
-  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
-  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
-  local -r QUERY_FILTER="$ORG$BUDDY_EMAIL"
-  local -r COUNT=$(_gtb_count_lines "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")
-
-  gawk '{print $1$2}' "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" | $GTB_GREP --silent "$QUERY_FILTER"
-
-  RESULT=$?
-
-  [[ 0 -lt $RESULT ]] && fail "error: $COUNT lines filtered with filter: '$QUERY_FILTER', should match exactly one line!"
-
-  return $RESULT
-}
-
-_gtb_feedback_add() {
-  local -r ORG="${1:?org name is required!}"
-  local -r BUDDY_EMAIL="${2:?buddy email is required!}"
-  local -r FEEDBACK_FILE="${3:?feedback is required!}"
-  local CREATED_AT="$(gdate --iso-8601=seconds)"
-  CREATED_AT="${4:-$CREATED_AT}"
-
-  assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
-  assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
-
-  # add feedback submission
-  echo "$ORG" "$BUDDY_EMAIL" "$CREATED_AT" >>"$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
-  LC_ALL=C sort -u --output "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
-
-  # mv temp file to feedback dir
-  mv "$FEEDBACK_FILE" "$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
-}
-
 _gtb_buddy() {
-  assert_trainers_file_exists
+  source "gtbbuddy"
 
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
@@ -1345,6 +1044,8 @@ _gtb_buddy() {
 _gtb_feedback() {
   assert_students_file_exists
   assert_eot_feedback_submission_file_exists
+
+  source "gtbfeedback"
 
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
@@ -1362,148 +1063,13 @@ _gtb_fd() {
 }
 
 _gtb_buddy_field() {
+  source "gtbbuddy"
+
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
 _gtb_buddy_f() {
   _gtb_buddy_field "$@"
-}
-
-_gtb_buddy_field_list() {
-  head -n1 $GTB_BUDDIES_FILE |
-    tr ' ' '\n' |
-    _gtb_table_format "$@"
-}
-
-_gtb_buddy_show() {
-  local BUDDY_FILTER=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
-
-  local buddy_lines=$(_gtb_filter_buddies "${BUDDY_FILTER}")
-  local buddies_count=$(_gtb_count_lines "$buddy_lines")
-  [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FILTER}', should match exactly one line!"
-
-  paste -d ' ' \
-    <(_gtb_buddy_field_list -N) \
-    <(echo "$buddy_lines" | tr ' ' '\n') |
-    _gtb_table_format
-}
-
-_gtb_buddy_list() {
-  _gtb_filter_buddies "$@" |
-    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
-    _gtb_cuts "${GTB_FIELDS:-1-}" |
-    _gtb_table_format
-}
-
-_gtb_buddy_add() {
-  local -r FULLNAME="${1:?FULLNAME is required!}"
-  local -r CN_NAME="${2:?CN_NAME is required!}"
-  local -r TW_EMAIL="${3:?TW_EMAIL is required!}"
-  local -r UNIT="${4:?UNIT is required!}"
-  local -r GITHUB_USERNAME="${5:?GITHUB_USERNAME is required!}"
-  local -r MOBILE="${6:?MOBILE is required!}"
-  local -r WECHAT="${7:?WECHAT is required!}"
-  shift 7
-  local -r TAGS="$GTB_TERM $*"
-
-  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 1 "$FULLNAME"
-  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 2 "$CN_NAME"
-  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 3 "$TW_EMAIL"
-  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 5 "$GITHUB_USERNAME"
-  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 6 "$MOBILE"
-  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 7 "$WECHAT"
-
-  local LINE="$FULLNAME $CN_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT"
-  [[ -n "$TAGS" ]] && LINE="$LINE $TAGS"
-
-  echo "$LINE" >>"$GTB_BUDDIES_FILE"
-
-  LC_ALL=C sort -u --output "$GTB_BUDDIES_FILE" "$GTB_BUDDIES_FILE"
-}
-
-_gtb_buddy_remove() {
-  readonly keyword=${1:?Fullname or TW email is required!}
-
-  cat $GTB_BUDDIES_FILE | _gtb_cuts 1,3 | grep --silent "\<$keyword\>" ||
-    fail "error: cannot find buddy, run \`gtb buddy show $keyword\` to learn more."
-
-  if [[ "false" == "$GTB_YES" ]]; then
-    read -p "about to DELETE $(red ${keyword}) from $(red $GTB_BUDDIES_FILE)? (y|n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      return 1
-    fi
-  fi
-
-  gawk \
-    -i inplace \
-    -v keyword="$keyword" \
-    '$1==keyword || $3==keyword {next} {print}' \
-    "$GTB_BUDDIES_FILE"
-
-  _gtb_config_diff "$GTB_BUDDIES_FILE"
-}
-
-_gtb_buddy_username() {
-  readonly BUDDY_FULLNAME=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
-  readonly FLAG_RAW="$GTB_RAW"
-  readonly FLAG_LINE_NUMBERS="$GTB_LINE_NUMBERS"
-
-  GTB_RAW="true"
-  GTB_LINE_NUMBERS="false"
-  _gtb_buddy_list $BUDDY_FULLNAME | _gtb_cuts 5
-  GTB_RAW="$FLAG_RAW"
-  GTB_LINE_NUMBERS="$FLAG_LINE_NUMBERS"
-}
-
-_gtb_buddy_mapping() {
-  assert_trainers_file_exists
-
-  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
-}
-
-_gtb_buddy_map() {
-  _gtb_buddy_mapping "$@"
-}
-
-_gtb_buddy_mapping_list() {
-  local A=1
-  local B=2
-  if [[ "true" == "$GTB_LIST_BY_BUDDEE" ]]; then
-    A=2
-    B=1
-  fi
-  _gtb_filter_buddies_mapping "${A}" "$@" |
-    awk -v A=$A -v B=$B '{map[$A]=map[$A]" "$B;count[$A]+=1} END{for (name in map) print name, count[name], map[name]}' |
-    tr -s ' ' |
-    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
-    _gtb_cuts "${GTB_FIELDS:-1-}" |
-    _gtb_table_format
-}
-
-_gtb_buddy_mapping_add() {
-  local -r BUDDY_FULLNAME="$(gtb buddy show --raw "$GTB_BUDDY_FILTER" | $GTB_GREP 'FULLNAME' | _gtb_cuts 2)"
-  assert_not_empty "error: cannot find buddy with filter '$GTB_BUDDY_FILTER' specified via --buddy." "${BUDDY_FULLNAME}"
-
-  gtb student list --raw --fields 2 $(echo $@ | tr ',' ' ' | tr -s ' ') |
-    grep -v '~PINYIN_NAME~' |
-    sed "s/^/$BUDDY_FULLNAME /" \
-      >>"$GTB_BUDDIES_MAPPING_FILE"
-
-  LC_ALL=C sort -u --output "$GTB_BUDDIES_MAPPING_FILE" "$GTB_BUDDIES_MAPPING_FILE"
-}
-
-_gtb_buddy_mapping_remove() {
-  local -r BUDDY_FULLNAME="$GTB_BUDDY_FILTER"
-
-  cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep --silent "^\<$BUDDY_FULLNAME\>" ||
-    fail "error: cannot find buddy with fullname '$BUDDY_FULLNAME' specified via --buddy."
-
-  gtb student list --raw --fields 2 "$@" |
-    sed "s/^/$BUDDY_FULLNAME /" |
-    while read -r line; do
-      sed -i.bak "/^${line}$/d" $GTB_BUDDIES_MAPPING_FILE
-    done
 }
 
 _git_list_all_branches_of_remote() {

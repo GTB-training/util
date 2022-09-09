@@ -1,0 +1,88 @@
+
+_gtb_feedback_list() {
+  cat "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" |
+    _gtb_table_format
+}
+
+gtb_feedback_remove_submission() {
+  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+
+  if [[ "false" == "$GTB_YES" ]]; then
+    read -p "about to DELETE $(red "$ORG") $(red "$BUDDY_EMAIL") from $(red "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")? (y|n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      return 1
+    fi
+  fi
+
+  gawk \
+    -i inplace \
+    -v org="$ORG" \
+    -v email="$BUDDY_EMAIL" \
+    '$1==org && $2==email {next} {print}' \
+    "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+
+  _gtb_config_diff "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+}
+
+gtb_feedback_delete_file() {
+  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+
+  if [[ "false" == "$GTB_YES" ]]; then
+    read -p "about to DELETE $(red "$ORG") $(red "$BUDDY_EMAIL") from $(red "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")? (y|n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      return 1
+    fi
+  fi
+
+  local -r FEEDBACK_FILE="$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
+
+  [[ -f $FEEDBACK_FILE ]] && rm -rf "$FEEDBACK_FILE"
+}
+
+_gtb_feedback_remove() {
+  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+
+  assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
+  assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
+
+  gtb_feedback_remove_submission "$ORG" "$BUDDY_EMAIL"
+  gtb_feedback_delete_file "$ORG" "$BUDDY_EMAIL"
+}
+
+_gtb_feedback_show() {
+  local -r ORG=${1:?organization is required! (e.g. gtb-2022-zhang-san, etc.)}
+  local -r BUDDY_EMAIL=${2:?buddy email is required! (e.g. hqu@thoughtworks.com, etc.)}
+  local -r QUERY_FILTER="$ORG$BUDDY_EMAIL"
+  local -r COUNT=$(_gtb_count_lines "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE")
+
+  gawk '{print $1$2}' "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" | $GTB_GREP --silent "$QUERY_FILTER"
+
+  RESULT=$?
+
+  [[ 0 -lt $RESULT ]] && fail "error: $COUNT lines filtered with filter: '$QUERY_FILTER', should match exactly one line!"
+
+  return $RESULT
+}
+
+_gtb_feedback_add() {
+  local -r ORG="${1:?org name is required!}"
+  local -r BUDDY_EMAIL="${2:?buddy email is required!}"
+  local -r FEEDBACK_FILE="${3:?feedback is required!}"
+  local CREATED_AT="$(gdate --iso-8601=seconds)"
+  CREATED_AT="${4:-$CREATED_AT}"
+
+  assert_value_exists_in_file "$GTB_STUDENTS_FILE" 2 "$ORG"
+  assert_value_exists_in_file "$GTB_BUDDIES_FILE" 3 "$BUDDY_EMAIL"
+
+  # add feedback submission
+  echo "$ORG" "$BUDDY_EMAIL" "$CREATED_AT" >>"$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+  LC_ALL=C sort -u --output "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE" "$GTB_EOT_FEEDBACK_SUBMISSIONS_FILE"
+
+  # mv temp file to feedback dir
+  mv "$FEEDBACK_FILE" "$GTB_CONFIG_DIR/$GTB_FEEDBACKS_DIR/$ORG-$BUDDY_EMAIL.txt"
+}

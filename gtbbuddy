@@ -1,0 +1,136 @@
+_gtb_buddy_field_list() {
+  head -n1 $GTB_BUDDIES_FILE |
+    tr ' ' '\n' |
+    _gtb_table_format "$@"
+}
+
+_gtb_buddy_show() {
+  local BUDDY_FILTER=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
+
+  local buddy_lines=$(_gtb_filter_buddies "${BUDDY_FILTER}")
+  local buddies_count=$(_gtb_count_lines "$buddy_lines")
+  [[ 1 -ne $buddies_count ]] && fail "error: $COUNT lines filtered with filter: '${BUDDY_FILTER}', should match exactly one line!"
+
+  paste -d ' ' \
+    <(_gtb_buddy_field_list -N) \
+    <(echo "$buddy_lines" | tr ' ' '\n') |
+    _gtb_table_format
+}
+
+_gtb_buddy_list() {
+  _gtb_filter_buddies "$@" |
+    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
+    _gtb_cuts "${GTB_FIELDS:-1-}" |
+    _gtb_table_format
+}
+
+_gtb_buddy_add() {
+  local -r FULLNAME="${1:?FULLNAME is required!}"
+  local -r CN_NAME="${2:?CN_NAME is required!}"
+  local -r TW_EMAIL="${3:?TW_EMAIL is required!}"
+  local -r UNIT="${4:?UNIT is required!}"
+  local -r GITHUB_USERNAME="${5:?GITHUB_USERNAME is required!}"
+  local -r MOBILE="${6:?MOBILE is required!}"
+  local -r WECHAT="${7:?WECHAT is required!}"
+  shift 7
+  local -r TAGS="$GTB_TERM $*"
+
+  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 1 "$FULLNAME"
+  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 2 "$CN_NAME"
+  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 3 "$TW_EMAIL"
+  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 5 "$GITHUB_USERNAME"
+  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 6 "$MOBILE"
+  assert_value_is_uniq_in_file "$GTB_BUDDIES_FILE" 7 "$WECHAT"
+
+  local LINE="$FULLNAME $CN_NAME $TW_EMAIL $UNIT $GITHUB_USERNAME $MOBILE $WECHAT"
+  [[ -n "$TAGS" ]] && LINE="$LINE $TAGS"
+
+  echo "$LINE" >>"$GTB_BUDDIES_FILE"
+
+  LC_ALL=C sort -u --output "$GTB_BUDDIES_FILE" "$GTB_BUDDIES_FILE"
+}
+
+_gtb_buddy_remove() {
+  readonly keyword=${1:?Fullname or TW email is required!}
+
+  cat $GTB_BUDDIES_FILE | _gtb_cuts 1,3 | grep --silent "\<$keyword\>" ||
+    fail "error: cannot find buddy, run \`gtb buddy show $keyword\` to learn more."
+
+  if [[ "false" == "$GTB_YES" ]]; then
+    read -p "about to DELETE $(red ${keyword}) from $(red $GTB_BUDDIES_FILE)? (y|n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      return 1
+    fi
+  fi
+
+  gawk \
+    -i inplace \
+    -v keyword="$keyword" \
+    '$1==keyword || $3==keyword {next} {print}' \
+    "$GTB_BUDDIES_FILE"
+
+  _gtb_config_diff "$GTB_BUDDIES_FILE"
+}
+
+_gtb_buddy_username() {
+  readonly BUDDY_FULLNAME=${1:?Fullname is required! (e.g. zhang.san, li.si, etc.)}
+  readonly FLAG_RAW="$GTB_RAW"
+  readonly FLAG_LINE_NUMBERS="$GTB_LINE_NUMBERS"
+
+  GTB_RAW="true"
+  GTB_LINE_NUMBERS="false"
+  _gtb_buddy_list $BUDDY_FULLNAME | _gtb_cuts 5
+  GTB_RAW="$FLAG_RAW"
+  GTB_LINE_NUMBERS="$FLAG_LINE_NUMBERS"
+}
+
+_gtb_buddy_mapping() {
+  assert_trainers_file_exists
+
+  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_buddy_map() {
+  _gtb_buddy_mapping "$@"
+}
+
+_gtb_buddy_mapping_list() {
+  local A=1
+  local B=2
+  if [[ "true" == "$GTB_LIST_BY_BUDDEE" ]]; then
+    A=2
+    B=1
+  fi
+  _gtb_filter_buddies_mapping "${A}" "$@" |
+    awk -v A=$A -v B=$B '{map[$A]=map[$A]" "$B;count[$A]+=1} END{for (name in map) print name, count[name], map[name]}' |
+    tr -s ' ' |
+    _gtb_sort "${GTB_SORT_ORDER:-1,1}" |
+    _gtb_cuts "${GTB_FIELDS:-1-}" |
+    _gtb_table_format
+}
+
+_gtb_buddy_mapping_add() {
+  local -r BUDDY_FULLNAME="$(gtb buddy show --raw "$GTB_BUDDY_FILTER" | $GTB_GREP 'FULLNAME' | _gtb_cuts 2)"
+  assert_not_empty "error: cannot find buddy with filter '$GTB_BUDDY_FILTER' specified via --buddy." "${BUDDY_FULLNAME}"
+
+  gtb student list --raw --fields 2 $(echo $@ | tr ',' ' ' | tr -s ' ') |
+    grep -v '~PINYIN_NAME~' |
+    sed "s/^/$BUDDY_FULLNAME /" \
+      >>"$GTB_BUDDIES_MAPPING_FILE"
+
+  LC_ALL=C sort -u --output "$GTB_BUDDIES_MAPPING_FILE" "$GTB_BUDDIES_MAPPING_FILE"
+}
+
+_gtb_buddy_mapping_remove() {
+  local -r BUDDY_FULLNAME="$GTB_BUDDY_FILTER"
+
+  cat $GTB_BUDDIES_FILE | _gtb_cuts 1 | grep --silent "^\<$BUDDY_FULLNAME\>" ||
+    fail "error: cannot find buddy with fullname '$BUDDY_FULLNAME' specified via --buddy."
+
+  gtb student list --raw --fields 2 "$@" |
+    sed "s/^/$BUDDY_FULLNAME /" |
+    while read -r line; do
+      sed -i.bak "/^${line}$/d" $GTB_BUDDIES_MAPPING_FILE
+    done
+}
