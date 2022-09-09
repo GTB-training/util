@@ -17,7 +17,7 @@ log() {
 run "sed -i '' -e \"s/^\(VERSION\=\).*/\1${VERSION#v}/\" ./gtb"
 run "git add gtb && git commit -m \"bump version to $VERSION\""
 run "git tag $VERSION $REF"
-run "git push origin master && git push --tags"
+run "git push origin modules && git push --tags"
 run "sleep 3"
 run "rm -f $HOME/Downloads/${VERSION}.tar.gz"
 run "wget -P $HOME/Downloads/ https://github.com/GTB-training/util/archive/${VERSION}.tar.gz"
