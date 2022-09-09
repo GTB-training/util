@@ -991,77 +991,39 @@ _gtb_rp() {
 }
 
 _gtb_report_assignment() {
-    local -r TMP_STUDENTS_FILE="/tmp/gtb-report-assignment-$$"
-    _gtb_filter_students "$@" | _gtb_cuts '1,2,7,8,10,12' >"$TMP_STUDENTS_FILE"
+  local -r TMP_STUDENTS_FILE="/tmp/gtb-report-assignment-$$"
+  _gtb_filter_students "$@" | _gtb_cuts '1,2,7,8,10,12' >"$TMP_STUDENTS_FILE"
 
-    if [[ $GTB_TERM = "gtb-2022" ]]
-    then
-       {
-          echo "ID Name Background Unit JoinOn" "Step0"{1..8}"-Grade" "Step0"{1..8}"-SubmittedAt"
-          {
-              paste -d' ' \
-                  <(cat "$TMP_STUDENTS_FILE" | _gtb_cuts 1,3-) \
-                  <(extract_asgmt_info 'Step01' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step02' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step03' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step04' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step05' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step06' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step07' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step08' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step01' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step02' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step03' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step04' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step05' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step06' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step07' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step08' '2.4'     "$TMP_STUDENTS_FILE")
-          } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;4,4;1,1}"
-        } \
-            | _gtb_cuts "${GTB_FIELDS:-1-13}" \
-            | _gtb_table_format --start-num 0 \
-            | _gtb_highlight \
-                'Level-0' red \
-                'Level-1' yellow \
-                'Level-2' blue \
-                'Level-3' green
-    else
-       {
-          echo "ID Name Background Unit JoinOn" "Step0"{1..10}"-Grade" "Step0"{1..10}"-SubmittedAt"
-          {
-              paste -d' ' \
-                  <(cat "$TMP_STUDENTS_FILE" | _gtb_cuts 1,3-) \
-                  <(extract_asgmt_info 'Step01' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step02' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step03' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step04' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step05' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step06' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step07' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step08' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step09' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step10' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
-                  <(extract_asgmt_info 'Step01' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step02' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step03' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step04' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step05' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step06' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step07' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step08' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step09' '2.4'     "$TMP_STUDENTS_FILE") \
-                  <(extract_asgmt_info 'Step10' '2.4'     "$TMP_STUDENTS_FILE")
-          } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;4,4;1,1}"
-      } \
-            | _gtb_cuts "${GTB_FIELDS:-1-15}" \
-            | _gtb_table_format --start-num 0 \
-            | _gtb_highlight \
-                'Level-0' red \
-                'Level-1' yellow \
-                'Level-2' blue \
-                'Level-3' green
-    fi
+  {
+    echo "ID Name Background Unit JoinOn" "Step0"{1..8}"-Grade" "Step0"{1..8}"-SubmittedAt"
+    {
+      paste -d' ' \
+        <(cat "$TMP_STUDENTS_FILE" | _gtb_cuts 1,3-) \
+        <(extract_asgmt_info 'Step01' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step02' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step03' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step04' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step05' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step06' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step07' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step08' '2.4,2.8' "$TMP_STUDENTS_FILE" | parse_assignment_level) \
+        <(extract_asgmt_info 'Step01' '2.4' "$TMP_STUDENTS_FILE") \
+        <(extract_asgmt_info 'Step02' '2.4' "$TMP_STUDENTS_FILE") \
+        <(extract_asgmt_info 'Step03' '2.4' "$TMP_STUDENTS_FILE") \
+        <(extract_asgmt_info 'Step04' '2.4' "$TMP_STUDENTS_FILE") \
+        <(extract_asgmt_info 'Step05' '2.4' "$TMP_STUDENTS_FILE") \
+        <(extract_asgmt_info 'Step06' '2.4' "$TMP_STUDENTS_FILE") \
+        <(extract_asgmt_info 'Step07' '2.4' "$TMP_STUDENTS_FILE") \
+        <(extract_asgmt_info 'Step08' '2.4' "$TMP_STUDENTS_FILE")
+    } | _gtb_sort "${GTB_SORT_ORDER:-5,5;3,3r;4,4;1,1}"
+  } |
+    _gtb_cuts "${GTB_FIELDS:-1-13}" |
+    _gtb_table_format --start-num 0 |
+    _gtb_highlight \
+      'Level-0' red \
+      'Level-1' yellow \
+      'Level-2' blue \
+      'Level-3' green
 }
 
 extract_asgmt_info() {
