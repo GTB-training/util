@@ -107,3 +107,15 @@ _gtb_report_feedback() {
 
   cat $TMP_STUDENTS_EOT_CSV_FILE
 }
+
+
+extract_asgmt_info() {
+  local -r STEP_NAME="${1:?step name is required!}"
+  local -r FIELDS="${2:?fields are required! ('2.4', '2.4,2.8', etc)}"
+  local -r STUDENTS_FILE="${3:?students file is required!}"
+  LC_ALL=C join -1 2 -2 3 -a 1 -e '-' -o "${FIELDS}" "$STUDENTS_FILE" <($GTB_GREP "^${STEP_NAME}" "$GTB_ASGMT_SUB_FILE")
+}
+
+parse_assignment_level() {
+  cat | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Level-?";}}'
+}

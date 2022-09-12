@@ -1,0 +1,39 @@
+_gtb_cache_list() {
+  local -r FILENAME=${1:?cache filename is required!}
+  local -r CACHE_FILE="$GTB_USER_CACHE_DIR/$FILENAME"
+
+  cat "$CACHE_FILE" |
+    _gtb_cuts "${GTB_FIELDS:-1-}" |
+    _gtb_table_format
+}
+
+_gtb_cache_get() {
+  local -r FILENAME=${1:?cache filename is required!}
+  local -r KEY=${2:?cache KEY is required!}
+
+  local -r CACHE_FILE="$GTB_USER_CACHE_DIR/$FILENAME"
+  local -r CACHE_KEY="${KEY// /-}"
+
+  [[ ! -f $CACHE_FILE ]] && return
+
+  awk -v KEY="$CACHE_KEY" '$1 == KEY' "$CACHE_FILE" | cut -d' ' -f2-
+}
+
+_gtb_cache_set() {
+  local -r FILENAME=${1:?cache filename is required!}
+  local -r KEY=${2:?cache KEY is required!}
+  local -r VALUE=${3:?cache VALUE is required!}
+
+  local -r CACHE_FILE="$GTB_USER_CACHE_DIR/$FILENAME"
+  local -r CACHE_KEY="${KEY// /-}"
+
+  echo "${CACHE_KEY} ${VALUE}" >>"$CACHE_FILE"
+}
+
+_gtb_cache_file() {
+  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
+_gtb_cache_file_list() {
+  $GTB_FIND "$GTB_USER_CACHE_DIR" -type f -printf "%f\n"
+}
