@@ -991,18 +991,6 @@ _gtb_rp() {
   _gtb_report "$@"
 }
 
-_gtb_report_assign() {
-  _gtb_report_assignment "$@"
-}
-
-_gtb_report_asgmt() {
-  _gtb_report_assignment "$@"
-}
-
-_gtb_report_as() {
-  _gtb_report_assignment "$@"
-}
-
 _gtb_assignment() {
   assert_students_file_exists
   assert_assignment_submissions_file_exists
@@ -1592,6 +1580,7 @@ _gtb_repo_check() {
 }
 
 _gtb_repo() {
+  source "gtbstudent"
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
@@ -1883,7 +1872,7 @@ _gtb_tag() {
   if ! echo $1 | grep --silent '^\(index\|add\|replace\|remove\|stat\)$'; then
     set -- index "$@"
   fi
-
+  source "gtbstudent"
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 

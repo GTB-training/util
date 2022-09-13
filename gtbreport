@@ -133,6 +133,18 @@ _gtb_report_process() {
     _gtb_table_format --start-num 0
 }
 
+_gtb_report_assign() {
+  _gtb_report_assignment "$@"
+}
+
+_gtb_report_asgmt() {
+  _gtb_report_assignment "$@"
+}
+
+_gtb_report_as() {
+  _gtb_report_assignment "$@"
+}
+
 extract_asgmt_info() {
   local -r STEP_NAME="${1:?step name is required!}"
   local -r FIELDS="${2:?fields are required! ('2.4', '2.4,2.8', etc)}"
