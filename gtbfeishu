@@ -1,0 +1,39 @@
+_gtb_feishu_refresh_assignment_process() {
+    _gtb_feishu_token
+
+    local -r SPREADSHEET_ID="shtcnL3CkMHvdKD2Lz4hS4qESmd"
+    local -r SHEET_ID="e24376"
+    local -r PUT_SHEET_URL="$GTB_FEISHU_API/sheets/v2/spreadsheets/$SPREADSHEET_ID/values"
+    local -r RANGE="\"$SHEET_ID!A2:Z900\""
+    local -r DATA="${1:?request data is required!}"
+    local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
+    local -r REQUEST_BODY=$(cat <<EOF
+{
+    "valueRange":{
+        "range": $RANGE,
+        "values": $DATA
+    }
+}
+EOF
+)
+    RESPONSE=$(echo -n "$REQUEST_BODY" |
+      http --follow --timeout 3600 PUT $PUT_SHEET_URL \
+      Authorization:"Bearer $TENANT_ACCESS_TOKEN" \
+      Content-Type:'application/json'
+    )
+    echo "$RESPONSE"
+    RESULT=$(echo "$RESPONSE" | jq -r ".msg")
+    [[ "$RESULT" == "success" ]] || echo "Failed to update process sheet."
+}
+
+_gtb_feishu_token() {
+    local -r GTB_FEISHU_TOKEN_URL="${GTB_FEISHU_API}${GTB_FEISHU_TOKEN_ENDPOINT}"
+
+    [[ -s $GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE ]] || echo "placeholder" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
+
+    run "http --ignore-stdin --form --follow --timeout 3600 POST $GTB_FEISHU_TOKEN_URL \
+     'app_id'="$FEISHU_APP_KEY" \
+     'app_secret'="$FEISHU_APP_SECRET" \
+     Content-Type:'application/x-www-form-urlencoded'" |
+      jq -r ".tenant_access_token" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
+}

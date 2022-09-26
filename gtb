@@ -1744,6 +1744,16 @@ _gtb_org() {
   _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
 }
 
+_gtb_feishu() {
+  GTB_FEISHU_API='https://open.feishu.cn/open-apis'
+  GTB_FEISHU_TOKEN_ENDPOINT='/auth/v3/tenant_access_token/internal'
+  GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE="$GTB_USER_CACHE_DIR/.tenant_access_token"
+
+  source "gtbfeishu"
+
+  _gtb_run_subcommand ${FUNCNAME[0]#_gtb_} "$@"
+}
+
 _gtb_trello() {
   GTB_TRELLO_API='https://api.trello.com/1'
   GTB_TRELLO_API_KEY="${GTB_TRELLO_API_KEY:?Trello API Key should be set! 'https://trello.com/app-key'}"
@@ -1759,6 +1769,10 @@ _gtb_trello() {
 
 _gtb_tr() {
   _gtb_trello "$@"
+}
+
+_gtb_fs() {
+  _gtb_feishu "$@"
 }
 
 _gtb_github() {
