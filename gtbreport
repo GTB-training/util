@@ -157,5 +157,5 @@ parse_assignment_level() {
 }
 
 parse_assignment_process() {
-  cat | awk '{if ($1 == "-" && $2 == "-") {print "-";} else if ($1 != "-" && $2 != "-") {print $2;} else {print "Done";}}'
+  cat | awk '{if ($1 == "-" && $2 == "-") {print "-";} else {print "Done";}}'
 }
