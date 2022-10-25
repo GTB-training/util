@@ -49,7 +49,7 @@ _gtb_feishu_group_joining_process() {
     RESPONSE=$(http --follow --timeout 3600 GET ${GET_GROUP_MEMBERS_URL} Authorization:"Bearer $TENANT_ACCESS_TOKEN")
     HAS_MORE=$(echo "$RESPONSE" | jq -r '.data.has_more')
     PAGE_TOKEN=$(echo "$RESPONSE" | jq -r '.data.page_token')
-    echo $RESPONSE | jq -r '.data.items[].name' | awk '{FS="\""} {print $1","}' >> $TMP_STUDENTS_FILE
+    echo $RESPONSE | jq -r '.data.items[].name' | awk '{FS="\""} {print $1}' >> $TMP_STUDENTS_FILE
 
     [[ $HAS_MORE != "false" ]] || break
   done
