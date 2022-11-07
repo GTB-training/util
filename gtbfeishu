@@ -17,7 +17,7 @@ _gtb_feishu_refresh_assignment_process() {
 EOF
 )
     RESPONSE=$(echo -n "$REQUEST_BODY" |
-      http --follow --timeout 3600 PUT $PUT_SHEET_URL \
+      http --follow --timeout 10 PUT $PUT_SHEET_URL \
       Authorization:"Bearer $TENANT_ACCESS_TOKEN" \
       Content-Type:'application/json'
     )
@@ -30,7 +30,7 @@ _gtb_feishu_token() {
 
     [[ -s $GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE ]] || echo "placeholder" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
 
-    run "http --ignore-stdin --form --follow --timeout 3600 POST $GTB_FEISHU_TOKEN_URL \
+    run "http --ignore-stdin --form --follow --timeout 10 POST $GTB_FEISHU_TOKEN_URL \
      'app_id'="$FEISHU_APP_KEY" \
      'app_secret'="$FEISHU_APP_SECRET" \
      Content-Type:'application/x-www-form-urlencoded'" |
@@ -46,7 +46,7 @@ _gtb_feishu_group_joining_process() {
   local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
   while true; do
     GET_GROUP_MEMBERS_URL="$GTB_FEISHU_API/im/v1/chats/$GTB_DEV_2023_GROUP_ID/members?page_size=100&page_token=$PAGE_TOKEN"
-    RESPONSE=$(http --follow --timeout 3600 GET ${GET_GROUP_MEMBERS_URL} Authorization:"Bearer $TENANT_ACCESS_TOKEN")
+    RESPONSE=$(http --follow --timeout 10 GET ${GET_GROUP_MEMBERS_URL} Authorization:"Bearer $TENANT_ACCESS_TOKEN")
     HAS_MORE=$(echo "$RESPONSE" | jq -r '.data.has_more')
     PAGE_TOKEN=$(echo "$RESPONSE" | jq -r '.data.page_token')
     echo $RESPONSE | jq -r '.data.items[].name' | awk '{FS="\""} {print $1}' >> $TMP_STUDENTS_FILE
