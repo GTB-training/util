@@ -17,9 +17,9 @@ _gtb_feishu_refresh_assignment_process() {
 EOF
 )
     RESPONSE=$(echo -n "$REQUEST_BODY" |
-      http --follow --timeout 10 PUT $PUT_SHEET_URL \
-      Authorization:"Bearer $TENANT_ACCESS_TOKEN" \
-      Content-Type:'application/json'
+     curl --silent --location --request --max-time 10 PUT $PUT_SHEET_URL \
+     --header "Authorization:Bearer $TENANT_ACCESS_TOKEN" \
+     --header 'Content-Type: application/json'
     )
     RESULT=$(echo "$RESPONSE" | jq -r ".msg")
     [[ "$RESULT" == "success" ]] || echo "Failed to update process sheet."
@@ -30,11 +30,15 @@ _gtb_feishu_token() {
 
     [[ -s $GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE ]] || echo "placeholder" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
 
-    run "http --ignore-stdin --form --follow --timeout 10 POST $GTB_FEISHU_TOKEN_URL \
-     'app_id'="$FEISHU_APP_KEY" \
-     'app_secret'="$FEISHU_APP_SECRET" \
-     Content-Type:'application/x-www-form-urlencoded'" |
-      jq -r ".tenant_access_token" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
+     curl --silent --location --request --max-time 10 PUT $PUT_SHEET_URL \
+     --header "Authorization:Bearer $TENANT_ACCESS_TOKEN" \
+     --header 'Content-Type: application/json'
+
+    run "curl --silent --location --request --max-time 10 POST $GTB_FEISHU_TOKEN_URL \
+     --header 'Content-Type: application/x-www-form-urlencoded' \
+     --data-urlencode 'app_id=$FEISHU_APP_KEY' \
+     --data-urlencode 'app_secret=$FEISHU_APP_SECRET' |
+     jq -r ".tenant_access_token" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
 }
 
 _gtb_feishu_group_joining_process() {
@@ -46,7 +50,7 @@ _gtb_feishu_group_joining_process() {
   local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
   while true; do
     GET_GROUP_MEMBERS_URL="$GTB_FEISHU_API/im/v1/chats/$GTB_DEV_2023_GROUP_ID/members?page_size=100&page_token=$PAGE_TOKEN"
-    RESPONSE=$(http --follow --timeout 10 GET ${GET_GROUP_MEMBERS_URL} Authorization:"Bearer $TENANT_ACCESS_TOKEN")
+    RESPONSE=$(curl --silent --location --request --max-time 10 GET ${GET_GROUP_MEMBERS_URL} --header "Authorization:Bearer $TENANT_ACCESS_TOKEN")
     HAS_MORE=$(echo "$RESPONSE" | jq -r '.data.has_more')
     PAGE_TOKEN=$(echo "$RESPONSE" | jq -r '.data.page_token')
     echo $RESPONSE | jq -r '.data.items[].name' | awk '{FS="\""} {print $1}' >> $TMP_STUDENTS_FILE
