@@ -655,6 +655,7 @@ _gtb_trello_api() {
   local HTTP_METHOD
   local HTTP_PRINT
   local OPTION_IGNORE_STDIN='--ignore-stdin'
+  local HTTP_TIMEOUT='--timeout 10'
 
   while (("$#")); do
     case "$1" in
@@ -698,6 +699,6 @@ _gtb_trello_api() {
     URL="${URL}${GTB_TRELLO_AUTH/&/?}"
   fi
 
-  run "http $OPTION_IGNORE_STDIN $OPTION_PRINT $HTTP_METHOD '${URL}'"
+  run "http $OPTION_IGNORE_STDIN $OPTION_PRINT $HTTP_TIMEOUT $HTTP_METHOD '${URL}'"
 }
 
