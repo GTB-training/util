@@ -654,18 +654,20 @@ _gtb_student_quit() {
     echo "Check whether coachee removed from GitHub org..."
     gh_check_user_not_in_org "$@"
 
-    while read -r STUDENT_FULLNAME ORG_NAME OTHER; do
-      while read -r BUDDY_NAME BUDDEE_NAME; do
-        info "Delete mapping to buddy '${BUDDY_NAME}' ..."
-        GTB_BUDDY_FILTER="${BUDDY_NAME}" _gtb_buddy_mapping_remove "${BUDDEE_NAME}"
-      done < <(_gtb_filter_buddies_mapping "2" "${STUDENT_FULLNAME}")
+    if [[ "false" == "$GTB_QUIT_EMPLOYEE" ]]; then
+        while read -r STUDENT_FULLNAME ORG_NAME OTHER; do
+          while read -r BUDDY_NAME BUDDEE_NAME; do
+            info "Delete mapping to buddy '${BUDDY_NAME}' ..."
+            GTB_BUDDY_FILTER="${BUDDY_NAME}" _gtb_buddy_mapping_remove "${BUDDEE_NAME}"
+          done < <(_gtb_filter_buddies_mapping "2" "${STUDENT_FULLNAME}")
 
-      info "Show existing assignment submissions..."
-      GTB_FIELDS="1-4,6-8" _gtb_assignment_submission_list "${STUDENT_FULLNAME}"
+          info "Show existing assignment submissions..."
+          GTB_FIELDS="1-4,6-8" _gtb_assignment_submission_list "${STUDENT_FULLNAME}"
 
-      info "Delete assignment submissions..."
-      GTB_ORG_NAME="${ORG_NAME}" _gtb_assignment_submission_delete
-    done < <(echo "${student_lines}")
+          info "Delete assignment submissions..."
+          GTB_ORG_NAME="${ORG_NAME}" _gtb_assignment_submission_delete
+        done < <(echo "${student_lines}")
+    fi
 
     for BOARD_NAME in $(_gtb_trello boards); do
       info "Remove from Trello board '$BOARD_NAME' ..."
@@ -674,5 +676,7 @@ _gtb_student_quit() {
     done
   fi
 
-  _gtb_student_quit_remove_from_config "$@"
+  if [[ "false" == "$GTB_QUIT_EMPLOYEE" ]]; then
+    _gtb_student_quit_remove_from_config "$@"
+  fi
 }

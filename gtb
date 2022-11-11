@@ -47,6 +47,7 @@ GTB_TRELLO_CARD_DUE_IN_DAYS=3
 GTB_HTTP_METHOD='GET'
 GTB_HTTP_PRINT=''
 GTB_PY_NAME_DEFAULT='~PINYIN_NAME~'
+GTB_QUIT_EMPLOYEE='false'
 
 declare -r NULL='-'
 
@@ -2305,6 +2306,10 @@ while (("$#")); do
     ;;
   --yes)
     GTB_YES="true"
+    shift
+    ;;
+  --quit-employee)
+    GTB_QUIT_EMPLOYEE="true"
     shift
     ;;
   --raw)
