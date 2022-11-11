@@ -651,6 +651,7 @@ _gtb_student_quit() {
     info "Remove from coachee GitHub org..."
     _gtb_student_org_remove "$@"
 
+    sleep 2
     echo "Check whether coachee removed from GitHub org..."
     gh_check_user_not_in_org "$@"
 
