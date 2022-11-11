@@ -557,9 +557,9 @@ _gtb_trello_board() {
 }
 
 _gtb_trello_boards() {
-  echo "GTB-Dev-Content"
   echo "GTB-Dev-Forum"
   echo "GTB-Dev-Resource"
+  echo "$GTB_TERM" | sed -e 's/gtb/GTB-Dev/' -e 's/$/-Content/'
   echo "$GTB_TERM" | sed -e 's/gtb/GTB-Dev/' -e 's/$/-Buddy/'
 }
 
