@@ -1935,6 +1935,11 @@ _gtb_config_diff() {
   run "git --no-pager diff --color-words $FILES"
 }
 
+_gtb_config_diffcheck() {
+  run "cd '$GTB_CONFIG_DIR'"
+  run "git --no-pager diff --exit-code"
+}
+
 _gtb_config_list() {
   run "cd '$GTB_CONFIG_DIR'"
   run 'ls -l students*.txt'
