@@ -280,6 +280,8 @@ _gtb_trello_card_label_add() {
 
   local -r RESULT="$(_gtb_trello_api --method 'POST' "/cards/${GTB_TRELLO_CARD_ID}/idLabels?value=${LABEL_ID}")"
 
+  [[ "$GTB_DEBUG" == "true" ]] && debug "$RESULT"
+
   $GTB_GREP --silent "$LABEL_ID" <(echo "$RESULT") && return 0
   $GTB_GREP --silent "that label is already on the card" <(echo "$RESULT") && return 0
 
