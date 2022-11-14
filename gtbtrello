@@ -659,7 +659,7 @@ _gtb_trello_api() {
   local HTTP_METHOD
   local HTTP_PRINT
   local OPTION_IGNORE_STDIN='--ignore-stdin'
-  local HTTP_TIMEOUT='--timeout 30'
+  local HTTP_TIMEOUT='--timeout 45'
 
   while (("$#")); do
     case "$1" in
