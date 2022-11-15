@@ -127,8 +127,15 @@ debug() {
 }
 
 run() {
-  [[ "$GTB_DEBUG" == "true" ]] && echo "$(tput setaf 22)$*$(tput sgr 0)" 1>&2
-  eval $*
+  if [[ "$GTB_DEBUG" == "true" ]]; then
+    echo "$(tput setaf 22)$*$(tput sgr 0)" 1>&2
+    start_time=`date +%s`
+    eval $*
+    end_time=`date +%s`
+    info "execution time was `expr $end_time - $start_time` s."
+  else
+    eval $*
+  fi
 }
 
 header() {
