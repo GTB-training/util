@@ -633,7 +633,6 @@ _gtb_trello_api_get_member_id() {
 
   if [[ -n "$RESULT" ]]; then
     echo "$RESULT $*"
-    info "Get member id from cache"
     return 0
   fi
 
@@ -641,7 +640,6 @@ _gtb_trello_api_get_member_id() {
   if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
     _gtb_cache_set trello "member-id-${QUERY}" "$RESULT"
     echo "$RESULT $*"
-    info "Set member id in cache"
     return 0
   fi
 
