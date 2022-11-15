@@ -232,8 +232,17 @@ _gtb_trello_card_field_set() {
   local -r FIELD_ID="$(_gtb_trello_board_field_id $FIELD_NAME)"
   assert_not_empty "Cannot find custom field '$FIELD_NAME' on board '$GTB_TRELLO_BOARD_NAME'!" "FIELD_ID"
 
-  local RESULT=$(echo "{\"value\": { \"text\": \"$FIELD_VALUE\" }}" |
-    _gtb_trello_api --stdin --method 'PUT' "/cards/${GTB_TRELLO_CARD_ID}/customField/${FIELD_ID}/item")
+  local RESULT=""
+  if [[ "$GTB_DEBUG" == "true" ]]; then
+    start_time=`date +%s`
+    RESULT=$(echo "{\"value\": { \"text\": \"$FIELD_VALUE\" }}" |
+        _gtb_trello_api --stdin --method 'PUT' "/cards/${GTB_TRELLO_CARD_ID}/customField/${FIELD_ID}/item")
+    end_time=`date +%s`
+    info "execution time was `expr $end_time - $start_time` s."
+  else
+    RESULT=$(echo "{\"value\": { \"text\": \"$FIELD_VALUE\" }}" |
+        _gtb_trello_api --stdin --method 'PUT' "/cards/${GTB_TRELLO_CARD_ID}/customField/${FIELD_ID}/item")
+  fi
 
   [[ "$GTB_DEBUG" == "true" ]] && debug "$RESULT"
   echo $RESULT | jq -jr '"card:", .idModel, " idCustomField:", .idCustomField, " value:", .value.text, "\n"'
