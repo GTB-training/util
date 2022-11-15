@@ -306,11 +306,7 @@ _gtb_trello_card_member_add() {
   GTB_TRELLO_CARD_ID="${GTB_TRELLO_CARD_ID:?Trello card ID is required! Specify by --card-id <ID>.}"
 
   trello_member_id "$@" |
-    env_parallel \
-      --linebuffer \
-      --jobs 1 \
-      $GTB_PARALLEL_OPT_PROGRESS_BAR \
-      "_gtb_trello_api --method 'POST' '/cards/${GTB_TRELLO_CARD_ID}/idMembers?value={1}' 1>/dev/null 2>&1"
+      _gtb_trello_api --method 'POST' '/cards/${GTB_TRELLO_CARD_ID}/idMembers?value={1}' 1>/dev/null 2>&1
 
   local -r MEMBER_LIST="$(_gtb_trello_card_member_list)"
   echo "${MEMBER_LIST}"
@@ -637,6 +633,7 @@ _gtb_trello_api_get_member_id() {
 
   if [[ -n "$RESULT" ]]; then
     echo "$RESULT $*"
+    info "Get member id from cache"
     return 0
   fi
 
@@ -644,6 +641,7 @@ _gtb_trello_api_get_member_id() {
   if [[ -n "$RESULT" ]] && [[ 'null' != "$RESULT" ]]; then
     _gtb_cache_set trello "member-id-${QUERY}" "$RESULT"
     echo "$RESULT $*"
+    info "Set member id in cache"
     return 0
   fi
 
