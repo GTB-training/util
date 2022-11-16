@@ -5,7 +5,7 @@ REF=${2}
 
 run() {
     echo "$(tput setaf 40)$*$(tput sgr0)" 1>&2
-    eval "timeout --preserve-status --kill-after 10s 120s $*"
+    eval $*
 }
 
 log() {
