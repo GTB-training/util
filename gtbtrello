@@ -666,9 +666,13 @@ _gtb_trello_limits() {
 
 _gtb_trello_api() {
   local HTTP_METHOD
-  local HTTP_PRINT
-  local OPTION_IGNORE_STDIN='--ignore-stdin'
-  local HTTP_TIMEOUT='--timeout 45'
+  local HTTP_TIMEOUT='--max-time 45'
+  local REQUEST='--request'
+  local REDIRECT='--location'
+  local HTTP_REQUEST
+  local OPTION_STDIN
+  local HEADER_CONTENT_TYPE='--header "Content-Type: application/json"'
+  local SILENT='--silent'
 
   while (("$#")); do
     case "$1" in
@@ -680,16 +684,8 @@ _gtb_trello_api() {
         fail "Error: HTTP method specified by '$1' is missing"
       fi
       ;;
-    --print)
-      if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
-        HTTP_PRINT="$2"
-        shift 2
-      else
-        fail "Error: httpie --print WHAT specified by '$1' is missing, e.g. HBhb"
-      fi
-      ;;
     --stdin)
-      OPTION_IGNORE_STDIN=''
+      OPTION_STDIN='--data-binary @-'
       shift
       ;;
     *)
@@ -701,9 +697,9 @@ _gtb_trello_api() {
   HTTP_METHOD=${HTTP_METHOD:-$GTB_HTTP_METHOD}
   HTTP_PRINT=${HTTP_PRINT:-$GTB_HTTP_PRINT}
 
+  HTTP_REQUEST="${REQUEST} ${HTTP_METHOD}"
+
   local -r API_PATH="${1:?path is required! (e.g. /cards/\{id\})}"
-  local OPTION_PRINT=''
-  [[ -n "$HTTP_PRINT" ]] && OPTION_PRINT="--print $HTTP_PRINT"
 
   local URL="${GTB_TRELLO_API}${API_PATH}"
   if [[ "$API_PATH" =~ '?' ]]; then
@@ -712,6 +708,6 @@ _gtb_trello_api() {
     URL="${URL}${GTB_TRELLO_AUTH/&/?}"
   fi
 
-  run "http $OPTION_IGNORE_STDIN $OPTION_PRINT $HTTP_TIMEOUT $HTTP_METHOD '${URL}'"
+  run "curl $SILENT $REDIRECT $OPTION_PRINT $HTTP_TIMEOUT $HEADER_CONTENT_TYPE $HTTP_REQUEST $OPTION_STDIN '${URL}'"
 }
 
