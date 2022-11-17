@@ -1937,7 +1937,7 @@ _gtb_config_diff() {
 
 _gtb_config_diffcheck() {
   run "cd '$GTB_CONFIG_DIR'"
-  run "git --no-pager diff --exit-code"
+  run "git --no-pager diff --exit-code --staged"
 }
 
 _gtb_config_list() {
