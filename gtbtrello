@@ -43,8 +43,8 @@ _gtb_trello_find_card_id() {
   local -r BOARD_ID=$(_gtb_trello_find_board_id "$BOARD_NAME")
   assert_not_empty "Cannot find board with name '$BOARD_NAME'!" "$BOARD_ID"
 
-  local -r URL="/search?modelTypes=cards&card_fields=name&idBoards=${BOARD_ID}&query=${CARD_NAME}"
-  local -r RESULT="$(_gtb_trello_api "$URL" |
+  local -r URL="/search?modelTypes=cards&card_fields=name&idBoards=${BOARD_ID}"
+  local -r RESULT="$(_gtb_trello_api --data-urlencode "query=${CARD_NAME}" "$URL" |
     jq -r ".cards[] | select(.name == \"$CARD_NAME\") | .id" |
     head -n1)"
 
@@ -671,14 +671,18 @@ _gtb_trello_api() {
   local REDIRECT='--location'
   local HTTP_REQUEST
   local OPTION_STDIN
-  local HEADER_CONTENT_TYPE='--header "Content-Type: application/json"'
+  local HEADER_CONTENT_TYPE
   local SILENT='--silent'
+  local PARAMETER_NEEDED_ENCODING
 
   while (("$#")); do
     case "$1" in
     --method)
       if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
         HTTP_METHOD="$2"
+        if [[ "PUT" = "$2" ]]; then
+            HEADER_CONTENT_TYPE='--header "Content-Type: application/json"'
+        fi
         shift 2
       else
         fail "Error: HTTP method specified by '$1' is missing"
@@ -687,6 +691,14 @@ _gtb_trello_api() {
     --stdin)
       OPTION_STDIN='--data-binary @-'
       shift
+      ;;
+    --data-urlencode)
+      if [[ -n "$2" ]] && [[ ${2:0:1} != "-" ]]; then
+        PARAMETER_NEEDED_ENCODING="--data-urlencode \"$2\""
+        shift 2
+      else
+        fail "Error: HTTP parameter needed encoding by '$1' is missing"
+      fi
       ;;
     *)
       break
@@ -708,6 +720,5 @@ _gtb_trello_api() {
     URL="${URL}${GTB_TRELLO_AUTH/&/?}"
   fi
 
-  run "curl $SILENT $REDIRECT $OPTION_PRINT $HTTP_TIMEOUT $HEADER_CONTENT_TYPE $HTTP_REQUEST $OPTION_STDIN '${URL}'"
+  run "curl $SILENT $REDIRECT $OPTION_PRINT $HTTP_TIMEOUT $HEADER_CONTENT_TYPE $HTTP_REQUEST $PARAMETER_NEEDED_ENCODING $OPTION_STDIN '${URL}'"
 }
-
