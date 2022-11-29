@@ -133,6 +133,10 @@ _gtb_report_process() {
     | _gtb_table_format --start-num 0
 }
 
+_gtb_report_buddy() {
+  cat $GTB_BUDDIES_FILE | sed 's/ /,/g'
+}
+
 _gtb_report_assign() {
   _gtb_report_assignment "$@"
 }
