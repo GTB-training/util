@@ -37,6 +37,35 @@ _gtb_feishu_token() {
       jq -r ".tenant_access_token" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
 }
 
+_gtb_feishu_message() {
+    local -r GROUP_ID="${1:?Feishu chat ID is required!}"
+    local -r MESSAGE_TYPE="${2:?Message type is required!(e.g. interactive,text,...)}"
+    local -r CONTENT="${3:?Message content is required!}"
+
+    _gtb_feishu_token
+    local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
+
+    local -r REQUEST_GROUP_ID="\"$GROUP_ID\""
+    local -r REQUEST_MESSAGE_TYPE="\"$MESSAGE_TYPE\""
+    local -r REQUEST_CONTENT="\"$CONTENT\""
+    local -r REQUEST_BODY=$(cat <<EOF
+{
+    "receive_id": $REQUEST_GROUP_ID,
+    "msg_type": $REQUEST_MESSAGE_TYPE,
+    "content": $REQUEST_CONTENT
+}
+EOF
+)
+
+    RESPONSE=$(printf "$REQUEST_BODY" |
+          http --follow --timeout 10 POST "$GTB_FEISHU_API/im/v1/messages?receive_id_type=chat_id" \
+          Authorization:"Bearer $TENANT_ACCESS_TOKEN" \
+          Content-Type:'application/json'
+        )
+    RESULT=$(echo "$RESPONSE" | jq -r ".msg")
+    [[ "$RESULT" == "ok" ]] || echo "Failed to send message."
+}
+
 _gtb_feishu_group_joining_process() {
   local -r GTB_DEV_2023_GROUP_ID="${1:?Feishu chat ID is required!}"
   local -r TMP_STUDENTS_FILE="/tmp/gtb-report-group-joining-process-$$"
