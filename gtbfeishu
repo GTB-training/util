@@ -39,42 +39,37 @@ _gtb_feishu_token() {
 
 _gtb_feishu_uploadImg() {
     local -r IMG_PATH="${1:?image path is required!}"
-
+echo "start to get token"
     _gtb_feishu_token
     local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
-
-echo "curl --location --request POST 'https://open.feishu.cn/open-apis/im/v1/images' \
-                      --header 'Content-Type: multipart/form-data' \
-                      --header 'Authorization: Bearer $TENANT_ACCESS_TOKEN' \
-                      --form 'image_type=message' \
-                      --form 'image=@\"$IMG_PATH\"'"
-
-    RESPONSE=$(curl --location --request POST 'https://open.feishu.cn/open-apis/im/v1/images' \
-                   --header 'Content-Type: multipart/form-data' \
-                   --header 'Authorization: Bearer $TENANT_ACCESS_TOKEN' \
-                   --form 'image_type=message' \
-                   --form 'image=@"/Users/lzhou/code/gtb/sd-words/inbox/bug/banner.png"')
-
-   echo "$RESPONSE"
+echo "got token"
+echo "start to uploadImg"
+    RESPONSE=$(http --form --follow --timeout 10 POST 'https://open.feishu.cn/open-apis/im/v1/images' \
+                    image_type='message' \
+                    image@"$IMG_PATH" \
+                    Content-Type:'multipart/form-data' \
+                    Authorization:"Bearer $TENANT_ACCESS_TOKEN" )
+echo "upload finish"
    RESULT=$(echo "$RESPONSE" | jq -r ".code")
        [[ "$RESULT" == "0" ]] || echo "Failed to upload img."
 
-   echo "$RESPONSE" | jq -r ".image_key"
+   [[ -s $GTB_FEISHU_IMG_KEY_FILE ]] || echo "placeholder" > "$GTB_FEISHU_IMG_KEY_FILE"
+   echo "$RESPONSE" | jq -r ".data.image_key" > "$GTB_FEISHU_IMG_KEY_FILE"
 }
 
-_gtb_feishu_every_day_word() {
+_gtb_feishu_word() {
     local -r REPO_NAME="sd-words"
     local -r GROUP_ID="oc_dbf3198d67e38dd67b6c3af7cc24edda"
     local -r TYPE="interactive"
 
     # 下载repo
-    _gtb_clone_default_repo $REPO_NAME
+    #_gtb_clone_default_repo $REPO_NAME
 
     # 确定哪个文件夹（单词）
     local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
     local INBOX_DIR="$REPO_DIR/inbox"
     local DONE_DIR="$REPO_DIR/done"
-    local TARGET_FOLDER=$(ls -d $INBOX_DIR/*/ | head -n1)
+    local TARGET_FOLDER=$(ls -d $INBOX_DIR/* | head -n1)
     local TARGET_NAME=$(basename $TARGET_FOLDER)
 
     echo "find word in inbox: $TARGET_FOLDER"
@@ -83,8 +78,12 @@ _gtb_feishu_every_day_word() {
     local IMAGE_KEY='img_v2_28145135-7649-49a1-b9ef-084a446ca03g'
     if find $TARGET_FOLDER -iname "banner.*"
     then
-        img_file=$(find $TARGET_FOLDER -iname "banner.name" -print0 | xargs -0 echo)
-        $IMAGE_KEY=_gtb_feishu_upload_img "$TARGET_FOLDER/$img_file"
+        img_file=$(find $TARGET_FOLDER -iname "banner.*" | xargs -0 echo)
+        echo "target_folder: $TARGET_FOLDER"
+        echo "img_file: $img_file"
+        _gtb_feishu_uploadImg "$img_file"
+        IMAGE_KEY=$(cat "$GTB_FEISHU_IMG_KEY_FILE")
+        echo "image_key: $IMAGE_KEY"
     else
         echo "banner.png not found, use default image"
     fi
