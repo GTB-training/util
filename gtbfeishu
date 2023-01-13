@@ -90,13 +90,23 @@ _gtb_feishu_word() {
 
     # 获取文件内容，拼接 content
     local -r TEMPLATE_ID="ctp_AAYdKKc3HnXx"
-    local -r SCENE_CONTENT=${$(cat $TARGET_FOLDER/scene.md):-"暂无"}
-    local -r DEFINITION_CONTENT=${$(cat $TARGET_FOLDER/definition.md):-"暂无"}
-    local -r EXTRA_CONTENT=${$(cat $TARGET_FOLDER/extra.md):-"暂无"}
-    local -r PREFERENCE_CONTENT=${$(cat $TARGET_FOLDER/preference.md):-"暂无"}
-    local -r CONTENT="{ \"type\": \"template\", \"data\": { \"template_id\": \"$template_id\" }, \"template_variable\": { \"banner\": \"$image_key\", \"scene_content\": \"$scene_content\", \"definition_content\": \"$definition_content\", \"extra_content\": \"$extra_content\", \"preference_content\": \"$preference_content\" } }"
+    local -r DEFAULT_VALUE="暂无"
 
-    # 发送消息
+    local -r SCENE_CONTENT=$(cat $TARGET_FOLDER/scene.md)
+    local -r SCENE_VALUE=${SCENE_CONTENT:-$DEFAULT_VALUE}
+
+    local -r DEFINITION_CONTENT=$(cat $TARGET_FOLDER/definition.md)
+    local -r DEFINITION_VALUE=${DEFINITION_CONTENT:-$DEFAULT_VALUE}
+
+    local -r EXTRA_CONTENT=$(cat $TARGET_FOLDER/extra.md)
+    local -r EXTRA_VALUE=${EXTRA_CONTENT:-$DEFAULT_VALUE}
+
+    local -r PREFERENCE_CONTENT=$(cat $TARGET_FOLDER/preference.md)
+    local -r PREFERENCE_VALUE=${PREFERENCE_CONTENT:-$DEFAULT_VALUE}
+
+    local -r CONTENT="{ \\"type\\": \\"template\\", \\"data\\": { \\"template_id\\": \\"$TEMPLATE_ID\\" }, \\"template_variable\\": { \\"banner\\": \\"$IMAGE_KEY\\", \\"scene_content\\": \\"$SCENE_VALUE\\", \\"definition_content\\": \\"$DEFINITION_VALUE\\", \\"extra_content\\": \\"$EXTRA_VALUE\\", \\"preference_content\\": \\"$PREFERENCE_VALUE\\" } }"
+
+    # 发送消息 (Failed to send message)
     _gtb_feishu_message $GROUP_ID $TYPE $CONTENT
 
     # 发送成功，文件挪到done,并且commit,push
