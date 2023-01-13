@@ -37,6 +37,77 @@ _gtb_feishu_token() {
       jq -r ".tenant_access_token" > "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE"
 }
 
+_gtb_feishu_uploadImg() {
+    local -r IMG_PATH="${1:?image path is required!}"
+
+    _gtb_feishu_token
+    local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
+
+echo "curl --location --request POST 'https://open.feishu.cn/open-apis/im/v1/images' \
+                      --header 'Content-Type: multipart/form-data' \
+                      --header 'Authorization: Bearer $TENANT_ACCESS_TOKEN' \
+                      --form 'image_type=message' \
+                      --form 'image=@\"$IMG_PATH\"'"
+
+    RESPONSE=$(curl --location --request POST 'https://open.feishu.cn/open-apis/im/v1/images' \
+                   --header 'Content-Type: multipart/form-data' \
+                   --header 'Authorization: Bearer $TENANT_ACCESS_TOKEN' \
+                   --form 'image_type=message' \
+                   --form 'image=@"/Users/lzhou/code/gtb/sd-words/inbox/bug/banner.png"')
+
+   echo "$RESPONSE"
+   RESULT=$(echo "$RESPONSE" | jq -r ".code")
+       [[ "$RESULT" == "0" ]] || echo "Failed to upload img."
+
+   echo "$RESPONSE" | jq -r ".image_key"
+}
+
+_gtb_feishu_every_day_word() {
+    local -r REPO_NAME="sd-words"
+    local -r GROUP_ID="oc_dbf3198d67e38dd67b6c3af7cc24edda"
+    local -r TYPE="interactive"
+
+    # 下载repo
+    _gtb_clone_default_repo $REPO_NAME
+
+    # 确定哪个文件夹（单词）
+    local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
+    local INBOX_DIR="$REPO_DIR/inbox"
+    local DONE_DIR="$REPO_DIR/done"
+    local TARGET_FOLDER=$(ls -d $INBOX_DIR/*/ | head -n1)
+    local TARGET_NAME=$(basename $TARGET_FOLDER)
+
+    echo "find word in inbox: $TARGET_FOLDER"
+
+    # 上传文件夹中的图片，如果有
+    local IMAGE_KEY='img_v2_28145135-7649-49a1-b9ef-084a446ca03g'
+    if find $TARGET_FOLDER -iname "banner.*"
+    then
+        img_file=$(find $TARGET_FOLDER -iname "banner.name" -print0 | xargs -0 echo)
+        $IMAGE_KEY=_gtb_feishu_upload_img "$TARGET_FOLDER/$img_file"
+    else
+        echo "banner.png not found, use default image"
+    fi
+
+    # 获取文件内容，拼接 content
+    local -r TEMPLATE_ID="ctp_AAYdKKc3HnXx"
+    local -r SCENE_CONTENT=${$(cat $TARGET_FOLDER/scene.md):-"暂无"}
+    local -r DEFINITION_CONTENT=${$(cat $TARGET_FOLDER/definition.md):-"暂无"}
+    local -r EXTRA_CONTENT=${$(cat $TARGET_FOLDER/extra.md):-"暂无"}
+    local -r PREFERENCE_CONTENT=${$(cat $TARGET_FOLDER/preference.md):-"暂无"}
+    local -r CONTENT="{ \"type\": \"template\", \"data\": { \"template_id\": \"$template_id\" }, \"template_variable\": { \"banner\": \"$image_key\", \"scene_content\": \"$scene_content\", \"definition_content\": \"$definition_content\", \"extra_content\": \"$extra_content\", \"preference_content\": \"$preference_content\" } }"
+
+    # 发送消息
+    _gtb_feishu_message $GROUP_ID $TYPE $CONTENT
+
+    # 发送成功，文件挪到done,并且commit,push
+    if [[ $(ls) == "DONE" ]]; then
+      mv $TARGET_FOLDER $DONE_DIR/$TARGET_NAME
+      run "cd $REPO_DIR"
+      git add . && git commit -m "move $TARGET_NAME to done" && git push
+    fi
+}
+
 _gtb_feishu_message() {
     local -r GROUP_ID="${1:?Feishu chat ID is required!}"
     local -r MESSAGE_TYPE="${2:?Message type is required!(e.g. interactive,text,...)}"
@@ -63,7 +134,7 @@ EOF
           Content-Type:'application/json'
         )
     RESULT=$(echo "$RESPONSE" | jq -r ".msg")
-    [[ "$RESULT" == "ok" ]] || echo "Failed to send message."
+    [[ "$RESULT" == "ok" ]] && echo "DONE" || echo "Failed to send message."
 }
 
 _gtb_feishu_group_joining_process() {
