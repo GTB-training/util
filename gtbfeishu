@@ -63,7 +63,7 @@ _gtb_feishu_word() {
     local -r TYPE="interactive"
 
     # 下载repo
-    #_gtb_clone_default_repo $REPO_NAME
+    _gtb_clone_default_repo $REPO_NAME
 
     # 确定哪个文件夹（单词）
     local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
@@ -92,29 +92,31 @@ _gtb_feishu_word() {
     local -r TEMPLATE_ID="ctp_AAYdKKc3HnXx"
     local -r DEFAULT_VALUE="暂无"
 
-    local -r SCENE_CONTENT=$(cat $TARGET_FOLDER/scene.md)
-    local -r SCENE_VALUE=${SCENE_CONTENT:-$DEFAULT_VALUE}
+    #local SCENE_CONTENT=$(cat $TARGET_FOLDER/scene.md | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\\\\\\\n/g')
+    local SCENE_CONTENT=$(cat $TARGET_FOLDER/scene.md | sed 's/$/\\\\\\\\n/g')
+    SCENE_VALUE=${SCENE_CONTENT:-$DEFAULT_VALUE}
 
-    local -r DEFINITION_CONTENT=$(cat $TARGET_FOLDER/definition.md)
-    local -r DEFINITION_VALUE=${DEFINITION_CONTENT:-$DEFAULT_VALUE}
+    local DEFINITION_CONTENT=$(cat $TARGET_FOLDER/definition.md | sed 's/$/\\\\\\\\n/g')
+    DEFINITION_VALUE=${DEFINITION_CONTENT:-$DEFAULT_VALUE}
 
-    local -r EXTRA_CONTENT=$(cat $TARGET_FOLDER/extra.md)
-    local -r EXTRA_VALUE=${EXTRA_CONTENT:-$DEFAULT_VALUE}
+    local EXTRA_CONTENT=$(cat $TARGET_FOLDER/extra.md | sed 's/$/\\\\\\\\n/g')
+    EXTRA_VALUE=${EXTRA_CONTENT:-$DEFAULT_VALUE}
 
-    local -r PREFERENCE_CONTENT=$(cat $TARGET_FOLDER/preference.md)
-    local -r PREFERENCE_VALUE=${PREFERENCE_CONTENT:-$DEFAULT_VALUE}
+    local PREFERENCE_CONTENT=$(cat $TARGET_FOLDER/preference.md | sed 's/$/\\\\\\\\n/g')
+    PREFERENCE_VALUE=${PREFERENCE_CONTENT:-$DEFAULT_VALUE}
 
-    local -r CONTENT="{ \\"type\\": \\"template\\", \\"data\\": { \\"template_id\\": \\"$TEMPLATE_ID\\" }, \\"template_variable\\": { \\"banner\\": \\"$IMAGE_KEY\\", \\"scene_content\\": \\"$SCENE_VALUE\\", \\"definition_content\\": \\"$DEFINITION_VALUE\\", \\"extra_content\\": \\"$EXTRA_VALUE\\", \\"preference_content\\": \\"$PREFERENCE_VALUE\\" } }"
+    local CONTENT='{"type":"template","data":{"template_id":"'$TEMPLATE_ID'","template_variable":{"banner":"'$IMAGE_KEY'","scene_content":"'$SCENE_VALUE'","definition_content":"'$DEFINITION_VALUE'","extra_content":"'$EXTRA_VALUE'","preference_content":"'$PREFERENCE_VALUE'"}}}'
+    CONTENT=$(echo $CONTENT | sed 's/\"/\\\\\"/g')
 
     # 发送消息 (Failed to send message)
-    _gtb_feishu_message $GROUP_ID $TYPE $CONTENT
+    _gtb_feishu_message $GROUP_ID $TYPE "$CONTENT"
 
     # 发送成功，文件挪到done,并且commit,push
-    if [[ $(ls) == "DONE" ]]; then
-      mv $TARGET_FOLDER $DONE_DIR/$TARGET_NAME
-      run "cd $REPO_DIR"
-      git add . && git commit -m "move $TARGET_NAME to done" && git push
-    fi
+    # if [[ $(ls) == "DONE" ]]; then
+      # mv $TARGET_FOLDER $DONE_DIR/$TARGET_NAME
+      # run "cd $REPO_DIR"
+      # git add . && git commit -m "move $TARGET_NAME to done" && git push
+    # fi
 }
 
 _gtb_feishu_message() {
