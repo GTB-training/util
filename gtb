@@ -1749,7 +1749,6 @@ _gtb_feishu() {
   GTB_FEISHU_API='https://open.feishu.cn/open-apis'
   GTB_FEISHU_TOKEN_ENDPOINT='/auth/v3/tenant_access_token/internal'
   GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE="$GTB_USER_CACHE_DIR/.tenant_access_token"
-  GTB_FEISHU_IMG_KEY_FILE="$GTB_USER_CACHE_DIR/.img_key"
 
   source "gtbfeishu"
 

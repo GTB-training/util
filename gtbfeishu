@@ -39,22 +39,20 @@ _gtb_feishu_token() {
 
 _gtb_feishu_uploadImg() {
     local -r IMG_PATH="${1:?image path is required!}"
-echo "start to get token"
+
     _gtb_feishu_token
     local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
-echo "got token"
-echo "start to uploadImg"
+
     RESPONSE=$(http --form --follow --timeout 10 POST 'https://open.feishu.cn/open-apis/im/v1/images' \
                     image_type='message' \
                     image@"$IMG_PATH" \
                     Content-Type:'multipart/form-data' \
                     Authorization:"Bearer $TENANT_ACCESS_TOKEN" )
-echo "upload finish"
+
    RESULT=$(echo "$RESPONSE" | jq -r ".code")
        [[ "$RESULT" == "0" ]] || echo "Failed to upload img."
 
-   [[ -s $GTB_FEISHU_IMG_KEY_FILE ]] || echo "placeholder" > "$GTB_FEISHU_IMG_KEY_FILE"
-   echo "$RESPONSE" | jq -r ".data.image_key" > "$GTB_FEISHU_IMG_KEY_FILE"
+   echo "$RESPONSE" | jq -r ".data.image_key"
 }
 
 _gtb_feishu_word() {
@@ -81,8 +79,7 @@ _gtb_feishu_word() {
         img_file=$(find $TARGET_FOLDER -iname "banner.*" | xargs -0 echo)
         echo "target_folder: $TARGET_FOLDER"
         echo "img_file: $img_file"
-        _gtb_feishu_uploadImg "$img_file"
-        IMAGE_KEY=$(cat "$GTB_FEISHU_IMG_KEY_FILE")
+        IMAGE_KEY=`_gtb_feishu_uploadImg "$img_file"`
         echo "image_key: $IMAGE_KEY"
     else
         echo "banner.png not found, use default image"
@@ -120,7 +117,6 @@ _gtb_feishu_word() {
       echo "updated repo"
     fi
 }
-
 _gtb_feishu_message() {
     local -r GROUP_ID="${1:?Feishu chat ID is required!}"
     local -r MESSAGE_TYPE="${2:?Message type is required!(e.g. interactive,text,...)}"
