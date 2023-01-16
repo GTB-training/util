@@ -108,15 +108,17 @@ _gtb_feishu_word() {
     local CONTENT='{"type":"template","data":{"template_id":"'$TEMPLATE_ID'","template_variable":{"banner":"'$IMAGE_KEY'","scene_content":"'$SCENE_VALUE'","definition_content":"'$DEFINITION_VALUE'","extra_content":"'$EXTRA_VALUE'","preference_content":"'$PREFERENCE_VALUE'"}}}'
     CONTENT=$(echo $CONTENT | sed 's/\"/\\\\\"/g')
 
-    # 发送消息 (Failed to send message)
-    _gtb_feishu_message $GROUP_ID $TYPE "$CONTENT"
+    # 发送消息
+    local send_result=`_gtb_feishu_message $GROUP_ID $TYPE "$CONTENT"`
+    echo "feishu message command's output is: $send_result"
 
     # 发送成功，文件挪到done,并且commit,push
-    # if [[ $(ls) == "DONE" ]]; then
-      # mv $TARGET_FOLDER $DONE_DIR/$TARGET_NAME
-      # run "cd $REPO_DIR"
-      # git add . && git commit -m "move $TARGET_NAME to done" && git push
-    # fi
+    if [[ $send_result == "DONE" ]]; then
+      mv $TARGET_FOLDER $DONE_DIR/$TARGET_NAME
+      run "cd $REPO_DIR"
+      git add . && git commit -m "move $TARGET_NAME to done" && git push
+      echo "updated repo"
+    fi
 }
 
 _gtb_feishu_message() {
