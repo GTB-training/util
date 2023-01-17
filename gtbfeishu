@@ -105,11 +105,13 @@ _gtb_feishu_uploadImg() {
 }
 
 _gtb_feishu_word() {
-    local -r REPO_NAME="sd-words"
-    local -r GROUP_ID="oc_dbf3198d67e38dd67b6c3af7cc24edda"
-    local -r TYPE="interactive"
+    local -r GROUP_ID="${1:?Feishu chat ID is required!}"
+    local -r MESSAGE_TYPE="${2:?Message type is required!(e.g. interactive,text,...)}"
+    local -r TEMPLATE_ID="${3:?Template id is required!}"
+    local -r REPO_NAME="${4:?Repo name is required!}"
+    local IMAGE_KEY="${5:?Default image_key is required!}"
 
-    # 下载repo
+    echo "update repo: $REPO_NAME"
     _gtb_clone_default_repo $REPO_NAME
 
     # 确定哪个文件夹（单词）
@@ -118,26 +120,22 @@ _gtb_feishu_word() {
     local DONE_DIR="$REPO_DIR/done"
     local TARGET_FOLDER=$(ls -d $INBOX_DIR/* | head -n1)
     local TARGET_NAME=$(basename $TARGET_FOLDER)
-
     echo "find word in inbox: $TARGET_FOLDER"
 
     # 上传文件夹中的图片，如果有
-    local IMAGE_KEY='img_v2_28145135-7649-49a1-b9ef-084a446ca03g'
     if find $TARGET_FOLDER -iname "banner.*"
     then
         img_file=$(find $TARGET_FOLDER -iname "banner.*" | xargs -0 echo)
-        echo "img_file: $img_file"
+        echo "find banner image: $img_file"
         IMAGE_KEY=`_gtb_feishu_uploadImg "$img_file"`
         echo "image_key: $IMAGE_KEY"
     else
-        echo "banner.png not found, use default image"
+        echo "banner.* not found, use default image"
     fi
 
     # 获取文件内容，拼接 content
-    local -r TEMPLATE_ID="ctp_AAYdKKc3HnXx"
     local -r DEFAULT_VALUE="暂无"
 
-    #local SCENE_CONTENT=$(cat $TARGET_FOLDER/scene.md | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\\\\\\\n/g')
     local SCENE_CONTENT=$(cat $TARGET_FOLDER/scene.md | sed 's/$/\\\\\\\\n/g')
     SCENE_VALUE=${SCENE_CONTENT:-$DEFAULT_VALUE}
 
@@ -154,10 +152,10 @@ _gtb_feishu_word() {
     CONTENT=$(echo $CONTENT | sed 's/\"/\\\\\"/g')
 
     # 发送消息
-    local send_result=`_gtb_feishu_message $GROUP_ID $TYPE "$CONTENT"`
+    local send_result=`_gtb_feishu_message $GROUP_ID $MESSAGE_TYPE "$CONTENT"`
     echo "feishu message command's output is: $send_result"
 
-    # 发送成功，文件挪到done,并且commit,push
+    # 发送成功，更新 repo
     if [[ $send_result == "DONE" ]]; then
       mv $TARGET_FOLDER $DONE_DIR/$TARGET_NAME
       run "cd $REPO_DIR"
