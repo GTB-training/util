@@ -97,7 +97,6 @@ _gtb_feishu_uploadImg() {
                     image@"$IMG_PATH" \
                     Content-Type:'multipart/form-data' \
                     Authorization:"Bearer $TENANT_ACCESS_TOKEN" )
-
    RESULT=$(echo "$RESPONSE" | jq -r ".code")
        [[ "$RESULT" == "0" ]] || echo "Failed to upload img."
 
@@ -142,6 +141,7 @@ _gtb_feishu_word() {
     then
         img_file=$(find $TARGET_FOLDER -iname "banner.*" | xargs -0 echo)
         IMAGE_KEY=`_gtb_feishu_uploadImg "$img_file"`
+        echo "upload image done"
     else
         echo "banner.* not found, use default image"
     fi
