@@ -104,18 +104,33 @@ _gtb_feishu_uploadImg() {
    echo "$RESPONSE" | jq -r ".data.image_key"
 }
 
+_gtb_update-words-repo() {
+    local -r REPO_NAME=${1:?Repo name is required!}
+    local -r REPO_DIR=${2:?Repo dir is required!}
+
+    if [[ -d "$REPO_DIR/.git" ]]; then
+        run "git -C '$REPO_DIR' pull --rebase --autostash"
+    else
+        gh_clone_repo $GTB_ORG $REPO_NAME $REPO_DIR
+    fi
+
+    if [[ $? -ne 0 ]]; then
+        fail "Failed to clone repo $REPO_NAME to $REPO_DIR"
+    fi
+}
+
 _gtb_feishu_word() {
     local -r GROUP_ID="${1:?Feishu chat ID is required!}"
     local -r MESSAGE_TYPE="${2:?Message type is required!(e.g. interactive,text,...)}"
     local -r TEMPLATE_ID="${3:?Template id is required!}"
     local -r REPO_NAME="${4:?Repo name is required!}"
     local IMAGE_KEY="${5:?Default image_key is required!}"
+    local -r REPO_DIR="$GTB_ROOT/$REPO_NAME"
 
     echo "update repo: $REPO_NAME"
-    _gtb_clone_default_repo $REPO_NAME
+    _gtb_update-words-repo $REPO_NAME $REPO_DIR
 
     # 确定哪个文件夹（单词）
-    local REPO_DIR=$(_gtb_default_repo_dir $REPO_NAME)
     local INBOX_DIR="$REPO_DIR/inbox"
     local DONE_DIR="$REPO_DIR/done"
     local TARGET_FOLDER=$(ls -d $INBOX_DIR/* | head -n1)
@@ -126,9 +141,7 @@ _gtb_feishu_word() {
     if find $TARGET_FOLDER -iname "banner.*"
     then
         img_file=$(find $TARGET_FOLDER -iname "banner.*" | xargs -0 echo)
-        echo "find banner image: $img_file"
         IMAGE_KEY=`_gtb_feishu_uploadImg "$img_file"`
-        echo "image_key: $IMAGE_KEY"
     else
         echo "banner.* not found, use default image"
     fi
@@ -158,8 +171,9 @@ _gtb_feishu_word() {
     # 发送成功，更新 repo
     if [[ $send_result == "DONE" ]]; then
       mv $TARGET_FOLDER $DONE_DIR/$TARGET_NAME
-      run "cd $REPO_DIR"
-      git add . && git commit -m "move $TARGET_NAME to done" && git push
-      echo "updated repo"
+      run "git -C '$REPO_DIR' add ."
+      run "git -C '$REPO_DIR' commit -m \"move $TARGET_NAME to done\""
+      run "git -C '$REPO_DIR' push"
+      echo "updated repo: $REPO_NAME"
     fi
 }
