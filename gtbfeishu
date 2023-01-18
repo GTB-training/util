@@ -158,7 +158,7 @@ _gtb_feishu_word() {
     local EXTRA_CONTENT=$(cat $TARGET_FOLDER/extra.md | sed 's/$/\\\\\\\\n/g')
     EXTRA_VALUE=${EXTRA_CONTENT:-$DEFAULT_VALUE}
 
-    local PREFERENCE_CONTENT=$(cat $TARGET_FOLDER/preference.md | sed 's/$/\\\\\\\\n/g')
+    local PREFERENCE_CONTENT=$(cat $TARGET_FOLDER/reference.md | sed 's/$/\\\\\\\\n/g')
     PREFERENCE_VALUE=${PREFERENCE_CONTENT:-$DEFAULT_VALUE}
 
     local CONTENT='{"type":"template","data":{"template_id":"'$TEMPLATE_ID'","template_variable":{"banner":"'$IMAGE_KEY'","scene_content":"'$SCENE_VALUE'","definition_content":"'$DEFINITION_VALUE'","extra_content":"'$EXTRA_VALUE'","preference_content":"'$PREFERENCE_VALUE'"}}}'
