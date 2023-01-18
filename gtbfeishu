@@ -92,7 +92,7 @@ _gtb_feishu_uploadImg() {
     _gtb_feishu_token
     local -r TENANT_ACCESS_TOKEN=$(cat "$GTB_FEISHU_TENANT_ACCESS_TOKEN_FILE")
 
-    RESPONSE=$(http --form --follow --timeout 10 POST 'https://open.feishu.cn/open-apis/im/v1/images' \
+    RESPONSE=$(http --form --follow --ignore-stdin --timeout 10 POST 'https://open.feishu.cn/open-apis/im/v1/images' \
                     image_type='message' \
                     image@"$IMG_PATH" \
                     Content-Type:'multipart/form-data' \
