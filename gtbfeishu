@@ -137,10 +137,10 @@ _gtb_feishu_word() {
     echo "find word in inbox: $TARGET_FOLDER"
 
     # 上传文件夹中的图片，如果有
-    if find $TARGET_FOLDER -iname "banner.*"
+    local banner=`find $TARGET_FOLDER -iname '*banner*'`
+    if [ -e "$banner" ]
     then
-        img_file=$(find $TARGET_FOLDER -iname "banner.*" | xargs -0 echo)
-        IMAGE_KEY=`_gtb_feishu_uploadImg "$img_file"`
+        IMAGE_KEY=`_gtb_feishu_uploadImg "$banner"`
         echo "upload image done"
     else
         echo "banner.* not found, use default image"
