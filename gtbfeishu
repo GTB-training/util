@@ -163,6 +163,7 @@ _gtb_feishu_word() {
 
     local CONTENT='{"type":"template","data":{"template_id":"'$TEMPLATE_ID'","template_variable":{"banner":"'$IMAGE_KEY'","scene_content":"'$SCENE_VALUE'","definition_content":"'$DEFINITION_VALUE'","extra_content":"'$EXTRA_VALUE'","preference_content":"'$PREFERENCE_VALUE'"}}}'
     CONTENT=$(echo $CONTENT | sed 's/\"/\\\\\"/g')
+    CONTENT=$(echo $CONTENT | sed 's/%/%%/g')
 
     # 发送消息
     local send_result=`_gtb_feishu_message $GROUP_ID $MESSAGE_TYPE "$CONTENT"`
