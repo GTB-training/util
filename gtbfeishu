@@ -60,7 +60,7 @@ EOF
     RESPONSE=$(printf "$REQUEST_BODY" |
           http --follow --timeout 10 POST "$GTB_FEISHU_API/im/v1/messages?receive_id_type=chat_id" \
           Authorization:"Bearer $TENANT_ACCESS_TOKEN" \
-          Content-Type:'application/json'
+          Content-Type:'application/json; charset=utf-8'
         )
     RESULT=$(echo "$RESPONSE" | jq -r ".msg")
     [[ "$RESULT" == "ok" ]] && echo "DONE" || echo "Failed to send message."
