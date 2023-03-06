@@ -63,7 +63,7 @@ EOF
           Content-Type:'application/json; charset=utf-8'
         )
     RESULT=$(echo "$RESPONSE" | jq -r ".msg")
-    [[ "$RESULT" == "ok" ]] && echo "DONE" || echo "Failed to send message."
+    [[ "$RESULT" == "success" ]] && echo "DONE" || echo "Failed to send message."
 }
 
 _gtb_feishu_group_joining_process() {
